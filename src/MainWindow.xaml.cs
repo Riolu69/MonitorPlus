@@ -53,6 +53,9 @@ namespace LersMonitor
         private readonly ObservableCollection<PodpitkaNodeViewModel> _podpitkaNodes = new();
         
         private ObservableCollection<TempSchedulePointViewModel> _currentScheduleEdit = new();
+        // true = выбор графика применяется сразу к выбранным точкам (из окна «Границы»),
+        // false = график загружается в редактор и ждёт «Сохранить график».
+        private bool _scheduleSourceApplyDirectly;
 
         private UserSettings _settings = new();
         private List<MeasurePointItem> _editingPoints = new();
@@ -167,6 +170,11 @@ namespace LersMonitor
                         CmbTheme.SelectedIndex = _settings.ThemeMode;
                         
                         if (_settings.PointLimits == null) _settings.PointLimits = new Dictionary<int, PointThresholds>();
+                        // Старые settings.json без поля ScheduleTolerance получают 3.0 из инициализатора;
+                        // здесь отсекаем только явно некорректные значения.
+                        foreach (var lim in _settings.PointLimits.Values)
+                            if (lim.ScheduleTolerance < 0 || lim.ScheduleTolerance > 50)
+                                lim.ScheduleTolerance = TempScheduleMath.DefaultTolerance;
                         if (_settings.PodpitkaLimits == null) _settings.PodpitkaLimits = new Dictionary<int, VolumeThresholds>();
                         if (_settings.PodpitkaPointIds == null) _settings.PodpitkaPointIds = new List<int>();
 
@@ -295,27 +303,49 @@ namespace LersMonitor
             var res = this.Resources;
             if (isDark)
             {
-                res["SystemBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
-                res["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
+                res["SystemBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#000000"));
+                res["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
+                res["CardBackgroundAlt"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
                 res["BorderBrushColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#38383A"));
+                res["BorderBrushSubtle"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
                 res["LabelPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
                 res["LabelSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#98989F"));
-                res["InputBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
-                res["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
-                res["SelectionBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3A3A3C"));
+                res["LabelTertiary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48484A"));
+                res["InputBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
+                res["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
+                res["SelectionBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0A84FF"));
                 res["SelectionForeground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                res["SegmentedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
+                res["SegmentedSelectedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#636366"));
+                res["AccentBlue"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0A84FF"));
+                res["AccentBlueHover"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#409CFF"));
+                res["AccentGreen"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#30D158"));
+                res["AccentRed"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF453A"));
+                res["AccentOrange"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9F0A"));
+                res["AccentGray"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8E8E93"));
             }
             else
             {
-                res["SystemBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F5F5F7"));
+                res["SystemBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F2F2F7"));
                 res["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                res["CardBackgroundAlt"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9F9FB"));
                 res["BorderBrushColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E5EA"));
-                res["LabelPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D1D1F"));
+                res["BorderBrushSubtle"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0F0F2"));
+                res["LabelPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
                 res["LabelSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#86868B"));
-                res["InputBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FBFBFD"));
-                res["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FAFAFC"));
-                res["SelectionBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E8F2FE"));
-                res["SelectionForeground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D1D1F"));
+                res["LabelTertiary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C7C7CC"));
+                res["InputBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F2F2F7"));
+                res["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9F9FB"));
+                res["SelectionBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#007AFF"));
+                res["SelectionForeground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                res["SegmentedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF0F3"));
+                res["SegmentedSelectedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                res["AccentBlue"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#007AFF"));
+                res["AccentBlueHover"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0051D5"));
+                res["AccentGreen"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34C759"));
+                res["AccentRed"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3B30"));
+                res["AccentOrange"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9500"));
+                res["AccentGray"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8E8E93"));
             }
 
             foreach (var r in _results) r.RefreshColors();
@@ -466,6 +496,7 @@ namespace LersMonitor
                 _settings.TnvSourcePointId = pt.Id;
                 SaveUserSettings();
                 TxtGlobalTnv.Text = "...";
+                TxtTnvCardUpdated.Text = "Ожидание данных...";
                 await UpdateGlobalTnvAsync();
             }
         }
@@ -488,14 +519,18 @@ namespace LersMonitor
                             {
                                 CurrentGlobalTnv = tnv;
                                 TxtGlobalTnv.Text = tnv.Value.ToString("F1");
+                                TxtTnvCardUpdated.Text = $"Обновлено в {DateTime.Now:HH:mm:ss}";
                                 foreach (var p in _dashboardFlatPoints) p.RefreshColors();
                                 foreach (var p in _results) p.RefreshColors();
                                 foreach (var node in _dashboardNodes) node.Refresh();
                             }
+                            else TxtTnvCardUpdated.Text = "Параметр Тнв не найден";
                         }
+                        else TxtTnvCardUpdated.Text = "Нет данных в ответе";
                     }
+                    else TxtTnvCardUpdated.Text = "Нет ответа от источника";
                 }
-                catch { }
+                catch { TxtTnvCardUpdated.Text = "Нет связи с источником"; }
             }
         }
 
@@ -516,6 +551,40 @@ namespace LersMonitor
             if (sender is Button btn && btn.Tag is PointResultViewModel vm && _dashboardCts != null)
             {
                 await _coord.PollPointAsync(new PollTarget(vm.Id, vm.NodeTitle), ignoreCache: true, _dashboardCts.Token);
+            }
+        }
+
+        private void BtnPollDetails_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is not Button btn) return;
+
+                int pointId = 0;
+                string title = "";
+
+                if (btn.Tag is PointResultViewModel vm)
+                {
+                    pointId = vm.Id;
+                    title = vm.Title;
+                }
+                else if (btn.Tag is PodpitkaPointViewModel pvm)
+                {
+                    pointId = pvm.Id;
+                    title = pvm.Title;
+                }
+
+                if (pointId == 0) return;
+
+                var win = new PollDetailsWindow(pointId, title, _coord.Log)
+                {
+                    Owner = this
+                };
+                win.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Не удалось открыть окно хода опроса: " + ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -631,21 +700,255 @@ namespace LersMonitor
             OverlayLimits.Visibility = Visibility.Visible;
         }
         
+        /// <summary>Читает поле допуска. Поддерживает и запятую, и точку; диапазон 0…50 °C.</summary>
+        private bool TryGetScheduleTolerance(out double value)
+        {
+            value = TempScheduleMath.DefaultTolerance;
+            string text = (TxtScheduleTolerance?.Text ?? "").Trim().Replace(',', '.');
+            if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)) return false;
+            if (parsed < 0 || parsed > 50) return false;
+            value = parsed;
+            return true;
+        }
+
+        private double EditorTolerance()
+            => TryGetScheduleTolerance(out double tol) ? tol : TempScheduleMath.DefaultTolerance;
+
+        /// <summary>Строки графика из редактора, отсортированные по Тнв.</summary>
+        private List<TempSchedulePoint> CurrentEditorSchedule()
+            => _currentScheduleEdit
+                .Select(x => new TempSchedulePoint { Tnv = x.Tnv, T1 = x.T1, T2 = x.T2 })
+                .OrderBy(x => x.Tnv)
+                .ToList();
+
+        /// <summary>Перечитывает границы во всех VM и обновляет цвета/подсказки по графику.</summary>
+        private void SyncLimitsToViews(IEnumerable<int> pointIds)
+        {
+            var ids = pointIds.ToHashSet();
+            foreach (var vm in _results.Concat(_dashboardFlatPoints).Concat(_trendHistory))
+            {
+                if (!ids.Contains(vm.Id)) continue;
+                _settings.PointLimits.TryGetValue(vm.Id, out var lim);
+                vm.Limits = lim;
+                vm.RefreshColors();
+            }
+            foreach (var node in _dashboardNodes) node.Refresh();
+        }
+
+        /// <summary>Записывает график и допуск в настройки указанных точек и сохраняет их.</summary>
+        private void WriteScheduleToPoints(IEnumerable<MeasurePointItem> points, List<TempSchedulePoint> schedule, double tol)
+        {
+            var targetList = points.ToList();
+            foreach (var point in targetList)
+            {
+                if (!_settings.PointLimits.TryGetValue(point.Id, out var limits))
+                {
+                    limits = new PointThresholds();
+                    _settings.PointLimits[point.Id] = limits;
+                }
+                // Отдельная копия списка на каждую точку: правка одной не меняет остальные.
+                limits.Schedule = schedule
+                    .Select(s => new TempSchedulePoint { Tnv = s.Tnv, T1 = s.T1, T2 = s.T2 })
+                    .ToList();
+                limits.ScheduleTolerance = tol;
+            }
+            SyncLimitsToViews(targetList.Select(p => p.Id));
+            SaveUserSettings();
+        }
+
+        // ---------- Выбор готового графика из другой точки ----------
+
+        private void BtnPickScheduleSourceDirect_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_editingPoints.Any())
+            {
+                MessageBox.Show("Сначала выберите точки для настройки границ.",
+                    "Температурный график", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            OpenScheduleSourcePicker(true);
+        }
+
+        private void BtnPickScheduleSource_Click(object sender, RoutedEventArgs e)
+            => OpenScheduleSourcePicker(false);
+
+        private void OpenScheduleSourcePicker(bool applyDirectly)
+        {
+            var sources = new List<ScheduleSourceItem>();
+            foreach (var kv in _settings.PointLimits)
+            {
+                if (kv.Value?.Schedule == null || kv.Value.Schedule.Count == 0) continue;
+                var pt = _allPoints.FirstOrDefault(p => p.Id == kv.Key);
+                double tol = kv.Value.ScheduleTolerance >= 0 && kv.Value.ScheduleTolerance <= 50
+                    ? kv.Value.ScheduleTolerance
+                    : TempScheduleMath.DefaultTolerance;
+
+                sources.Add(new ScheduleSourceItem
+                {
+                    PointId = kv.Key,
+                    DisplayName = pt?.DisplayName ?? $"Точка #{kv.Key}",
+                    Description = string.Format(CultureInfo.CurrentCulture,
+                        "Строк в графике: {0} · допуск ±{1:0.##} °C", kv.Value.Schedule.Count, tol),
+                    Schedule = kv.Value.Schedule,
+                    Tolerance = tol
+                });
+            }
+
+            sources = sources.OrderBy(s => s.DisplayName, StringComparer.CurrentCultureIgnoreCase).ToList();
+            if (sources.Count == 0)
+            {
+                MessageBox.Show("Пока ни у одной точки нет сохранённого температурного графика.\n\n" +
+                    "Создайте его через «📈 Температурный график», после чего этот список заполнится.",
+                    "Нет готовых графиков", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            _scheduleSourceApplyDirectly = applyDirectly;
+            TxtScheduleSourceHint.Text = applyDirectly
+                ? "График и допуск будут сразу применены к выбранным точкам и сохранены."
+                : "График и допуск попадут в редактор. Нажмите «Сохранить график», чтобы применить их.";
+            ListScheduleSources.ItemsSource = sources;
+            ListScheduleSources.SelectedIndex = 0;
+            OverlayScheduleSource.Visibility = Visibility.Visible;
+        }
+
+        private void BtnCancelScheduleSource_Click(object sender, RoutedEventArgs e)
+            => OverlayScheduleSource.Visibility = Visibility.Collapsed;
+
+        private void BtnApplyScheduleSource_Click(object sender, RoutedEventArgs e)
+        {
+            if (ListScheduleSources.SelectedItem is not ScheduleSourceItem src)
+            {
+                MessageBox.Show("Выберите точку из списка.", "Температурный график",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (_scheduleSourceApplyDirectly)
+            {
+                if (_editingPoints.Count == 0) { OverlayScheduleSource.Visibility = Visibility.Collapsed; return; }
+                WriteScheduleToPoints(_editingPoints, src.Schedule, src.Tolerance);
+                OverlayScheduleSource.Visibility = Visibility.Collapsed;
+                MessageBox.Show(string.Format(CultureInfo.CurrentCulture,
+                    "График из «{0}» применён к {1} точкам.", src.DisplayName, _editingPoints.Count),
+                    "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            _currentScheduleEdit.Clear();
+            foreach (var sp in src.Schedule.OrderBy(p => p.Tnv))
+                _currentScheduleEdit.Add(new TempSchedulePointViewModel { Tnv = sp.Tnv, T1 = sp.T1, T2 = sp.T2 });
+
+            // Сначала строки, затем текст: TextChanged разошлёт допуск по строкам.
+            TxtScheduleTolerance.Text = src.Tolerance.ToString("0.##", CultureInfo.CurrentCulture);
+            foreach (var row in _currentScheduleEdit) row.Tolerance = src.Tolerance;
+            TxtScheduleSource.Text = "Источник: " + src.DisplayName;
+            UpdateScheduleToleranceHint();
+            OverlayScheduleSource.Visibility = Visibility.Collapsed;
+        }
+
+        private void BtnApplyScheduleToAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TryGetScheduleTolerance(out double tol))
+            {
+                MessageBox.Show("Введите допустимое отклонение от 0 до 50 °C.",
+                    "Температурный график", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            var schedule = CurrentEditorSchedule();
+            if (schedule.Count == 0)
+            {
+                MessageBox.Show("График пуст — добавьте хотя бы одну точку.",
+                    "Температурный график", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (_allPoints.Count == 0)
+            {
+                MessageBox.Show("Список точек пуст — подключитесь к ЛЭРС.",
+                    "Температурный график", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var answer = MessageBox.Show(string.Format(CultureInfo.CurrentCulture,
+                "Применить текущий график (строк: {0}, допуск ±{1:0.##} °C) ко ВСЕМ {2} точкам?\n\n" +
+                "Существующие графики у других точек будут заменены.",
+                schedule.Count, tol, _allPoints.Count),
+                "Применить ко всем", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (answer != MessageBoxResult.Yes) return;
+
+            WriteScheduleToPoints(_allPoints, schedule, tol);
+            TxtScheduleSource.Text = string.Format(CultureInfo.CurrentCulture,
+                "График применён ко всем {0} точкам.", _allPoints.Count);
+        }
+
         private void BtnEditTempSchedule_Click(object sender, RoutedEventArgs e)
         {
             _currentScheduleEdit.Clear();
             var point = _editingPoints.FirstOrDefault();
-            if (point != null && _settings.PointLimits.TryGetValue(point.Id, out var limits) && limits.Schedule != null)
+            double tol = TempScheduleMath.DefaultTolerance;
+
+            if (point != null && _settings.PointLimits.TryGetValue(point.Id, out var limits))
             {
-                foreach (var sp in limits.Schedule) 
-                    _currentScheduleEdit.Add(new TempSchedulePointViewModel { Tnv = sp.Tnv, T1 = sp.T1, T2 = sp.T2 });
+                if (limits.Schedule != null)
+                    foreach (var sp in limits.Schedule)
+                        _currentScheduleEdit.Add(new TempSchedulePointViewModel { Tnv = sp.Tnv, T1 = sp.T1, T2 = sp.T2 });
+
+                if (limits.ScheduleTolerance >= 0 && limits.ScheduleTolerance <= 50)
+                    tol = limits.ScheduleTolerance;
             }
+
+            // Сначала строки, потом текст: TextChanged разошлёт допуск по всем строкам.
+            TxtScheduleTolerance.Text = tol.ToString("0.##", CultureInfo.CurrentCulture);
+            foreach (var row in _currentScheduleEdit) row.Tolerance = tol;
+            TxtScheduleSource.Text = "";
+            UpdateScheduleToleranceHint();
             OverlayTempSchedule.Visibility = Visibility.Visible;
+        }
+
+        private void TxtScheduleTolerance_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (TxtScheduleToleranceHint == null) return;   // окно ещё не проинициализировано
+            double tol = EditorTolerance();
+            foreach (var row in _currentScheduleEdit) row.Tolerance = tol;
+            UpdateScheduleToleranceHint();
+        }
+
+        private void GridTempSchedule_RowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
+            => UpdateScheduleToleranceHint();
+
+        /// <summary>Показывает, какой коридор температур получается при текущем Тнв.</summary>
+        private void UpdateScheduleToleranceHint()
+        {
+            if (TxtScheduleToleranceHint == null) return;
+
+            double tol = EditorTolerance();
+            var pts = _currentScheduleEdit
+                .Select(x => new TempSchedulePoint { Tnv = x.Tnv, T1 = x.T1, T2 = x.T2 })
+                .ToList();
+            var exp = TempScheduleMath.Expected(CurrentGlobalTnv, pts);
+
+            if (CurrentGlobalTnv.HasValue && exp.expT1.HasValue && exp.expT2.HasValue)
+            {
+                TxtScheduleToleranceHint.Text = string.Format(CultureInfo.CurrentCulture,
+                    "При Тнв = {0:0.#} °C по графику допустимо: T1 {1:0.#}…{2:0.#} °C, T2 {3:0.#}…{4:0.#} °C. Выход за границы считается нарушением.",
+                    CurrentGlobalTnv.Value,
+                    exp.expT1.Value - tol, exp.expT1.Value + tol,
+                    exp.expT2.Value - tol, exp.expT2.Value + tol);
+            }
+            else
+            {
+                TxtScheduleToleranceHint.Text = string.Format(CultureInfo.CurrentCulture,
+                    "Отклонение ±{0:0.##} °C применяется к T1 и T2 всех точек графика. Диапазоны в таблице пересчитываются сразу.",
+                    tol);
+            }
         }
 
         private void BtnAddSchedulePoint_Click(object sender, RoutedEventArgs e)
         {
-            _currentScheduleEdit.Add(new TempSchedulePointViewModel { Tnv = 0, T1 = 70, T2 = 50 });
+            _currentScheduleEdit.Add(new TempSchedulePointViewModel
+            {
+                Tnv = 0, T1 = 70, T2 = 50, Tolerance = EditorTolerance()
+            });
         }
 
         private void BtnRemoveSchedulePoint_Click(object sender, RoutedEventArgs e)
@@ -661,22 +964,15 @@ namespace LersMonitor
 
         private void BtnSaveSchedule_Click(object sender, RoutedEventArgs e)
         {
-            var newSchedule = _currentScheduleEdit
-                .Select(x => new TempSchedulePoint { Tnv = x.Tnv, T1 = x.T1, T2 = x.T2 })
-                .OrderBy(x => x.Tnv)
-                .ToList();
-
-            foreach (var point in _editingPoints)
+            if (!TryGetScheduleTolerance(out double tol))
             {
-                if (!_settings.PointLimits.TryGetValue(point.Id, out var limits)) { limits = new PointThresholds(); _settings.PointLimits[point.Id] = limits; }
-                limits.Schedule = newSchedule;
-                
-                var vm = _results.FirstOrDefault(r => r.Id == point.Id); if (vm != null) { vm.Limits = limits; vm.RefreshColors(); }
-                var vmDash = _dashboardFlatPoints.FirstOrDefault(r => r.Id == point.Id); if (vmDash != null) { vmDash.Limits = limits; vmDash.RefreshColors(); }
+                MessageBox.Show("Введите допустимое отклонение от 0 до 50 °C (например 3 или 2,5).",
+                    "Температурный график", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
-            
-            foreach (var node in _dashboardNodes) node.Refresh();
-            SaveUserSettings();
+
+            WriteScheduleToPoints(_editingPoints, CurrentEditorSchedule(), tol);
+            TxtScheduleSource.Text = "";
             OverlayTempSchedule.Visibility = Visibility.Collapsed;
         }
 
@@ -960,13 +1256,14 @@ namespace LersMonitor
         private async Task PodpitkaCycleAsync(bool ignoreCache, CancellationToken ct)
         {
             var pts = _podpitkaNodes.SelectMany(n => n.Points.Select(p => (p, n))).ToList();
+            var now = DateTime.Now;
 
-            // 1. СРАЗУ считываем из базы ЛЭРС готовые регламентные архивы (месяц, вчера, сегодня)
+            // 1. Сразу читаем готовые регламентные архивы из базы ЛЭРС
             await Task.WhenAll(pts.Select(async x =>
             {
                 try
                 {
-                    await _volumes.RefreshAsync(x.p, DateTime.Now, ct);
+                    await _volumes.RefreshAsync(x.p, now, ct);
                     x.p.State = PollState.OkCached;
                     x.p.Message = "Данные из ЛЭРС загружены";
                 }
@@ -977,7 +1274,9 @@ namespace LersMonitor
             }));
             Dispatcher.Invoke(() => { foreach (var n in _podpitkaNodes) n.Refresh(); });
 
-            // 2. Параллельно опрашиваем приборы для добора свежих данных
+            // 2. Опрашиваем приборы для добора свежих данных.
+            //    После опроса перечитываем часовые архивы из базы (теперь с свежими данными),
+            //    не перезаписывая отчётный период и "вчера".
             await Task.WhenAll(pts.Select(async x =>
             {
                 try
@@ -986,7 +1285,26 @@ namespace LersMonitor
                     var u = await _coord.PollPointAsync(new PollTarget(x.p.Id, x.n.NodeTitle), ignoreCache, ct);
                     if (u.State != PollState.Error)
                     {
-                        await _volumes.RefreshAsync(x.p, DateTime.Now, ct);
+                        // Перечитаем часовые данные из базы после опроса прибора
+                        var afterNow = DateTime.Now;
+                        var h = PodpitkaPeriods.PrevHour(afterNow);
+                        var t = PodpitkaPeriods.Today(afterNow);
+
+                        // Обновляем "прошлый час" и "сегодня" из часового архива
+                        var hourVal = await _volumes.SumV1Async(x.p.Id, h.From, h.ToExclusive, true, ct, h.From, h.ToExclusive);
+                        var todayVal = afterNow.Hour > 0
+                            ? await _volumes.SumV1Async(x.p.Id, t.From, t.ToExclusive, true, ct, t.From, t.ToExclusive)
+                            : null;
+
+                        if (hourVal.HasValue)
+                            x.p.UpdateHour(todayVal, hourVal.Value);
+                        else
+                        {
+                            // Если часовой архив ещё не записался — берём оперативный срез
+                            var instant = await _volumes.GetLastInstantVolumeAsync(x.p.Id, ct);
+                            if (instant.HasValue) x.p.UpdateHour(todayVal, instant.Value);
+                        }
+
                         x.p.State = PollState.Ok;
                         x.p.Message = "Опрошено " + DateTime.Now.ToString("HH:mm:ss");
                     }
@@ -1018,7 +1336,11 @@ namespace LersMonitor
             {
                 var pts = _podpitkaNodes.SelectMany(n => n.Points).ToList();
                 await Task.WhenAll(pts.Select(p => _volumes.RefreshAsync(p, DateTime.Now, CancellationToken.None)));
-                Dispatcher.Invoke(() => { foreach (var n in _podpitkaNodes) n.Refresh(); });
+                Dispatcher.Invoke(() =>
+                {
+                    foreach (var p in pts) p.State = PollState.OkCached;
+                    foreach (var n in _podpitkaNodes) n.Refresh();
+                });
             });
         }
 
@@ -1228,6 +1550,46 @@ namespace LersMonitor
         public double T2 { get; set; }
     }
 
+    /// <summary>Общая математика температурного графика: интерполяция T1/T2 по Тнв.</summary>
+    public static class TempScheduleMath
+    {
+        /// <summary>Допуск по умолчанию для настроек, сохранённых до появления этого поля.</summary>
+        public const double DefaultTolerance = 3.0;
+
+        /// <summary>Ожидаемые по графику T1/T2 для заданной температуры наружного воздуха.</summary>
+        public static (double? expT1, double? expT2) Expected(double? tnv, IEnumerable<TempSchedulePoint>? schedule)
+        {
+            if (!tnv.HasValue || schedule == null) return (null, null);
+            try
+            {
+                var points = schedule.OrderBy(p => p.Tnv).ToList();
+                if (points.Count == 0) return (null, null);
+
+                var exact = points.FirstOrDefault(p => Math.Abs(p.Tnv - tnv.Value) < 0.2);
+                if (exact != null) return (exact.T1, exact.T2);
+
+                var first = points[0];
+                var last = points[points.Count - 1];
+                if (tnv.Value <= first.Tnv) return (first.T1, first.T2);
+                if (tnv.Value >= last.Tnv) return (last.T1, last.T2);
+
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    if (tnv.Value >= points[i].Tnv && tnv.Value <= points[i + 1].Tnv)
+                    {
+                        double x1 = points[i].Tnv, y1 = points[i].T1, z1 = points[i].T2;
+                        double x2 = points[i + 1].Tnv, y2 = points[i + 1].T1, z2 = points[i + 1].T2;
+                        if (Math.Abs(x2 - x1) < 0.001) return (y1, z1);
+                        double ratio = (tnv.Value - x1) / (x2 - x1);
+                        return (y1 + ratio * (y2 - y1), z1 + ratio * (z2 - z1));
+                    }
+                }
+            }
+            catch { }
+            return (null, null);
+        }
+    }
+
     public class TempSchedulePointViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -1237,10 +1599,38 @@ namespace LersMonitor
         public double Tnv { get => _tnv; set { _tnv = value; OnPropertyChanged(); } }
 
         private double _t1;
-        public double T1 { get => _t1; set { _t1 = value; OnPropertyChanged(); } }
+        public double T1 { get => _t1; set { _t1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T1Band)); } }
 
         private double _t2;
-        public double T2 { get => _t2; set { _t2 = value; OnPropertyChanged(); } }
+        public double T2 { get => _t2; set { _t2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T2Band)); } }
+
+        /// <summary>Допустимое отклонение (±°C), общее для всех точек графика.</summary>
+        private double _tolerance = TempScheduleMath.DefaultTolerance;
+        [JsonIgnore]
+        public double Tolerance
+        {
+            get => _tolerance;
+            set { _tolerance = value; OnPropertyChanged(); OnPropertyChanged(nameof(T1Band)); OnPropertyChanged(nameof(T2Band)); }
+        }
+
+        /// <summary>Рассчитанный допустимый диапазон для отображения в таблице графика.</summary>
+        [JsonIgnore]
+        public string T1Band => Band(T1);
+        [JsonIgnore]
+        public string T2Band => Band(T2);
+
+        private string Band(double v) => string.Format(CultureInfo.CurrentCulture,
+            "{0:0.#} … {1:0.#}", v - _tolerance, v + _tolerance);
+    }
+
+    /// <summary>Точка-источник уже сохранённого температурного графика (для окна выбора).</summary>
+    public sealed class ScheduleSourceItem
+    {
+        public int PointId { get; init; }
+        public string DisplayName { get; init; } = "";
+        public string Description { get; init; } = "";
+        public List<TempSchedulePoint> Schedule { get; init; } = new();
+        public double Tolerance { get; init; } = TempScheduleMath.DefaultTolerance;
     }
 
     public class MeasurePointItem
@@ -1263,6 +1653,9 @@ namespace LersMonitor
         public double? M2Min { get; set; } public double? M2Max { get; set; }
         public double? QMin { get; set; } public double? QMax { get; set; }
         public List<TempSchedulePoint> Schedule { get; set; } = new();
+
+        /// <summary>Допустимое отклонение от температурного графика, ±°C (для T1 и T2).</summary>
+        public double ScheduleTolerance { get; set; } = TempScheduleMath.DefaultTolerance;
     }
 
     public class UserSettings
@@ -1356,6 +1749,11 @@ namespace LersMonitor
             OnPropertyChanged(nameof(SingleStatusColor));
             OnPropertyChanged(nameof(PointTitleColor));
             OnPropertyChanged(nameof(RetryVisibility));
+
+            // Заданные значения по температурному графику зависят от Тнв и настроек графика.
+            OnPropertyChanged(nameof(ScheduleTargetVisibility));
+            OnPropertyChanged(nameof(ExpectedT1Text)); OnPropertyChanged(nameof(ExpectedT2Text));
+            OnPropertyChanged(nameof(ScheduleT1Tooltip)); OnPropertyChanged(nameof(ScheduleT2Tooltip));
         }
 
         private PollState _state = PollState.Pending;
@@ -1391,48 +1789,60 @@ namespace LersMonitor
         }
 
         private (double? expT1, double? expT2) GetExpectedTemps(List<TempSchedulePoint>? schedule)
+            => TempScheduleMath.Expected(MainWindow.CurrentGlobalTnv, schedule);
+
+        /// <summary>Настроенный用户对 точки допуск; для старых настроек — 3.0 °C.</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public double ScheduleTolerance =>
+            Math.Max(0, Limits?.ScheduleTolerance ?? TempScheduleMath.DefaultTolerance);
+
+        // ---------- Заданные значения по температурному графику (для крупных плиток одиночного режима) ----------
+
+        /// <summary>Показывать цель только когда график задан и известна температура наружного воздуха.</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool HasScheduleTarget =>
+            Limits?.Schedule != null && Limits.Schedule.Count > 0 && MainWindow.CurrentGlobalTnv.HasValue;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public Visibility ScheduleTargetVisibility =>
+            HasScheduleTarget ? Visibility.Visible : Visibility.Collapsed;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string ExpectedT1Text => FormatExpected(GetExpectedTemps(Limits?.Schedule).expT1);
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string ExpectedT2Text => FormatExpected(GetExpectedTemps(Limits?.Schedule).expT2);
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string ScheduleT1Tooltip => ScheduleTooltip(GetExpectedTemps(Limits?.Schedule).expT1);
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string ScheduleT2Tooltip => ScheduleTooltip(GetExpectedTemps(Limits?.Schedule).expT2);
+
+        private static string FormatExpected(double? value) =>
+            value.HasValue ? value.Value.ToString("F1", CultureInfo.CurrentCulture) : "";
+
+        private string ScheduleTooltip(double? expected)
         {
-            var tnv = MainWindow.CurrentGlobalTnv;
-            if (!tnv.HasValue || schedule == null || !schedule.Any()) return (null, null);
-
-            try
-            {
-                var points = schedule.OrderBy(p => p.Tnv).ToList();
-                
-                var exact = points.FirstOrDefault(p => Math.Abs(p.Tnv - tnv.Value) < 0.2);
-                if (exact != null) return (exact.T1, exact.T2);
-
-                if (tnv.Value <= points.First().Tnv) return (points.First().T1, points.First().T2);
-                if (tnv.Value >= points.Last().Tnv) return (points.Last().T1, points.Last().T2);
-
-                for (int i = 0; i < points.Count - 1; i++)
-                {
-                    if (tnv.Value >= points[i].Tnv && tnv.Value <= points[i+1].Tnv)
-                    {
-                        double x1 = points[i].Tnv, y1 = points[i].T1, z1 = points[i].T2;
-                        double x2 = points[i+1].Tnv, y2 = points[i+1].T1, z2 = points[i+1].T2;
-                        if (Math.Abs(x2 - x1) < 0.001) return (y1, z1);
-                        double ratio = (tnv.Value - x1) / (x2 - x1);
-                        return (y1 + ratio * (y2 - y1), z1 + ratio * (z2 - z1));
-                    }
-                }
-            }
-            catch { }
-            return (null, null);
+            if (!expected.HasValue)
+                return "Температурный график не задан или не получена температура наружного воздуха (Тнв)";
+            return string.Format(CultureInfo.CurrentCulture,
+                "По графику: {0:F1} °C при Тнв = {1:F1} °C. Допустимое отклонение ±{2:0.##} °C",
+                expected.Value, MainWindow.CurrentGlobalTnv ?? 0, ScheduleTolerance);
         }
 
         private bool IsT1ScheduleBreached(double? t1, List<TempSchedulePoint>? schedule)
         {
             if (!t1.HasValue) return false;
             var exp = GetExpectedTemps(schedule).expT1;
-            return exp.HasValue && Math.Abs(t1.Value - exp.Value) > 3.0;
+            return exp.HasValue && Math.Abs(t1.Value - exp.Value) > ScheduleTolerance;
         }
 
         private bool IsT2ScheduleBreached(double? t2, List<TempSchedulePoint>? schedule)
         {
             if (!t2.HasValue) return false;
             var exp = GetExpectedTemps(schedule).expT2;
-            return exp.HasValue && Math.Abs(t2.Value - exp.Value) > 3.0;
+            return exp.HasValue && Math.Abs(t2.Value - exp.Value) > ScheduleTolerance;
         }
 
         private Brush GetDashBg(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false)
@@ -1533,6 +1943,45 @@ namespace LersMonitor
         private string _status = string.Empty; public string Status { get => _status; set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(RetryVisibility)); } }
     }
 
+    // ==================== Poll Log ====================
+
+    public sealed class PollLogEntry
+    {
+        public DateTime Timestamp { get; init; } = DateTime.Now;
+        public PollState State { get; init; }
+        public string Message { get; init; } = "";
+        public string Phase { get; init; } = "";     // "Ожидание", "Дозвон", "Опрос", "Снятие данных", "Отключение", "Готово", "Ошибка"
+    }
+
+    public sealed class PollLogStore
+    {
+        private readonly ConcurrentDictionary<int, List<PollLogEntry>> _logs = new();
+        private const int MaxEntries = 200;
+
+        public void Add(int pointId, PollState state, string message, string phase)
+        {
+            var list = _logs.GetOrAdd(pointId, _ => new List<PollLogEntry>());
+            lock (list)
+            {
+                list.Add(new PollLogEntry { State = state, Message = message, Phase = phase });
+                if (list.Count > MaxEntries) list.RemoveRange(0, list.Count - MaxEntries);
+            }
+        }
+
+        public List<PollLogEntry> Get(int pointId)
+        {
+            if (_logs.TryGetValue(pointId, out var list))
+                lock (list) return new List<PollLogEntry>(list);
+            return new List<PollLogEntry>();
+        }
+
+        public void Clear(int pointId)
+        {
+            if (_logs.TryGetValue(pointId, out var list))
+                lock (list) list.Clear();
+        }
+    }
+
     // ==================== PollCoordinator ====================
 
     public enum PollState { Pending, Queued, Polling, Ok, OkCached, Error, Paused }
@@ -1573,6 +2022,8 @@ namespace LersMonitor
         private readonly ConcurrentDictionary<int, Lazy<Task<PollUpdate>>> _inFlight = new();
         private readonly ConcurrentDictionary<int, PointSnapshot> _cache = new();
         private static readonly Random Rng = new();
+
+        public PollLogStore Log { get; } = new PollLogStore();
 
         public TimeSpan CacheTtl { get; set; } = TimeSpan.FromMinutes(3);
         public TimeSpan PollTimeout { get; set; } = TimeSpan.FromMinutes(3);
@@ -1640,6 +2091,7 @@ namespace LersMonitor
         private async Task<PollUpdate> PollDeviceAsync(PollTarget t, bool ignoreCache, CancellationToken ct)
         {
             // Повторная проверка: пока стояли в очереди, мог опросить кто-то другой / ЛЭРС сам.
+            Log.Add(t.PointId, PollState.Polling, "Проверка актуальных данных в базе ЛЭРС", "Снятие данных");
             var first = await GetLastAsync(t.PointId, ct);
             if (first != null && !ignoreCache && first.Age(DateTime.UtcNow) <= CacheTtl)
             {
@@ -1660,6 +2112,7 @@ namespace LersMonitor
 
                 if (DateTime.UtcNow >= nextPostAt)
                 {
+                    Log.Add(t.PointId, PollState.Polling, "Отправка команды опроса прибору (дозвон)", "Дозвон");
                     var (ok, code, err) = await PostPollAsync(t.PointId, ct);
                     if (ok)
                     {
@@ -1686,15 +2139,29 @@ namespace LersMonitor
                 await Task.Delay(delay, ct);
                 delay = TimeSpan.FromMilliseconds(Math.Min(6000, delay.TotalMilliseconds * 1.5)); // 2→3→4.5→6 c
 
+                Log.Add(t.PointId, PollState.Polling, "Проверка снятых данных из базы ЛЭРС", "Снятие данных");
                 var snap = await GetLastAsync(t.PointId, ct);
                 if (snap?.DeviceTime != null && (before == null || snap.DeviceTime > before))
                 {
                     var fresh = new PointSnapshot { PointId = snap.PointId, DeviceTime = snap.DeviceTime, RawJson = snap.RawJson,
                                                     ReadAtUtc = snap.ReadAtUtc, PolledOkAtUtc = DateTime.UtcNow };
                     _cache[t.PointId] = fresh;
+
+                    // Отключаем прибор после успешного опроса — освобождаем канал связи
+                    // для других устройств на том же канале.
+                    Log.Add(t.PointId, PollState.Polling, "Отключение прибора, освобождение канала", "Отключение");
+                    try { await DisconnectAsync(t.PointId, ct).ConfigureAwait(false); }
+                    catch { /* best-effort */ }
+                    Log.Add(t.PointId, PollState.Ok, "Прибор отключён, канал свободен", "Готово");
+
                     return Publish(new PollUpdate(t.PointId, PollState.Ok, $"Опрошено {Fmt(fresh)}", fresh));
                 }
             }
+            // Отключаем прибор даже при таймауте — канал должен быть освобождён
+            Log.Add(t.PointId, PollState.Error, "Отключение прибора после таймаута", "Отключение");
+            try { await DisconnectAsync(t.PointId, ct).ConfigureAwait(false); }
+            catch { /* best-effort */ }
+
             return Publish(new PollUpdate(t.PointId, PollState.Error, $"Таймаут: {lastError}", first));
         }
 
@@ -1707,7 +2174,26 @@ namespace LersMonitor
 
         private static string Fmt(PointSnapshot s) => (s.DeviceTime ?? s.ReadAtUtc.ToLocalTime()).ToString("HH:mm:ss");
 
-        private PollUpdate Publish(PollUpdate u) { try { Updated?.Invoke(u); } catch { } return u; }
+        private PollUpdate Publish(PollUpdate u)
+        {
+            Log.Add(u.PointId, u.State, u.Message, PhaseForState(u.State, u.Message));
+            try { Updated?.Invoke(u); } catch { }
+            return u;
+        }
+
+        private static string PhaseForState(PollState state, string message)
+        {
+            if (string.IsNullOrEmpty(message)) return "";
+            var msgLower = message.ToLowerInvariant();
+            if (state == PollState.Queued) return "Ожидание";
+            if (msgLower.Contains("канал") || msgLower.Contains("очеред")) return "Дозвон";
+            if (msgLower.Contains("опрос") || state == PollState.Polling) return "Опрос";
+            if (msgLower.Contains("снят") || msgLower.Contains("данные")) return "Снятие данных";
+            if (msgLower.Contains("отключ")) return "Отключение";
+            if (state is PollState.Ok or PollState.OkCached) return "Готово";
+            if (state == PollState.Error) return "Ошибка";
+            return "";
+        }
 
         // ---------- HTTP ----------
 
@@ -1748,6 +2234,46 @@ namespace LersMonitor
             catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return (false, 0, "Сбой сети (таймаут запроса)"); }
             catch (HttpRequestException) { return (false, 0, "Сбой сети"); }
             finally { _httpSlots.Release(); }
+        }
+
+        /// <summary>
+        /// Отключает прибор после опроса, освобождая канал связи.
+        /// Пробует несколько вариантов эндпоинтов отключения.
+        /// Ошибки тихо игнорируются — отключение best-effort.
+        /// </summary>
+        public async Task DisconnectAsync(int pointId, CancellationToken ct)
+        {
+            await _httpSlots.WaitAsync(ct);
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                cts.CancelAfter(TimeSpan.FromSeconds(15));
+
+                // Вариант 1: POST /Poll/MeasurePoints/{id}/Disconnect (наиболее вероятный по схеме API)
+                using var req1 = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{pointId}/Disconnect")
+                { Content = new ByteArrayContent(Array.Empty<byte>()) };
+                using var res1 = await _http.SendAsync(req1, cts.Token);
+                if (res1.IsSuccessStatusCode) return;
+
+                // Вариант 2: DELETE /Poll/MeasurePoints/{id}/Currents
+                using var req2 = new HttpRequestMessage(HttpMethod.Delete, $"{_baseUrl()}/Poll/MeasurePoints/{pointId}/Currents");
+                using var res2 = await _http.SendAsync(req2, cts.Token);
+                if (res2.IsSuccessStatusCode) return;
+
+                // Вариант 3: POST /Poll/MeasurePoints/{id}/Stop
+                using var req3 = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{pointId}/Stop")
+                { Content = new ByteArrayContent(Array.Empty<byte>()) };
+                using var res3 = await _http.SendAsync(req3, cts.Token);
+                // Результат игнорируем — best-effort
+            }
+            catch
+            {
+                // Тихо игнорируем — отключение не критично
+            }
+            finally
+            {
+                _httpSlots.Release();
+            }
         }
 
         private static bool IsBusy(int code, string msg) =>
@@ -1822,56 +2348,210 @@ namespace LersMonitor
                 new FrameworkPropertyMetadata(6.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
         public static readonly DependencyProperty MaxCardWidthProperty =
             DependencyProperty.Register(nameof(MaxCardWidth), typeof(double), typeof(MasonryPanel),
-                new FrameworkPropertyMetadata(360.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+                new FrameworkPropertyMetadata(420.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public static readonly DependencyProperty MinCardWidthProperty =
+            DependencyProperty.Register(nameof(MinCardWidth), typeof(double), typeof(MasonryPanel),
+                new FrameworkPropertyMetadata(220.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
         public double Spacing { get => (double)GetValue(SpacingProperty); set => SetValue(SpacingProperty, value); }
         public double MaxCardWidth { get => (double)GetValue(MaxCardWidthProperty); set => SetValue(MaxCardWidthProperty, value); }
+        public double MinCardWidth { get => (double)GetValue(MinCardWidthProperty); set => SetValue(MinCardWidthProperty, value); }
+
+        /// <summary>Сколько колонок влезет так, чтобы карточки были не шире MaxCardWidth,
+        /// но при этом ЗАПОЛНЯЛИ всю доступную ширину (без пустой полосы справа).</summary>
+        private int CalcColumns(double totalWidth)
+        {
+            double sp = Spacing;
+            // ceil — в отличие от floor, даёт столько колонок, что cardW <= MaxCardWidth
+            int cols = Math.Max(1, (int)Math.Ceiling((totalWidth + sp) / (MaxCardWidth + sp)));
+
+            // Не держим пустые колонки, если карточек меньше, чем колонок:
+            // одна карточка должна занимать всю строку, а не треть ширины.
+            int visible = 0;
+            foreach (UIElement c in InternalChildren)
+                if (c.Visibility != Visibility.Collapsed) visible++;
+            cols = Math.Clamp(cols, 1, Math.Max(1, visible));
+
+            double cardW = (totalWidth - sp * (cols - 1)) / cols;
+            // Если карточки получились уже минимума — уменьшаем число колонок
+            while (cols > 1 && cardW < MinCardWidth)
+            {
+                cols--;
+                cardW = (totalWidth - sp * (cols - 1)) / cols;
+            }
+            return cols;
+        }
+
+        private double CalcCardWidth(double totalWidth)
+        {
+            int cols = CalcColumns(totalWidth);
+            double w = (totalWidth - Spacing * (cols - 1)) / cols;
+            // Если карточек мало (одна на очень широком экране), не растягиваем её
+            // до бесконечности — иначе внутри снова появится пустое пространство.
+            return Math.Min(w, Math.Max(MinCardWidth, MaxCardWidth * 1.5));
+        }
 
         protected override Size MeasureOverride(Size available)
         {
             double w = double.IsInfinity(available.Width) ? 1200 : available.Width;
+            double cardW = CalcCardWidth(w);
             foreach (UIElement c in InternalChildren)
-                c.Measure(new Size(Math.Min(MaxCardWidth, w), double.PositiveInfinity));
-            var (_, size) = Pack(w);
+            {
+                if (c.Visibility == Visibility.Collapsed) continue;
+                c.Measure(new Size(cardW, double.PositiveInfinity));
+            }
+            var (_, size) = Pack(w, cardW);
             return new Size(Math.Min(size.Width, w), size.Height);
         }
 
         protected override Size ArrangeOverride(Size final)
         {
-            var (rects, size) = Pack(final.Width);
+            double cardW = CalcCardWidth(final.Width);
+            var (rects, size) = Pack(final.Width, cardW);
             for (int i = 0; i < rects.Count; i++)
                 if (rects[i] is Rect r) InternalChildren[i].Arrange(r);
             return new Size(final.Width, size.Height);
         }
 
-        private (List<Rect?> rects, Size size) Pack(double totalWidth)
+        /// <summary>Кладём карточки в самый короткий столбец. Ширина столбца фиксирована,
+        /// поэтому вся строка заполняется целиком — пустой полосы справа нет.</summary>
+        private (List<Rect?> rects, Size size) Pack(double totalWidth, double cardW)
         {
-            int units = Math.Max(1, (int)Math.Floor(totalWidth / Unit));
-            var heights = new double[units];
+            double sp = Spacing;
+            int cols = CalcColumns(totalWidth);
+            var colHeights = new double[cols];
             var rects = new List<Rect?>(InternalChildren.Count);
-            double sp = Spacing, maxW = 0;
 
             foreach (UIElement c in InternalChildren)
             {
                 if (c.Visibility == Visibility.Collapsed) { rects.Add(null); continue; }
-                var d = c.DesiredSize;
-                int w = Math.Min(units, (int)Math.Ceiling((d.Width + sp) / Unit));
 
-                int bestX = 0; double bestY = double.MaxValue;
-                for (int x = 0; x + w <= units; x++)
-                {
-                    double y = 0;
-                    for (int k = x; k < x + w; k++) if (heights[k] > y) y = heights[k];
-                    if (y < bestY - 0.01) { bestY = y; bestX = x; }      // строго меньше → при равенстве остаётся левее
-                }
-                if (bestY == double.MaxValue) bestY = heights.Max();
+                // Самый короткий столбец (при равенстве — левый)
+                int best = 0;
+                for (int i = 1; i < cols; i++)
+                    if (colHeights[i] < colHeights[best] - 0.01) best = i;
 
-                rects.Add(new Rect(bestX * Unit, bestY, d.Width, d.Height));
-                double newH = bestY + d.Height + sp;
-                for (int k = bestX; k < bestX + w && k < units; k++) heights[k] = newH;
-                maxW = Math.Max(maxW, bestX * Unit + d.Width);
+                double x = best * (cardW + sp);
+                double y = colHeights[best];
+                double h = c.DesiredSize.Height;
+
+                rects.Add(new Rect(x, y, cardW, h));
+                colHeights[best] = y + h + sp;
             }
-            return (rects, new Size(maxW, Math.Max(0, heights.Max() - sp)));
+
+            double maxH = 0;
+            foreach (var h in colHeights) if (h > maxH) maxH = h;
+            return (rects, new Size(totalWidth, Math.Max(0, maxH - sp)));
+        }
+    }
+
+    // ==================== CompactColumnsPanel ====================
+
+    /// <summary>
+    /// Компактная сетка плиток ВНУТРИ карточки объекта. В отличие от UniformGrid:
+    ///  - число колонок подбирается по ширине и по реальному числу плиток
+    ///    (одна точка = одна колонка, а не пустая половина карточки);
+    ///  - высота строки равна самой высокой плитке в ней, без растягивания;
+    ///  - скрытые (Collapsed) элементы не занимают место.
+    /// </summary>
+    public class CompactColumnsPanel : Panel
+    {
+        public static readonly DependencyProperty SpacingProperty =
+            DependencyProperty.Register(nameof(Spacing), typeof(double), typeof(CompactColumnsPanel),
+                new FrameworkPropertyMetadata(4.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public static readonly DependencyProperty MinColumnWidthProperty =
+            DependencyProperty.Register(nameof(MinColumnWidth), typeof(double), typeof(CompactColumnsPanel),
+                new FrameworkPropertyMetadata(180.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+        public double Spacing { get => (double)GetValue(SpacingProperty); set => SetValue(SpacingProperty, value); }
+        public double MinColumnWidth { get => (double)GetValue(MinColumnWidthProperty); set => SetValue(MinColumnWidthProperty, value); }
+
+        private int VisibleCount()
+        {
+            int n = 0;
+            foreach (UIElement c in InternalChildren)
+                if (c.Visibility != Visibility.Collapsed) n++;
+            return n;
+        }
+
+        private int CalcColumns(double width, int visible)
+        {
+            if (visible <= 0) return 1;
+            double sp = Math.Max(0, Spacing);
+            double min = Math.Max(40, MinColumnWidth);
+            int byWidth = (int)Math.Floor((width + sp) / (min + sp));
+            return Math.Clamp(byWidth, 1, visible);
+        }
+
+        /// <summary>Считает прямоугольники плиток по уже измеренным DesiredSize.</summary>
+        private (List<Rect?> rects, Size size) Layout(double width)
+        {
+            double sp = Math.Max(0, Spacing);
+            int visible = VisibleCount();
+            int cols = CalcColumns(width, visible);
+            double cellW = Math.Max(1, (width - sp * (cols - 1)) / cols);
+
+            var rowHeights = new List<double>();
+            int idx = 0;
+            foreach (UIElement c in InternalChildren)
+            {
+                if (c.Visibility == Visibility.Collapsed) continue;
+                int row = idx / cols;
+                while (rowHeights.Count <= row) rowHeights.Add(0);
+                double h = c.DesiredSize.Height;
+                if (h > rowHeights[row]) rowHeights[row] = h;
+                idx++;
+            }
+
+            var rowY = new List<double>();
+            double y = 0;
+            foreach (double h in rowHeights) { rowY.Add(y); y += h + sp; }
+
+            var rects = new List<Rect?>(InternalChildren.Count);
+            idx = 0;
+            foreach (UIElement c in InternalChildren)
+            {
+                if (c.Visibility == Visibility.Collapsed) { rects.Add(null); continue; }
+                int row = idx / cols;
+                int col = idx % cols;
+                double rh = row < rowHeights.Count ? rowHeights[row] : c.DesiredSize.Height;
+                double ry = row < rowY.Count ? rowY[row] : 0;
+                rects.Add(new Rect(col * (cellW + sp), ry, cellW, rh));
+                idx++;
+            }
+
+            double totalH = rowHeights.Count == 0
+                ? 0
+                : rowHeights.Sum() + sp * (rowHeights.Count - 1);
+            return (rects, new Size(width, totalH));
+        }
+
+        protected override Size MeasureOverride(Size available)
+        {
+            double w = double.IsInfinity(available.Width) || available.Width <= 0
+                ? 420
+                : available.Width;
+            int visible = VisibleCount();
+            int cols = CalcColumns(w, visible);
+            double cellW = Math.Max(1, (w - Math.Max(0, Spacing) * (cols - 1)) / cols);
+
+            foreach (UIElement c in InternalChildren)
+            {
+                if (c.Visibility == Visibility.Collapsed) continue;
+                c.Measure(new Size(cellW, double.PositiveInfinity));
+            }
+
+            var (_, size) = Layout(w);
+            return size;
+        }
+
+        protected override Size ArrangeOverride(Size final)
+        {
+            double w = final.Width > 0 ? final.Width : 420;
+            var (rects, size) = Layout(w);
+            for (int i = 0; i < rects.Count; i++)
+                if (rects[i] is Rect r) InternalChildren[i].Arrange(r);
+            return new Size(w, size.Height);
         }
     }
 
@@ -1885,15 +2565,34 @@ namespace LersMonitor
         public static readonly int[] IntervalsMin = { 10, 20, 30, 40, 50, 60, 120 };
 
         /// <summary>Последний ЗАКРЫТЫЙ отчётный период 25-е → 24-е (включительно).
-        /// 13.10 → 25.08–24.09; 29.10 → 25.09–24.10.</summary>
+        /// 4 ноября → 25 сентября – 24 октября.
+        /// 25 ноября → 25 октября – 24 ноября.
+        /// 13 октября → 25.08–24.09; 29 октября → 25.09–24.10.</summary>
         public static Period Report(DateTime now)
         {
-            var endEx = now.Day >= 25 ? new DateTime(now.Year, now.Month, 25)
-                                      : new DateTime(now.Year, now.Month, 25).AddMonths(-1);
-            return new Period(endEx.AddMonths(-1), endEx);
+            // Если сегодня 25-е или позже — отчётный период начался в этом месяце 25-го
+            // Если сегодня до 25-го — отчётный период начался в прошлом месяце 25-го
+            var start = now.Day >= 25
+                ? new DateTime(now.Year, now.Month, 25)
+                : new DateTime(now.Year, now.Month, 25).AddMonths(-1);
+            // Период длится до 24-го числа следующего месяца (эксклюзивно = 25-е)
+            var endExclusive = start.AddMonths(1);
+            return new Period(start, endExclusive);
         }
+
+        /// <summary>Вчерашние сутки: 00:00 вчерашнего дня → 00:00 сегодняшнего дня (эксклюзивно).</summary>
         public static Period Yesterday(DateTime now) => new(now.Date.AddDays(-1), now.Date);
-        public static Period Today(DateTime now) => new(now.Date, new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0));
+
+        /// <summary>Сегодня с 00:00 до начала текущего часа (эксклюзивно).
+        /// Например, 15:30 → период 00:00–15:00 (15 полных часов).</summary>
+        public static Period Today(DateTime now)
+        {
+            var hourStart = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
+            return new Period(now.Date, hourStart);
+        }
+
+        /// <summary>Прошлый полный час: от (час-1):00 до (час):00.
+        /// Например, 15:30 → период 14:00–15:00.</summary>
         public static Period PrevHour(DateTime now)
         {
             var h = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
@@ -1930,31 +2629,53 @@ namespace LersMonitor
             _baseUrl = baseUrl;
         }
 
-        public async Task<double?> SumV1Async(int pointId, DateTime from, DateTime to, bool hourly, CancellationToken ct)
+        /// <summary>
+        /// Чтение суммарного объёма V1 за период через LERS REST API.
+        /// Эндпоинт: /Data/MeasurePoints/{id}/Consumption/{start}/{end}
+        /// Дата в формате yyyy-MM-dd (или yyyy-MM-ddTHH:mm:ss для часового).
+        /// </summary>
+        /// <param name="hourFilterFrom">Если задано — фильтровать почасовые записи по времени (от).</param>
+        /// <param name="hourFilterTo">Если задано — фильтровать почасовые записи по времени (до, эксклюзивно).</param>
+        public async Task<double?> SumV1Async(int pointId, DateTime from, DateTime to, bool hourly, CancellationToken ct,
+            DateTime? hourFilterFrom = null, DateTime? hourFilterTo = null)
         {
             await _gate.WaitAsync(ct);
             try
             {
-                string kind = hourly ? "Hour" : "Day";
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
+                string kind = hourly ? "Hour" : "Day";
 
-                // Прямой запрос к стандартному эндпоинту ЛЭРС с параметром dataKind
-                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?start={fromDate}&end={toDate}&dataKind={kind}";
+                // Основной формат: path-based (документированный в LERS REST API)
+                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}";
 
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 using var res = await _http.SendAsync(req, ct);
-                
-                // Если с короткими датами не прошло, пробуем startDate/endDate
-                if (!res.IsSuccessStatusCode)
+
+                if (res.IsSuccessStatusCode)
                 {
-                    string altUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?startDate={fromDate}&endDate={toDate}&dataKind={kind}";
-                    using var altRes = await _http.GetAsync(altUrl, ct);
-                    if (!altRes.IsSuccessStatusCode) return null;
-                    return await ParseLersConsumptionArray(altRes);
+                    return await ParseLersConsumptionArray(res, hourFilterFrom, hourFilterTo);
                 }
 
-                return await ParseLersConsumptionArray(res);
+                // Фолбэк 1: query-based с dataKind
+                string altUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?start={fromDate}&end={toDate}&dataKind={kind}";
+                using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
+                using var altRes = await _http.SendAsync(altReq, ct);
+                if (altRes.IsSuccessStatusCode)
+                {
+                    return await ParseLersConsumptionArray(altRes, hourFilterFrom, hourFilterTo);
+                }
+
+                // Фолбэк 2: startDate/endDate (старый формат)
+                string altUrl2 = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?startDate={fromDate}&endDate={toDate}&dataKind={kind}";
+                using var altReq2 = new HttpRequestMessage(HttpMethod.Get, altUrl2);
+                using var altRes2 = await _http.SendAsync(altReq2, ct);
+                if (altRes2.IsSuccessStatusCode)
+                {
+                    return await ParseLersConsumptionArray(altRes2, hourFilterFrom, hourFilterTo);
+                }
+
+                return null;
             }
             catch
             {
@@ -1966,7 +2687,13 @@ namespace LersMonitor
             }
         }
 
-        private static async Task<double?> ParseLersConsumptionArray(HttpResponseMessage response)
+        /// <summary>
+        /// Парсинг массива данных потребления из ответа LERS.
+        /// Если заданы hourFilterFrom/hourFilterTo — фильтрует записи по timestamp,
+        /// оставляя только те, что попадают в указанный часовой интервал.
+        /// </summary>
+        private static async Task<double?> ParseLersConsumptionArray(HttpResponseMessage response,
+            DateTime? hourFilterFrom = null, DateTime? hourFilterTo = null)
         {
             var json = await response.Content.ReadAsStringAsync();
             if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null" || json.Trim() == "[]") return null;
@@ -1996,6 +2723,14 @@ namespace LersMonitor
 
             foreach (var record in array.EnumerateArray())
             {
+                // Фильтрация по времени записи (для часовых архивов)
+                if (hourFilterFrom.HasValue || hourFilterTo.HasValue)
+                {
+                    if (!TryGetRecordDateTime(record, out var recDate)) continue;
+                    if (hourFilterFrom.HasValue && recDate < hourFilterFrom.Value) continue;
+                    if (hourFilterTo.HasValue && recDate >= hourFilterTo.Value) continue;
+                }
+
                 var val = ExtractVolume(record);
                 if (val.HasValue)
                 {
@@ -2005,6 +2740,23 @@ namespace LersMonitor
             }
 
             return hasData ? total : null;
+        }
+
+        /// <summary>Извлекает дату/время из записи потребления LERS.
+        /// LERS использует поля: dateTime, date, targetDate, hour, timestamp.</summary>
+        private static bool TryGetRecordDateTime(JsonElement record, out DateTime result)
+        {
+            // Прямые поля с датой
+            foreach (var name in new[] { "dateTime", "date", "targetDate", "timestamp", "d" })
+            {
+                if (record.TryGetProperty(name, out var p))
+                {
+                    if (p.TryGetDateTime(out var dt)) { result = dt; return true; }
+                    if (p.ValueKind == JsonValueKind.String && DateTime.TryParse(p.GetString(), out var s)) { result = s; return true; }
+                }
+            }
+            result = default;
+            return false;
         }
 
         public async Task<double?> GetLastInstantVolumeAsync(int pointId, CancellationToken ct)
@@ -2075,21 +2827,24 @@ namespace LersMonitor
         {
             var r = PodpitkaPeriods.Report(now);
             var y = PodpitkaPeriods.Yesterday(now);
+            var t = PodpitkaPeriods.Today(now);
+            var h = PodpitkaPeriods.PrevHour(now);
 
-            // 1. Отчётный месяц (сумма суток с 25 числа прошлого месяца по 24 текущего)
-            var taskReport = SumV1Async(vm.Id, r.From, r.ToExclusive, false, ct);
+            // 1. Отчётный месяц (25→24): суточный архив Day за весь период
+            var taskReport = SumV1Async(vm.Id, r.From, r.ToExclusive.AddDays(-1), false, ct);
 
-            // 2. Вчера (суточный архив за вчерашний день, Day)
-            var taskDay = SumV1Async(vm.Id, y.From, y.ToExclusive, false, ct);
+            // 2. Вчера: суточный архив Day за вчерашний день
+            var taskDay = SumV1Async(vm.Id, y.From, y.From, false, ct);
 
-            // 3. Сегодня (сумма всех часовых архивов с 00:00 до текущего часа)
-            var todayStart = now.Date;
-            var taskToday = now.Hour > 0 ? SumV1Async(vm.Id, todayStart, now, true, ct) : Task.FromResult<double?>(0);
+            // 3. Сегодня: часовой архив Hour, суммируем только часы с 00:00 до текущего часа
+            //    LERS вернёт все часы за день → фильтруем по t.From..t.ToExclusive
+            var taskToday = now.Hour > 0
+                ? SumV1Async(vm.Id, t.From, t.ToExclusive, true, ct, t.From, t.ToExclusive)
+                : Task.FromResult<double?>(null);
 
-            // 4. Прошлый час (часовой срез за предыдущий час)
-            var prevHourStart = now.Date.AddHours(now.Hour - 1);
-            var prevHourEnd = now.Date.AddHours(now.Hour);
-            var taskHour = SumV1Async(vm.Id, prevHourStart, prevHourEnd, true, ct);
+            // 4. Прошлый час: часовой архив Hour за один конкретный час
+            //    LERS вернёт все часы за день → фильтруем по h.From..h.ToExclusive (один час)
+            var taskHour = SumV1Async(vm.Id, h.From, h.ToExclusive, true, ct, h.From, h.ToExclusive);
 
             await Task.WhenAll(taskReport, taskDay, taskToday, taskHour);
 
@@ -2103,12 +2858,14 @@ namespace LersMonitor
             {
                 hour = await GetLastInstantVolumeAsync(vm.Id, ct);
             }
+
+            // Если "сегодня" не вернуло данных, но есть часовой срез — используем его
             if (!today.HasValue && hour.HasValue)
             {
                 today = hour;
             }
 
-            // Ни в коем случае не перезаписываем `day` значением `today`!
+            // Не перезаписываем day значением today!
             vm.SetVolumes(rep, day, today, hour, DateTime.Now);
         }
     }
@@ -2137,6 +2894,17 @@ namespace LersMonitor
         {
             Report = rep; Day = day; Today = today; Hour = hour; UpdatedAt = at;
             On(nameof(Report)); On(nameof(Day)); On(nameof(Today)); On(nameof(Hour)); On(nameof(UpdatedAt));
+            RefreshColors();
+        }
+
+        /// <summary>Обновить часовой срез и "сегодня" после опроса прибора.</summary>
+        public void UpdateHour(double? today, double hourValue)
+        {
+            Hour = hourValue;
+            if (today.HasValue) Today = today;
+            else if (!Today.HasValue) Today = hourValue;
+            UpdatedAt = DateTime.Now;
+            On(nameof(Hour)); On(nameof(Today)); On(nameof(UpdatedAt));
             RefreshColors();
         }
 
@@ -2181,6 +2949,190 @@ namespace LersMonitor
         public string GeneralStatus =>
             Points.Any(p => !p.IsDone) ? $"Опрошено {Points.Count(p => p.IsDone)} из {Points.Count}" :
             Points.FirstOrDefault(p => p.HasError)?.Message ?? "Опрошено успешно";
+    }
+
+    // ==================== Poll Details Window ====================
+
+    public sealed class PollDetailsWindow : Window
+    {
+        private readonly System.Windows.Threading.DispatcherTimer _timer;
+        private readonly int _pointId;
+        private readonly string _pointTitle;
+        private readonly PollLogStore _logStore;
+        private readonly ScrollViewer _scrollViewer;
+        private readonly StackPanel _logPanel;
+
+        public PollDetailsWindow(int pointId, string pointTitle, PollLogStore logStore)
+        {
+            _pointId = pointId;
+            _pointTitle = pointTitle;
+            _logStore = logStore;
+
+            Title = $"Ход опроса — {pointTitle}";
+            Width = 560;
+            Height = 500;
+            MinWidth = 380;
+            MinHeight = 260;
+            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            ShowInTaskbar = false;
+            ResizeMode = ResizeMode.CanResize;
+
+            // Try to get theme brushes, fallback to safe defaults
+            var bgBrush = TryFindRes("SystemBackground") ?? TryFindRes("CardBackground") ?? Brushes.White;
+            var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.Black;
+
+            Background = bgBrush;
+
+            var grid = new Grid { Margin = new Thickness(10) };
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // Header
+            var header = new TextBlock
+            {
+                Text = $"Точка: {pointTitle} (ID: {pointId})",
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = fgBrush,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            Grid.SetRow(header, 0);
+            grid.Children.Add(header);
+
+            // Scrollable log panel
+            _logPanel = new StackPanel { Orientation = Orientation.Vertical };
+            _scrollViewer = new ScrollViewer
+            {
+                Content = _logPanel,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Background = bgBrush,
+                Padding = new Thickness(4),
+                BorderThickness = new Thickness(1),
+                BorderBrush = TryFindRes("AccentGray") ?? Brushes.LightGray,
+            };
+            Grid.SetRow(_scrollViewer, 1);
+            grid.Children.Add(_scrollViewer);
+
+            // Buttons panel
+            var btnPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 8, 0, 0)
+            };
+
+            var btnRefresh = new Button { Content = "Обновить", Margin = new Thickness(0, 0, 6, 0), Padding = new Thickness(12, 4, 12, 4) };
+            btnRefresh.Click += (s, e) => RefreshLog();
+            btnPanel.Children.Add(btnRefresh);
+
+            var btnClear = new Button { Content = "Очистить", Margin = new Thickness(0, 0, 6, 0), Padding = new Thickness(12, 4, 12, 4) };
+            btnClear.Click += (s, e) => { _logStore.Clear(_pointId); RefreshLog(); };
+            btnPanel.Children.Add(btnClear);
+
+            var btnClose = new Button { Content = "Закрыть", Padding = new Thickness(12, 4, 12, 4), IsCancel = true };
+            btnClose.Click += (s, e) => Close();
+            btnPanel.Children.Add(btnClose);
+
+            Grid.SetRow(btnPanel, 2);
+            grid.Children.Add(btnPanel);
+
+            Content = grid;
+
+            // Auto-refresh timer
+            _timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _timer.Tick += (s, e) => RefreshLog();
+            _timer.Start();
+
+            Closed += (s, e) => _timer.Stop();
+
+            Loaded += (s, e) => RefreshLog();
+        }
+
+        private static Brush? TryFindRes(string key)
+        {
+            try
+            {
+                if (Application.Current?.MainWindow != null)
+                    return Application.Current.MainWindow.TryFindResource(key) as Brush;
+            }
+            catch { }
+            return null;
+        }
+
+        private static Brush StateBrush(PollState state)
+        {
+            return state switch
+            {
+                PollState.Ok or PollState.OkCached => TryFindRes("AccentGreen") ?? Brushes.Green,
+                PollState.Error => TryFindRes("AccentRed") ?? Brushes.Red,
+                PollState.Polling => TryFindRes("AccentOrange") ?? Brushes.Orange,
+                PollState.Queued => TryFindRes("AccentGray") ?? Brushes.Gray,
+                _ => TryFindRes("AccentGray") ?? Brushes.Gray,
+            };
+        }
+
+        private void RefreshLog()
+        {
+            var entries = _logStore.Get(_pointId);
+            _logPanel.Children.Clear();
+
+            var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.Black;
+
+            if (entries.Count == 0)
+            {
+                _logPanel.Children.Add(new TextBlock
+                {
+                    Text = "Записей нет. Запустите опрос точки.",
+                    FontSize = 12,
+                    Foreground = fgBrush,
+                    Margin = new Thickness(4),
+                    FontStyle = FontStyles.Italic,
+                    Opacity = 0.6
+                });
+                return;
+            }
+
+            foreach (var entry in entries)
+            {
+                // Each entry: a horizontal row with colored dot + text
+                var row = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(2),
+                };
+
+                // Colored dot (small ellipse via Border)
+                var dot = new Border
+                {
+                    Width = 8,
+                    Height = 8,
+                    CornerRadius = new CornerRadius(4),
+                    Background = StateBrush(entry.State),
+                    Margin = new Thickness(0, 4, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                row.Children.Add(dot);
+
+                // Text
+                var text = new TextBlock
+                {
+                    Text = $"{entry.Timestamp:HH:mm:ss}  [{entry.Phase}]  {entry.Message}",
+                    FontFamily = new FontFamily("Consolas, Courier New"),
+                    FontSize = 12,
+                    Foreground = fgBrush,
+                    TextWrapping = TextWrapping.Wrap,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                row.Children.Add(text);
+
+                _logPanel.Children.Add(row);
+            }
+
+            // Auto-scroll to bottom
+            _scrollViewer.ScrollToBottom();
+        }
     }
 
 }

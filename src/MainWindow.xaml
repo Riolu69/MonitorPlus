@@ -7,60 +7,107 @@
         MinHeight="720" MinWidth="1100"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource SystemBackground}"
-        FontFamily="Segoe UI Variable Display, -apple-system, SF Pro Display, Segoe UI, Helvetica">
+        FontFamily="SF Pro Display, -apple-system, Segoe UI Variable Display, Segoe UI, Helvetica"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <SolidColorBrush x:Key="SystemBackground" Color="#F5F5F7"/>
+        <!-- ═══ Apple System Color Palette (Light) ═══ -->
+        <SolidColorBrush x:Key="SystemBackground" Color="#F2F2F7"/>
         <SolidColorBrush x:Key="CardBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CardBackgroundAlt" Color="#F9F9FB"/>
         <SolidColorBrush x:Key="BorderBrushColor" Color="#E5E5EA"/>
-        <SolidColorBrush x:Key="LabelPrimary" Color="#1D1D1F"/>
+        <SolidColorBrush x:Key="BorderBrushSubtle" Color="#F0F0F2"/>
+        <SolidColorBrush x:Key="LabelPrimary" Color="#1C1C1E"/>
         <SolidColorBrush x:Key="LabelSecondary" Color="#86868B"/>
-        <SolidColorBrush x:Key="AccentBlue" Color="#0071E3"/>
+        <SolidColorBrush x:Key="LabelTertiary" Color="#C7C7CC"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#007AFF"/>
+        <SolidColorBrush x:Key="AccentBlueHover" Color="#0051D5"/>
         <SolidColorBrush x:Key="AccentGreen" Color="#34C759"/>
         <SolidColorBrush x:Key="AccentRed" Color="#FF3B30"/>
         <SolidColorBrush x:Key="AccentOrange" Color="#FF9500"/>
         <SolidColorBrush x:Key="AccentGray" Color="#8E8E93"/>
-        <SolidColorBrush x:Key="InputBackground" Color="#FBFBFD"/>
-        <SolidColorBrush x:Key="HeaderBackground" Color="#FAFAFC"/>
-        <SolidColorBrush x:Key="SelectionBackground" Color="#E8F2FE"/>
-        <SolidColorBrush x:Key="SelectionForeground" Color="#1D1D1F"/>
+        <SolidColorBrush x:Key="AccentTeal" Color="#30B0C7"/>
+        <SolidColorBrush x:Key="AccentPurple" Color="#AF52DE"/>
+        <SolidColorBrush x:Key="AccentPink" Color="#FF2D55"/>
+        <SolidColorBrush x:Key="AccentIndigo" Color="#5856D6"/>
+        <SolidColorBrush x:Key="InputBackground" Color="#F2F2F7"/>
+        <SolidColorBrush x:Key="HeaderBackground" Color="#F9F9FB"/>
+        <SolidColorBrush x:Key="SelectionBackground" Color="#007AFF"/>
+        <SolidColorBrush x:Key="SelectionForeground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SegmentedBg" Color="#EFF0F3"/>
+        <SolidColorBrush x:Key="SegmentedSelectedBg" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="StatusDotOk" Color="#34C759"/>
+        <SolidColorBrush x:Key="StatusDotErr" Color="#FF3B30"/>
+        <SolidColorBrush x:Key="StatusDotWait" Color="#FF9500"/>
 
+        <!-- ═══ Card Shadow ═══ -->
+        <DropShadowEffect x:Key="CardShadow" Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.06" Direction="270"/>
+        <DropShadowEffect x:Key="CardShadowDeep" Color="#000000" BlurRadius="32" ShadowDepth="3" Opacity="0.08" Direction="270"/>
+        <DropShadowEffect x:Key="PopupShadow" Color="#000000" BlurRadius="40" ShadowDepth="6" Opacity="0.12" Direction="270"/>
+
+        <!-- ═══ TextBox — Apple Style ═══ -->
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushSubtle}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Padding" Value="10,7"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
+                                CornerRadius="10">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                <Setter TargetName="bd" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsFocused" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
+        <!-- ═══ Компактное числовое поле (короткие значения: 70, 105, 2,5) ═══ -->
+        <Style x:Key="CompactNumericTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Width" Value="76"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="HorizontalContentAlignment" Value="Right"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+        </Style>
+
+        <!-- ═══ ComboBox — Apple Style ═══ -->
         <Style TargetType="ComboBox">
             <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushSubtle}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="6,4"/>
-            <Setter Property="Height" Value="32"/>
+            <Setter Property="Height" Value="34"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -69,7 +116,7 @@
                                     Background="{TemplateBinding Background}" 
                                     BorderBrush="{TemplateBinding BorderBrush}" 
                                     BorderThickness="{TemplateBinding BorderThickness}" 
-                                    CornerRadius="8"/>
+                                    CornerRadius="10"/>
                             <ToggleButton x:Name="toggleButton" 
                                           Background="Transparent" 
                                           BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource TemplatedParent}}" 
@@ -78,14 +125,14 @@
                                           ClickMode="Press">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border Background="Transparent" CornerRadius="8">
+                                        <Border Background="Transparent" CornerRadius="10">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="20"/>
+                                                    <ColumnDefinition Width="22"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Path x:Name="arrow" Grid.Column="1" Data="M0,0 L4,4 L8,0 Z" 
-                                                      Fill="{DynamicResource LabelSecondary}" 
+                                                <Path x:Name="arrow" Grid.Column="1" Data="M0,0 L4.5,5 L9,0 Z" 
+                                                      Fill="{DynamicResource LabelTertiary}" 
                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Grid>
                                         </Border>
@@ -98,9 +145,9 @@
                                               ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
                                               Margin="10,0,25,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                             <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False" IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Fade" Placement="Bottom">
-                                <Border x:Name="shadowBorder" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="8" MaxHeight="{TemplateBinding MaxDropDownHeight}" MinWidth="{TemplateBinding ActualWidth}" Margin="0,4,0,0">
+                                <Border x:Name="shadowBorder" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" MaxHeight="{TemplateBinding MaxDropDownHeight}" MinWidth="{TemplateBinding ActualWidth}" Margin="0,4,0,0" Padding="4">
                                     <Border.Effect>
-                                        <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.15"/>
+                                        <DropShadowEffect Color="#000000" BlurRadius="30" ShadowDepth="5" Opacity="0.12"/>
                                     </Border.Effect>
                                     <ScrollViewer x:Name="DropDownScrollViewer" Margin="0" SnapsToDevicePixels="True">
                                         <ItemsPresenter x:Name="ItemsPresenter" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
@@ -116,16 +163,16 @@
         <Style TargetType="ComboBoxItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Padding" Value="12,9"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6" Margin="4,2" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8" Margin="2,1" Padding="{TemplateBinding Padding}">
                             <ContentPresenter TextElement.Foreground="{DynamicResource LabelPrimary}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource HeaderBackground}"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
                             </Trigger>
                             <Trigger Property="IsHighlighted" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBackground}"/>
@@ -137,57 +184,65 @@
             </Setter>
         </Style>
 
+        <!-- ═══ PasswordBox — Apple Style ═══ -->
         <Style TargetType="PasswordBox">
             <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushSubtle}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Padding" Value="10,7"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="PasswordBox">
-                        <Border Background="{TemplateBinding Background}"
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
+                                CornerRadius="10">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                <Setter TargetName="bd" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
+        <!-- ═══ Primary Button — Apple Filled Pill ═══ -->
         <Style x:Key="ApplePrimaryButton" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Padding" Value="18,9"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border"
                                 Background="{TemplateBinding Background}"
-                                CornerRadius="18"
+                                CornerRadius="20"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.88"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentBlueHover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.75"/>
+                                <Setter TargetName="border" Property="Opacity" Value="0.8"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                                <Setter TargetName="border" Property="Opacity" Value="0.35"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -197,12 +252,23 @@
 
         <Style x:Key="AppleGreenButton" TargetType="Button" BasedOn="{StaticResource ApplePrimaryButton}">
             <Setter Property="Background" Value="{DynamicResource AccentGreen}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2BB24C"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="AppleRedButton" TargetType="Button" BasedOn="{StaticResource ApplePrimaryButton}">
             <Setter Property="Background" Value="{DynamicResource AccentRed}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E03528"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
         
+        <!-- ═══ Ghost Button — Text-only Apple Style ═══ -->
         <Style x:Key="AppleGhostButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
@@ -212,25 +278,28 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="Transparent" Padding="4,2">
+                        <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="8,4">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Opacity" Value="0.7"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
-        <!-- Стиль вертикальной кнопки сворачивания боковой панели -->
+        <!-- ═══ Side Panel Toggle ═══ -->
         <Style x:Key="SidePanelToggleBtn" TargetType="Button">
-            <Setter Property="Width" Value="18"/>
+            <Setter Property="Width" Value="20"/>
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
-            <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="Foreground" Value="{DynamicResource LabelTertiary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushSubtle}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="10"/>
@@ -241,12 +310,12 @@
                         <Border x:Name="bd" Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="7" Margin="0,0,8,0">
+                                CornerRadius="8" Margin="0,0,6,0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBackground}"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -255,29 +324,33 @@
             </Setter>
         </Style>
 
+        <!-- ═══ CheckBox — Apple Toggle Style ═══ -->
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="0,0,12,0"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <StackPanel Orientation="Horizontal" Background="Transparent">
-                            <Border x:Name="checkBoxBorder" Width="18" Height="18" 
+                            <Border x:Name="checkBoxBorder" Width="20" Height="20" 
                                     Background="{DynamicResource InputBackground}" 
-                                    BorderBrush="{DynamicResource BorderBrushColor}" 
-                                    BorderThickness="1.5" CornerRadius="5" 
-                                    VerticalAlignment="Center" Margin="0,0,6,0">
-                                <Path x:Name="checkMark" Data="M3.5,9.5 L7.5,13.5 L14.5,4.5" 
-                                      Stroke="White" StrokeThickness="2.2" 
+                                    BorderBrush="{DynamicResource LabelTertiary}" 
+                                    BorderThickness="1.5" CornerRadius="6" 
+                                    VerticalAlignment="Center" Margin="0,0,8,0">
+                                <Path x:Name="checkMark" Data="M4,10.5 L8.5,15 L16.5,5.5" 
+                                      Stroke="White" StrokeThickness="2.5" 
                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                       Visibility="Hidden" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ContentPresenter VerticalAlignment="Center"/>
                         </StackPanel>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                            </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="checkBoxBorder" Property="Background" Value="{DynamicResource AccentBlue}"/>
                                 <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
@@ -289,14 +362,16 @@
             </Setter>
         </Style>
 
+        <!-- ═══ DataGrid — Apple Table Style ═══ -->
         <Style TargetType="DataGrid">
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="RowHeight" Value="38"/>
+            <Setter Property="RowHeight" Value="42"/>
             <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrushSubtle}"/>
             <Setter Property="HeadersVisibility" Value="Column"/>
             <Setter Property="RowBackground" Value="Transparent"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource CardBackgroundAlt}"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
         </Style>
@@ -309,21 +384,25 @@
                     <Setter Property="Background" Value="{DynamicResource SelectionBackground}"/>
                     <Setter Property="Foreground" Value="{DynamicResource SelectionForeground}"/>
                 </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
+                </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource HeaderBackground}"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="14,12"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
         </Style>
 
         <Style TargetType="DataGridCell">
-            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Padding" Value="14,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -336,6 +415,7 @@
             </Setter>
         </Style>
 
+        <!-- ═══ Segmented Control — iOS-style Tab Navigation ═══ -->
         <Style x:Key="TabNavButton" TargetType="RadioButton">
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
@@ -344,13 +424,95 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="bd" Background="Transparent" CornerRadius="16" Padding="14,6" Margin="0,0,6,0">
-                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="16,7" Margin="2,0">
+                            <ContentPresenter x:Name="cp" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
+                                <Setter TargetName="cp" Property="TextElement.Foreground" Value="{DynamicResource LabelPrimary}"/>
+                            </Trigger>
                             <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SegmentedSelectedBg}"/>
+                                <Setter TargetName="cp" Property="TextElement.Foreground" Value="{DynamicResource LabelPrimary}"/>
+                                <Setter TargetName="bd" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.06"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══ Slider — Apple Style ═══ -->
+        <Style TargetType="Slider">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Border Height="4" CornerRadius="2" Background="{DynamicResource BorderBrushColor}" VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="4" CornerRadius="2" Background="{DynamicResource AccentBlue}"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Width="18" Height="18" CornerRadius="9" Background="White" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0.5">
+                                                    <Border.Effect>
+                                                        <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.15"/>
+                                                    </Border.Effect>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══ ListBoxItem — Apple Grouped List Style ═══ -->
+        <Style x:Key="AppleListItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBackground}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                                <Setter TargetName="bd" Property="TextElement.Foreground" Value="{DynamicResource SelectionForeground}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -368,55 +530,55 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Верхняя панель подключения и настроек темы -->
-            <Border Grid.Row="0" Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="16,14" Margin="0,0,0,12">
+            <!-- Верхняя панель подключения -->
+            <Border Grid.Row="0" Background="{DynamicResource CardBackground}" CornerRadius="16" Padding="20,16" Margin="0,0,0,10">
                 <Border.Effect>
-                    <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/>
+                    <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/>
                 </Border.Effect>
                 <WrapPanel VerticalAlignment="Center">
-                    <StackPanel Margin="0,0,12,10">
-                        <TextBlock Text="Сервер" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
-                        <TextBox x:Name="TxtHost" Width="120" Text="localhost"/>
+                    <StackPanel Margin="0,0,14,10">
+                        <TextBlock Text="Сервер" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
+                        <TextBox x:Name="TxtHost" Width="130" Text="localhost"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,12,10">
-                        <TextBlock Text="Порт" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
-                        <TextBox x:Name="TxtPort" Width="60" Text="10000"/>
+                    <StackPanel Margin="0,0,14,10">
+                        <TextBlock Text="Порт" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
+                        <TextBox x:Name="TxtPort" Width="64" Text="10000"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,12,10">
-                        <TextBlock Text="Логин" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
-                        <TextBox x:Name="TxtLogin" Width="95"/>
+                    <StackPanel Margin="0,0,14,10">
+                        <TextBlock Text="Логин" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
+                        <TextBox x:Name="TxtLogin" Width="100"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,12,10">
-                        <TextBlock Text="Пароль" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
-                        <PasswordBox x:Name="TxtPassword" Width="95"/>
+                    <StackPanel Margin="0,0,14,10">
+                        <TextBlock Text="Пароль" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
+                        <PasswordBox x:Name="TxtPassword" Width="100"/>
                     </StackPanel>
-                    <CheckBox x:Name="ChkRemember" Content="Запомнить" IsChecked="True" VerticalAlignment="Bottom" Margin="0,0,14,16"/>
+                    <CheckBox x:Name="ChkRemember" Content="Запомнить" IsChecked="True" VerticalAlignment="Bottom" Margin="0,0,16,16"/>
 
-                    <StackPanel Margin="0,0,12,10">
-                        <TextBlock Text="Тема" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
-                        <ComboBox x:Name="CmbTheme" Width="115" SelectionChanged="CmbTheme_SelectionChanged">
+                    <StackPanel Margin="0,0,14,10">
+                        <TextBlock Text="Тема" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
+                        <ComboBox x:Name="CmbTheme" Width="120" SelectionChanged="CmbTheme_SelectionChanged">
                             <ComboBoxItem Content="☀ Светлая"/>
                             <ComboBoxItem Content="🌙 Тёмная"/>
                             <ComboBoxItem Content="🕒 Авто"/>
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel x:Name="PanelAutoTheme" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,12,10">
-                        <StackPanel Margin="0,0,6,0">
-                            <TextBlock Text="День с" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
-                            <TextBox x:Name="TxtThemeLight" Width="54" Text="08:00"/>
+                    <StackPanel x:Name="PanelAutoTheme" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,14,10">
+                        <StackPanel Margin="0,0,8,0">
+                            <TextBlock Text="День с" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
+                            <TextBox x:Name="TxtThemeLight" Width="56" Text="08:00"/>
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Ночь с" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
-                            <TextBox x:Name="TxtThemeDark" Width="54" Text="20:00"/>
+                            <TextBlock Text="Ночь с" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
+                            <TextBox x:Name="TxtThemeDark" Width="56" Text="20:00"/>
                         </StackPanel>
                     </StackPanel>
 
-                    <StackPanel Margin="0,0,12,10">
-                        <TextBlock Text="Источник Тнв (улица)" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
+                    <StackPanel Margin="0,0,14,10">
+                        <TextBlock Text="Источник Тнв (улица)" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,5" FontWeight="Medium"/>
                         <StackPanel Orientation="Horizontal">
-                            <ComboBox x:Name="CmbTnvSource" Width="190" DisplayMemberPath="DisplayName" SelectionChanged="CmbTnvSource_SelectionChanged"/>
-                            <Border Background="{DynamicResource HeaderBackground}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="8" Padding="8,0" Margin="6,0,0,0" Height="32">
+                            <ComboBox x:Name="CmbTnvSource" Width="200" DisplayMemberPath="DisplayName" SelectionChanged="CmbTnvSource_SelectionChanged"/>
+                            <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="10,0" Margin="6,0,0,0" Height="34">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Тнв: " FontSize="12" Foreground="{DynamicResource LabelSecondary}"/>
                                     <TextBlock x:Name="TxtGlobalTnv" Text="—" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
@@ -430,13 +592,15 @@
                 </WrapPanel>
             </Border>
 
-            <!-- Переключение режимов -->
-            <WrapPanel Grid.Row="1" Margin="4,0,0,12">
-                <RadioButton x:Name="TabAll" Content="Общий мониторинг" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="TabMode_Checked" Margin="0,0,6,6"/>
-                <RadioButton x:Name="TabSingle" Content="Мониторинг текущих" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked" Margin="0,0,6,6"/>
-                <RadioButton x:Name="TabDashboard" Content="Дашборд" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked" Margin="0,0,6,6"/>
-                <RadioButton x:Name="TabPodpitka" Content="Подпитка" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked" Margin="0,0,6,6"/>
-            </WrapPanel>
+            <!-- Segmented Control — навигация -->
+            <Border Grid.Row="1" Background="{DynamicResource SegmentedBg}" CornerRadius="10" Padding="3" HorizontalAlignment="Left" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="TabAll" Content="Общий мониторинг" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="TabMode_Checked"/>
+                    <RadioButton x:Name="TabSingle" Content="Текущие" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                    <RadioButton x:Name="TabDashboard" Content="Дашборд" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                    <RadioButton x:Name="TabPodpitka" Content="Подпитка" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                </StackPanel>
+            </Border>
 
             <!-- Экран 1: Общий мониторинг точек -->
             <Grid x:Name="ViewGeneral" Grid.Row="2">
@@ -447,9 +611,9 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Левая колонка -->
-                <Border x:Name="PanelGeneralLeft" Width="400" Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="14" Margin="0,0,4,0" Padding="14">
+                <Border x:Name="PanelGeneralLeft" Width="400" Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="16" Margin="0,0,6,0" Padding="16">
                     <Border.Effect>
-                        <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/>
+                        <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/>
                     </Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -459,11 +623,11 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="Объекты и точки учёта" FontWeight="SemiBold" FontSize="14" 
-                                   Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,10"/>
+                        <TextBlock Grid.Row="0" Text="Объекты и точки учёта" FontWeight="Bold" FontSize="15" 
+                                   Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,12"/>
 
                         <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                            <TextBox x:Name="TxtSearch" Padding="8,6" Margin="0,0,0,8" 
+                            <TextBox x:Name="TxtSearch" Padding="10,7" Margin="0,0,0,8" 
                                      ToolTip="Поиск по названию" TextChanged="ApplyFilters_Changed" />
                             
                             <Grid Margin="0,0,0,4">
@@ -482,8 +646,8 @@
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
-                                    <Setter Property="Padding" Value="8,8"/>
-                                    <Setter Property="Margin" Value="0,2"/>
+                                    <Setter Property="Padding" Value="10,9"/>
+                                    <Setter Property="Margin" Value="0,1"/>
                                     <Setter Property="Cursor" Value="Hand"/>
                                     <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
                                     <Setter Property="Template">
@@ -494,10 +658,11 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource HeaderBackground}"/>
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsSelected" Value="True">
                                                         <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBackground}"/>
+                                                        <Setter TargetName="bd" Property="TextElement.Foreground" Value="{DynamicResource SelectionForeground}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -507,7 +672,7 @@
                             </ListBox.ItemContainerStyle>
                         </ListBox>
                         
-                        <Border Grid.Row="3" Margin="0,8,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0,1,0,0">
+                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0,1,0,0">
                             <Grid>
                                 <Button Content="Выделить всё" Style="{StaticResource AppleGhostButton}" HorizontalAlignment="Left" Click="BtnSelectAll_Click"/>
                                 <Button Content="Очистить" Style="{StaticResource AppleGhostButton}" Foreground="#FF3B30" HorizontalAlignment="Right" Click="BtnClearSelection_Click"/>
@@ -520,9 +685,9 @@
                 <Button x:Name="BtnToggleGenPanel" Grid.Column="1" Content="◀" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleGeneral_Click" ToolTip="Свернуть/развернуть панель объектов"/>
 
                 <!-- Правая колонка -->
-                <Border Grid.Column="2" Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="14">
+                <Border Grid.Column="2" Background="{DynamicResource CardBackground}" CornerRadius="16" Padding="16">
                     <Border.Effect>
-                        <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/>
+                        <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/>
                     </Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -533,7 +698,7 @@
 
                         <!-- Панель инструментов внутри правой колонки с WrapPanel (адаптивная без уменьшения) -->
                         <WrapPanel Grid.Row="0" Margin="2,0,0,12" VerticalAlignment="Center">
-                            <TextBlock Text="Текущие параметры" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center" Margin="0,0,20,10"/>
+                            <TextBlock Text="Текущие параметры" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center" Margin="0,0,20,10"/>
                             <Button x:Name="BtnSettings" Content="⚙ Настроить границы" Style="{StaticResource ApplePrimaryButton}" Background="{DynamicResource AccentGray}" Margin="0,0,10,10" Click="BtnSettingsShared_Click"/>
                             <Button x:Name="BtnStartMonitor" Content="Опросить выбранные" Style="{StaticResource AppleGreenButton}" Margin="0,0,10,10" Click="BtnStartMonitor_Click" IsEnabled="False"/>
                             <Button x:Name="BtnCancelMonitor" Content="✕ Отмена опроса" Style="{StaticResource AppleRedButton}" Margin="0,0,0,10" Visibility="Collapsed" Click="BtnCancelMonitor_Click"/>
@@ -552,7 +717,7 @@
                             <CheckBox Content="Q"  IsChecked="True" Margin="0,0,12,6" Click="ColumnToggle_Click"/>
                         </WrapPanel>
 
-                        <Border Grid.Row="2" CornerRadius="10" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
+                        <Border Grid.Row="2" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Background="{DynamicResource CardBackgroundAlt}">
                             <DataGrid x:Name="GridResults" AutoGenerateColumns="False" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Объект учёта" Binding="{Binding NodeTitle}" Width="150"/>
@@ -600,8 +765,8 @@
 
             <!-- Экран 2: Мониторинг текущих -->
             <Grid x:Name="ViewTrend" Grid.Row="2" Visibility="Collapsed">
-                <Border Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="16">
-                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/></Border.Effect>
+                <Border Background="{DynamicResource CardBackground}" CornerRadius="16" Padding="18">
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/></Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <WrapPanel Grid.Row="0" Margin="0,0,0,16" VerticalAlignment="Center">
@@ -666,13 +831,13 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border x:Name="PanelDashboardLeft" Width="320" Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="14" Margin="0,0,4,0" Padding="14">
-                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/></Border.Effect>
+                <Border x:Name="PanelDashboardLeft" Width="320" Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="16" Margin="0,0,6,0" Padding="16">
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/></Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="Выбор для Дашборда" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,10"/>
+                        <TextBlock Grid.Row="0" Text="Выбор для Дашборда" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,12"/>
                         <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                            <TextBox x:Name="TxtSearchDashboard" Padding="8,6" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersDashboard_Changed" />
+                            <TextBox x:Name="TxtSearchDashboard" Padding="10,7" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersDashboard_Changed" />
                             <Grid Margin="0,0,0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                 <ComboBox x:Name="CmbNodeDashboard" Grid.Column="0" Margin="0,0,4,0" SelectionChanged="ApplyFiltersDashboard_Changed"/>
@@ -682,14 +847,14 @@
                         <ListBox Grid.Row="2" x:Name="ListPointsDashboard" SelectionMode="Multiple" DisplayMemberPath="DisplayName" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
-                                    <Setter Property="Padding" Value="8,8"/><Setter Property="Margin" Value="0,2"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+                                    <Setter Property="Padding" Value="10,9"/><Setter Property="Margin" Value="0,1"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ListBoxItem">
                                                 <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
                                                 <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource HeaderBackground}"/></Trigger>
-                                                    <Trigger Property="IsSelected" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBackground}"/></Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/></Trigger>
+                                                    <Trigger Property="IsSelected" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBackground}"/><Setter TargetName="bd" Property="TextElement.Foreground" Value="{DynamicResource SelectionForeground}"/></Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Setter.Value>
@@ -697,7 +862,7 @@
                                 </Style>
                             </ListBox.ItemContainerStyle>
                         </ListBox>
-                        <Border Grid.Row="3" Margin="0,8,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0,1,0,0">
+                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0,1,0,0">
                             <Grid>
                                 <Button Content="Выделить всё" Style="{StaticResource AppleGhostButton}" HorizontalAlignment="Left" Click="BtnSelectAllDashboard_Click"/>
                                 <Button Content="Очистить" Style="{StaticResource AppleGhostButton}" Foreground="#FF3B30" HorizontalAlignment="Right" Click="BtnClearSelectionDashboard_Click"/>
@@ -710,12 +875,12 @@
                 <Button x:Name="BtnToggleDashPanel" Grid.Column="1" Content="◀" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleDashboard_Click" ToolTip="Свернуть/развернуть список точек"/>
 
                 <!-- Правая колонка: Плитки Дашборда -->
-                <Border Grid.Column="2" Background="Transparent" CornerRadius="14">
+                <Border Grid.Column="2" Background="Transparent" CornerRadius="16">
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <!-- Панель управления дашбордом -->
-                        <Border Grid.Row="0" Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="14" Margin="0,0,0,16">
-                            <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/></Border.Effect>
+                        <Border Grid.Row="0" Background="{DynamicResource CardBackground}" CornerRadius="16" Padding="16" Margin="0,0,0,14">
+                            <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/></Border.Effect>
                             <WrapPanel VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,10">
                                     <TextBlock Text="Автоопрос (мин):" FontSize="13" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -750,77 +915,129 @@
                         <Grid x:Name="PanelSinglePoint" Grid.Row="1" Visibility="Collapsed" DataContext="{Binding}">
                             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                             <StackPanel Grid.Row="0" Margin="4,0,0,20">
-                                <TextBlock Text="{Binding NodeTitle}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}"/>
-                                <TextBlock Text="{Binding Title}" FontSize="18" Foreground="{DynamicResource LabelSecondary}" Margin="0,4,0,0"/>
+                                <TextBlock Text="{Binding NodeTitle}" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}"/>
+                                <TextBlock Text="{Binding Title}" FontSize="17" Foreground="{DynamicResource LabelSecondary}" Margin="0,4,0,0"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                     <TextBlock Text="{Binding Status}" FontSize="14" FontWeight="SemiBold" Foreground="{Binding SingleStatusColor}" Margin="0,0,16,0"/>
                                     <TextBlock Text="{Binding DeviceTime, StringFormat='Обновлено: {0:dd.MM.yyyy HH:mm:ss}'}" FontSize="14" Foreground="{DynamicResource LabelSecondary}"/>
                                 </StackPanel>
                             </StackPanel>
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <WrapPanel ItemWidth="200" ItemHeight="130">
+                                <WrapPanel ItemWidth="210" ItemHeight="140">
                                     <WrapPanel.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}" 
                                                         ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
                                     </WrapPanel.LayoutTransform>
-                                    <Border Background="{Binding T1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+
+                                    <!-- Тнв: та же точка, что выбрана в «Источник Тнв (улица)» -->
+                                    <Border Background="{DynamicResource AccentTeal}" CornerRadius="16" Margin="0,0,16,16" Padding="18"
+                                            ToolTip="Температура наружного воздуха из точки, выбранной в «Источник Тнв (улица)»">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
-                                            <TextBlock Text="T1 (°C)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
-                                            <TextBlock Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="Тнв (°C)" Foreground="White" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.9"/>
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,2,0,2">
+                                                <TextBlock Text="Источник Тнв" FontSize="10" Foreground="#B3FFFFFF"/>
+                                                <TextBlock Text="{Binding ElementName=CmbTnvSource, Path=SelectedItem.DisplayName, TargetNullValue='не выбран', FallbackValue='не выбран'}"
+                                                           FontSize="11" Foreground="#E6FFFFFF" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                                                           ToolTip="{Binding ElementName=CmbTnvSource, Path=SelectedItem.DisplayName, TargetNullValue='Источник не выбран'}"/>
+                                                <TextBlock x:Name="TxtTnvCardUpdated" Text="Ожидание данных..." FontSize="10" Foreground="#B3FFFFFF" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding ElementName=TxtGlobalTnv, Path=Text}" Foreground="White" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom"/>
+                                                <TextBlock Text=" °C" Foreground="#CCFFFFFF" FontSize="15" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding T2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+
+                                    <Border Background="{Binding T1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
-                                            <TextBlock Text="T2 (°C)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
-                                            <TextBlock Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="T1 (°C)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
+                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom"/>
+                                                <StackPanel Margin="10,0,0,2" VerticalAlignment="Bottom"
+                                                            Visibility="{Binding ScheduleTargetVisibility}"
+                                                            ToolTip="{Binding ScheduleT1Tooltip}">
+                                                    <TextBlock Text="график" FontSize="9" Foreground="#B3FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,1"/>
+                                                    <TextBlock Text="{Binding ExpectedT1Text}" FontSize="18" FontWeight="SemiBold" Foreground="#CCFFFFFF"/>
+                                                </StackPanel>
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding P1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+                                    <Border Background="{Binding T2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="T2 (°C)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
+                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom"/>
+                                                <StackPanel Margin="10,0,0,2" VerticalAlignment="Bottom"
+                                                            Visibility="{Binding ScheduleTargetVisibility}"
+                                                            ToolTip="{Binding ScheduleT2Tooltip}">
+                                                    <TextBlock Text="график" FontSize="9" Foreground="#B3FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,1"/>
+                                                    <TextBlock Text="{Binding ExpectedT2Text}" FontSize="18" FontWeight="SemiBold" Foreground="#CCFFFFFF"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <Border Background="{Binding P1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="P1 (атм)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding P2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+                                    <Border Background="{Binding P2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="P2 (атм)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding V1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+                                    <Border Background="{Binding V1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="V1 (м³/ч)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding V2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+                                    <Border Background="{Binding V2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="V2 (м³/ч)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding M1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+                                    <Border Background="{Binding M1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="M1 (т)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding M2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+                                    <Border Background="{Binding M2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="M2 (т)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding QDashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}" CornerRadius="14" Margin="0,0,16,16" Padding="16">
-                                        <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.1" Color="#000000"/></Border.Effect>
+                                    <Border Background="{Binding QDashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="Q (Гкал)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
@@ -839,29 +1056,29 @@
                                 </ItemsControl.LayoutTransform>
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <local:MasonryPanel Spacing="6" MaxCardWidth="360"/>
+                                        <local:MasonryPanel Spacing="8" MaxCardWidth="420" MinCardWidth="240"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border VerticalAlignment="Top" HorizontalAlignment="Left" Background="{Binding TileBackground}" CornerRadius="8" Margin="0" Padding="6">
+                                        <Border VerticalAlignment="Top" HorizontalAlignment="Stretch" Background="{Binding TileBackground}" CornerRadius="14" Margin="0" Padding="8">
                                             <Border.Effect>
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.1" Color="#000000"/>
+                                                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
                                             </Border.Effect>
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
                                                 </Grid.RowDefinitions>
                                                 
-                                                <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                <Grid Grid.Row="0" Margin="0,0,0,4">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel Grid.Column="0">
-                                                        <TextBlock Text="{Binding NodeTitle}" Foreground="{Binding TileForeground}" FontSize="13" FontWeight="Bold" TextWrapping="Wrap" ToolTip="{Binding NodeTitle}"/>
+                                                        <TextBlock Text="{Binding NodeTitle}" Foreground="{Binding TileForeground}" FontSize="14" FontWeight="Bold" TextWrapping="Wrap" ToolTip="{Binding NodeTitle}"/>
                                                         <TextBlock Text="{Binding GeneralStatus}" Foreground="{Binding TileForeground}" FontSize="10" Opacity="0.85" Margin="0,1,0,0"/>
                                                     </StackPanel>
                                                     
@@ -880,12 +1097,12 @@
                                                 <ItemsControl Grid.Row="1" ItemsSource="{Binding Points}">
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate>
-                                                            <WrapPanel />
+                                                            <local:CompactColumnsPanel Spacing="4" MinColumnWidth="180"/>
                                                         </ItemsPanelTemplate>
                                                     </ItemsControl.ItemsPanel>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <Border Background="#26000000" CornerRadius="4" Padding="4" Margin="2" MinWidth="120">
+                                                            <Border Background="#26000000" CornerRadius="6" Padding="5" Margin="1">
                                                                 <Grid>
                                                                     <Grid.RowDefinitions>
                                                                         <RowDefinition Height="Auto"/>
@@ -896,9 +1113,13 @@
                                                                         <Grid.ColumnDefinitions>
                                                                             <ColumnDefinition Width="*"/>
                                                                             <ColumnDefinition Width="Auto"/>
+                                                                            <ColumnDefinition Width="Auto"/>
                                                                         </Grid.ColumnDefinitions>
                                                                         <TextBlock Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="11" FontWeight="Bold" Margin="0,0,4,4" TextWrapping="Wrap"/>
-                                                                        <Button Grid.Column="1" Tag="{Binding}" Visibility="{Binding RetryVisibility}" Click="BtnRetryPoint_Click" Width="16" Height="16" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Повторить опрос">
+                                                                        <Button Grid.Column="1" Tag="{Binding}" Click="BtnPollDetails_Click" Width="16" Height="16" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Ход опроса">
+                                                                            <TextBlock Text="ℹ" Foreground="#4FC3F7" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                        </Button>
+                                                                        <Button Grid.Column="2" Tag="{Binding}" Visibility="{Binding RetryVisibility}" Click="BtnRetryPoint_Click" Width="16" Height="16" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Повторить опрос">
                                                                             <TextBlock Text="↻" Foreground="#FF9500" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                                         </Button>
                                                                     </Grid>
@@ -916,35 +1137,35 @@
                                                                         
                                                                         <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}">
                                                                             <TextBlock Text="T1/T2" FontSize="9" Opacity="0.75" Foreground="White"/>
-                                                                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="White">
+                                                                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
                                                                                 <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding T1DashForeground}"/><Run Text="/" Foreground="#80FFFFFF"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding T2DashForeground}"/>
                                                                             </TextBlock>
                                                                         </StackPanel>
                                                                         
                                                                         <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}">
                                                                             <TextBlock Text="P1/P2" FontSize="9" Opacity="0.75" Foreground="White"/>
-                                                                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="White">
+                                                                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
                                                                                 <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding P1DashForeground}"/><Run Text="/" Foreground="#80FFFFFF"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding P2DashForeground}"/>
                                                                             </TextBlock>
                                                                         </StackPanel>
 
                                                                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}">
                                                                             <TextBlock Text="V1/V2" FontSize="9" Opacity="0.75" Foreground="White"/>
-                                                                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="White">
+                                                                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
                                                                                 <Run Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding V1DashForeground}"/><Run Text="/" Foreground="#80FFFFFF"/><Run Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding V2DashForeground}"/>
                                                                             </TextBlock>
                                                                         </StackPanel>
 
                                                                         <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}">
                                                                             <TextBlock Text="M1/M2" FontSize="9" Opacity="0.75" Foreground="White"/>
-                                                                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="White">
+                                                                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
                                                                                 <Run Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding M1DashForeground}"/><Run Text="/" Foreground="#80FFFFFF"/><Run Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding M2DashForeground}"/>
                                                                             </TextBlock>
                                                                         </StackPanel>
 
                                                                         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}">
                                                                             <TextBlock Text="Q (Гкал)" FontSize="9" Opacity="0.75" Foreground="White"/>
-                                                                            <TextBlock Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='-'}" FontSize="11" FontWeight="Bold" Foreground="{Binding QDashForeground}"/>
+                                                                            <TextBlock Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='-'}" FontSize="12" FontWeight="Bold" Foreground="{Binding QDashForeground}"/>
                                                                         </StackPanel>
                                                                     </Grid>
                                                                 </Grid>
@@ -954,7 +1175,7 @@
                                                 </ItemsControl>
 
                                                 <TextBlock Grid.Row="2" Text="{Binding MaxDeviceTime, StringFormat='Обновлено: {0:dd.MM.yy HH:mm}'}" 
-                                                           Foreground="{Binding TileForeground}" FontSize="9" Opacity="0.7" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+                                                           Foreground="{Binding TileForeground}" FontSize="9" Opacity="0.7" HorizontalAlignment="Right" Margin="0,3,0,0"/>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -974,9 +1195,9 @@
     </Grid.ColumnDefinitions>
 
     <!-- Левая панель выбора точек для подпитки -->
-    <Border x:Name="PanelPodpitkaLeft" Width="320" Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="14" Margin="0,0,4,0" Padding="14">
+    <Border x:Name="PanelPodpitkaLeft" Width="320" Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="16" Margin="0,0,6,0" Padding="16">
         <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/>
+            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/>
         </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
@@ -985,9 +1206,9 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Text="Выбор точек подпитки" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,10"/>
+            <TextBlock Grid.Row="0" Text="Выбор точек подпитки" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,12"/>
             <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                <TextBox x:Name="TxtSearchPodpitka" Padding="8,6" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersPodpitka_Changed"/>
+                <TextBox x:Name="TxtSearchPodpitka" Padding="10,7" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersPodpitka_Changed"/>
                 <Grid Margin="0,0,0,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -1000,8 +1221,8 @@
             <ListBox Grid.Row="2" x:Name="ListPodpitka" SelectionMode="Multiple" DisplayMemberPath="DisplayName" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="ListPodpitka_SelectionChanged">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="8,8"/>
-                        <Setter Property="Margin" Value="0,2"/>
+                        <Setter Property="Padding" Value="10,9"/>
+                        <Setter Property="Margin" Value="0,1"/>
                         <Setter Property="Cursor" Value="Hand"/>
                         <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
                         <Setter Property="Template">
@@ -1012,10 +1233,11 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource HeaderBackground}"/>
+                                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
                                             <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBackground}"/>
+                                            <Setter TargetName="bd" Property="TextElement.Foreground" Value="{DynamicResource SelectionForeground}"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -1024,7 +1246,7 @@
                     </Style>
                 </ListBox.ItemContainerStyle>
             </ListBox>
-            <Border Grid.Row="3" Margin="0,8,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0,1,0,0">
+            <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0,1,0,0">
                 <Grid>
                     <Button Content="Выделить всё" Style="{StaticResource AppleGhostButton}" HorizontalAlignment="Left" Click="BtnSelectAllPodpitka_Click"/>
                     <Button Content="Очистить" Style="{StaticResource AppleGhostButton}" Foreground="#FF3B30" HorizontalAlignment="Right" Click="BtnClearSelectionPodpitka_Click"/>
@@ -1037,7 +1259,7 @@
     <Button x:Name="BtnTogglePodpPanel" Grid.Column="1" Content="◀" Style="{StaticResource SidePanelToggleBtn}" Click="BtnTogglePodpitka_Click" ToolTip="Свернуть/развернуть список точек"/>
 
     <!-- Правая колонка: Панель управления и карточки -->
-    <Border Grid.Column="2" Background="Transparent" CornerRadius="14">
+    <Border Grid.Column="2" Background="Transparent" CornerRadius="16">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -1045,9 +1267,9 @@
             </Grid.RowDefinitions>
 
             <!-- Верхняя панель управления подпиткой -->
-            <Border Grid.Row="0" Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="14" Margin="0,0,0,16">
+            <Border Grid.Row="0" Background="{DynamicResource CardBackground}" CornerRadius="16" Padding="16" Margin="0,0,0,14">
                 <Border.Effect>
-                    <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="2" Opacity="0.04"/>
+                    <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="1" Opacity="0.05"/>
                 </Border.Effect>
                 <WrapPanel VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,10">
@@ -1079,51 +1301,60 @@
                     </ItemsControl.LayoutTransform>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <local:MasonryPanel Spacing="6" MaxCardWidth="360"/>
+                            <local:MasonryPanel Spacing="8" MaxCardWidth="420" MinCardWidth="240"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="{Binding TileBackground}" CornerRadius="8" Padding="8" VerticalAlignment="Top" HorizontalAlignment="Left">
+                            <Border Background="{Binding TileBackground}" CornerRadius="14" Padding="8" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
+                                </Border.Effect>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding NodeTitle}" Foreground="White" FontWeight="Bold" FontSize="13" TextWrapping="Wrap" MaxWidth="320"/>
-                                    <TextBlock Text="{Binding GeneralStatus}" Foreground="White" FontSize="10" Opacity="0.85" Margin="0,1,0,6"/>
+                                    <TextBlock Text="{Binding NodeTitle}" Foreground="White" FontWeight="Bold" FontSize="14" TextWrapping="Wrap" MaxWidth="380"/>
+                                    <TextBlock Text="{Binding GeneralStatus}" Foreground="White" FontSize="10" Opacity="0.85" Margin="0,1,0,4"/>
                                     <ItemsControl ItemsSource="{Binding Points}">
                                         <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                            <ItemsPanelTemplate><local:CompactColumnsPanel Spacing="4" MinColumnWidth="200"/></ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Background="#26000000" CornerRadius="4" Padding="4" Margin="2">
+                                                <Border Background="#26000000" CornerRadius="6" Padding="5" Margin="1">
                                                     <StackPanel>
                                                         <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
                                                             <TextBlock Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Left"/>
-                                                            <Button HorizontalAlignment="Right" Tag="{Binding}" Click="BtnPodpitkaRetry_Click" Visibility="{Binding RetryVisibility}"
+                                                            <Button Grid.Column="1" Tag="{Binding}" Click="BtnPollDetails_Click" Background="Transparent" BorderThickness="0" Content="ℹ" Foreground="#4FC3F7" ToolTip="Ход опроса" Cursor="Hand"/>
+                                                            <Button Grid.Column="2" Tag="{Binding}" Click="BtnPodpitkaRetry_Click" Visibility="{Binding RetryVisibility}"
                                                                     Background="Transparent" BorderThickness="0" Content="↻" Foreground="#FF9500" ToolTip="Повторить опрос точки"/>
                                                         </Grid>
                                                         <UniformGrid Columns="2">
-                                                            <Border Background="{Binding ReportBg}" CornerRadius="3" Padding="4,2" Margin="1">
+                                                            <Border Background="{Binding ReportBg}" CornerRadius="4" Padding="4,2" Margin="1">
                                                                 <StackPanel>
                                                                     <TextBlock Text="Отчётный период V1" FontSize="9" Foreground="White" Opacity="0.8"/>
-                                                                    <TextBlock Text="{Binding Report, StringFormat={}{0:F1} м³, TargetNullValue='—'}" FontSize="13" FontWeight="Bold" Foreground="{Binding ReportFg}"/>
+                                                                    <TextBlock Text="{Binding Report, StringFormat={}{0:F1} м³, TargetNullValue='—'}" FontSize="14" FontWeight="Bold" Foreground="{Binding ReportFg}"/>
                                                                 </StackPanel>
                                                             </Border>
-                                                            <Border Background="{Binding DayBg}" CornerRadius="3" Padding="4,2" Margin="1">
+                                                            <Border Background="{Binding DayBg}" CornerRadius="4" Padding="4,2" Margin="1">
                                                                 <StackPanel>
                                                                     <TextBlock Text="Вчера V1" FontSize="9" Foreground="White" Opacity="0.8"/>
-                                                                    <TextBlock Text="{Binding Day, StringFormat={}{0:F1} м³, TargetNullValue='—'}" FontSize="13" FontWeight="Bold" Foreground="{Binding DayFg}"/>
+                                                                    <TextBlock Text="{Binding Day, StringFormat={}{0:F1} м³, TargetNullValue='—'}" FontSize="14" FontWeight="Bold" Foreground="{Binding DayFg}"/>
                                                                 </StackPanel>
                                                             </Border>
-                                                            <Border Background="{Binding TodayBg}" CornerRadius="3" Padding="4,2" Margin="1">
+                                                            <Border Background="{Binding TodayBg}" CornerRadius="4" Padding="4,2" Margin="1">
                                                                 <StackPanel>
                                                                     <TextBlock Text="Сегодня V1" FontSize="9" Foreground="White" Opacity="0.8"/>
-                                                                    <TextBlock Text="{Binding Today, StringFormat={}{0:F1} м³, TargetNullValue='—'}" FontSize="13" FontWeight="Bold" Foreground="{Binding TodayFg}"/>
+                                                                    <TextBlock Text="{Binding Today, StringFormat={}{0:F1} м³, TargetNullValue='—'}" FontSize="14" FontWeight="Bold" Foreground="{Binding TodayFg}"/>
                                                                 </StackPanel>
                                                             </Border>
-                                                            <Border Background="{Binding HourBg}" CornerRadius="3" Padding="4,2" Margin="1">
+                                                            <Border Background="{Binding HourBg}" CornerRadius="4" Padding="4,2" Margin="1">
                                                                 <StackPanel>
                                                                     <TextBlock Text="Прошлый час V1" FontSize="9" Foreground="White" Opacity="0.8"/>
-                                                                    <TextBlock Text="{Binding Hour, StringFormat={}{0:F2} м³, TargetNullValue='—'}" FontSize="13" FontWeight="Bold" Foreground="{Binding HourFg}"/>
+                                                                    <TextBlock Text="{Binding Hour, StringFormat={}{0:F2} м³, TargetNullValue='—'}" FontSize="14" FontWeight="Bold" Foreground="{Binding HourFg}"/>
                                                                 </StackPanel>
                                                             </Border>
                                                         </UniformGrid>
@@ -1143,30 +1374,30 @@
 </Grid>
 
             <!-- Статус бар -->
-            <Border Grid.Row="3" Margin="4,12,4,0">
+            <Border Grid.Row="3" Margin="2,14,2,0">
                 <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentGreen}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <Ellipse Width="8" Height="8" Fill="{DynamicResource StatusDotOk}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtStatus" Text="Готово к работе" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- Модальное окно настройки границ (общее) -->
-        <Grid x:Name="OverlayLimits" Visibility="Collapsed" Background="#66000000" Panel.ZIndex="100">
-            <Border Background="{DynamicResource CardBackground}" CornerRadius="14" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="420">
+        <Grid x:Name="OverlayLimits" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="100">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" Width="330">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.1"/>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.15"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock x:Name="TxtLimitsTitle" Text="Границы" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
-                    <TextBlock x:Name="TxtLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,16"/>
-                    
-                    <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16" Padding="0,0,8,0">
-                        <Grid>
+                    <TextBlock x:Name="TxtLimitsTitle" Text="Границы" FontWeight="Bold" FontSize="17" Margin="0,0,0,2" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock x:Name="TxtLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,10"/>
+
+                    <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8" Padding="0">
+                        <Grid HorizontalAlignment="Center">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="70"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="84"/>
+                                <ColumnDefinition Width="84"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -1180,78 +1411,118 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            
-                            <TextBlock Grid.Column="1" Text="Мин." Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
-                            <TextBlock Grid.Column="2" Text="Макс." Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
-                            
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="T1 (°C)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtT1Min" Grid.Row="1" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtT1Max" Grid.Row="1" Grid.Column="2" Margin="0,0,0,8"/>
-                            
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="T2 (°C)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtT2Min" Grid.Row="2" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtT2Max" Grid.Row="2" Grid.Column="2" Margin="0,0,0,8"/>
-                            
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="P1 (атм)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtP1Min" Grid.Row="3" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtP1Max" Grid.Row="3" Grid.Column="2" Margin="0,0,0,8"/>
-                            
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="P2 (атм)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtP2Min" Grid.Row="4" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtP2Max" Grid.Row="4" Grid.Column="2" Margin="0,0,0,8"/>
 
-                            <TextBlock Grid.Row="5" Grid.Column="0" Text="V1 (м³/ч)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtV1Min" Grid.Row="5" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtV1Max" Grid.Row="5" Grid.Column="2" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Column="1" Text="Мин." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
+                            <TextBlock Grid.Column="2" Text="Макс." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" Text="V2 (м³/ч)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtV2Min" Grid.Row="6" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtV2Max" Grid.Row="6" Grid.Column="2" Margin="0,0,0,8"/>
-                            
-                            <TextBlock Grid.Row="7" Grid.Column="0" Text="M1 (т)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtM1Min" Grid.Row="7" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtM1Max" Grid.Row="7" Grid.Column="2" Margin="0,0,0,8"/>
-                            
-                            <TextBlock Grid.Row="8" Grid.Column="0" Text="M2 (т)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtM2Min" Grid.Row="8" Grid.Column="1" Margin="0,0,8,8"/>
-                            <TextBox x:Name="TxtM2Max" Grid.Row="8" Grid.Column="2" Margin="0,0,0,8"/>
-                            
-                            <TextBlock Grid.Row="9" Grid.Column="0" Text="Q (Гкал)" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtQMin" Grid.Row="9" Grid.Column="1" Margin="0,0,8,0"/>
-                            <TextBox x:Name="TxtQMax" Grid.Row="9" Grid.Column="2" Margin="0,0,0,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="T1 (°C)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtT1Min" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtT1Max" Grid.Row="1" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="T2 (°C)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtT2Min" Grid.Row="2" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtT2Max" Grid.Row="2" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="P1 (атм)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtP1Min" Grid.Row="3" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtP1Max" Grid.Row="3" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="P2 (атм)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtP2Min" Grid.Row="4" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtP2Max" Grid.Row="4" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="V1 (м³/ч)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtV1Min" Grid.Row="5" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtV1Max" Grid.Row="5" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="V2 (м³/ч)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtV2Min" Grid.Row="6" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtV2Max" Grid.Row="6" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="M1 (т)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtM1Min" Grid.Row="7" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtM1Max" Grid.Row="7" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Text="M2 (т)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtM2Min" Grid.Row="8" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtM2Max" Grid.Row="8" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                            <TextBlock Grid.Row="9" Grid.Column="0" Text="Q (Гкал)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtQMin" Grid.Row="9" Grid.Column="1" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                            <TextBox x:Name="TxtQMax" Grid.Row="9" Grid.Column="2" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
                         </Grid>
                     </ScrollViewer>
-                    
-                    <Grid>
-                        <Button Content="📈 Температурный график" Click="BtnEditTempSchedule_Click" HorizontalAlignment="Left" Style="{StaticResource AppleGhostButton}"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Отмена" Click="BtnCancelLimits_Click" Margin="0,0,10,0" Padding="12,8" Style="{StaticResource AppleGhostButton}"/>
-                            <Button Content="Применить" Click="BtnSaveLimits_Click" Style="{StaticResource ApplePrimaryButton}"/>
+
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="10,7" Margin="0,0,0,8">
+                        <StackPanel>
+                            <Button Content="📈 Температурный график" Click="BtnEditTempSchedule_Click"
+                                    HorizontalAlignment="Left" FontSize="11" Style="{StaticResource AppleGhostButton}"/>
+                            <Button Content="📋 График из другой точки" Click="BtnPickScheduleSourceDirect_Click"
+                                    HorizontalAlignment="Left" FontSize="11" Style="{StaticResource AppleGhostButton}"/>
+                            <TextBlock Text="Создайте график один раз и применяйте его к любым точкам."
+                                       FontSize="10.5" TextWrapping="Wrap" Margin="0,2,0,0"
+                                       Foreground="{DynamicResource LabelSecondary}"/>
                         </StackPanel>
-                    </Grid>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Отмена" Click="BtnCancelLimits_Click" Margin="0,0,8,0" Padding="10,7" FontSize="11" Style="{StaticResource AppleGhostButton}"/>
+                        <Button Content="Применить" Click="BtnSaveLimits_Click" Padding="14,8" FontSize="12" Style="{StaticResource ApplePrimaryButton}"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- Модальное окно настройки температурного графика -->
-        <Grid x:Name="OverlayTempSchedule" Visibility="Collapsed" Background="#66000000" Panel.ZIndex="110">
-            <Border Background="{DynamicResource CardBackground}" CornerRadius="14" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="460">
+        <Grid x:Name="OverlayTempSchedule" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="110">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="28" Width="640">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.15"/>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.15"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="Температурный график (Тнв → Т1/Т2)" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
-                    <TextBlock Text="Допустимое отклонение от графика составляет ±3.0 °C" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,12"/>
+                    <TextBlock Text="Температурный график (Тнв → Т1/Т2)" FontWeight="Bold" FontSize="18" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
 
-                    <Border CornerRadius="8" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Margin="0,0,0,12" Height="240" ClipToBounds="True">
-                        <DataGrid x:Name="GridTempSchedule" AutoGenerateColumns="False" CanUserAddRows="False">
+                    <!-- Настраиваемое значение допустимого отклонения -->
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="10,8" Margin="0,8,0,10">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="72"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Допустимое отклонение от графика (±)" FontSize="13"
+                                           Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="TxtScheduleTolerance" Grid.Column="1" Text="3" Margin="6,0,6,0" Width="56"
+                                         Style="{StaticResource CompactNumericTextBox}"
+                                         TextChanged="TxtScheduleTolerance_TextChanged" ToolTip="От 0 до 50 °C. Например: 3 или 2,5"/>
+                                <TextBlock Grid.Column="2" Text="°C" FontSize="13" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
+                            </Grid>
+                            <TextBlock x:Name="TxtScheduleToleranceHint" FontSize="10.5" Margin="0,6,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource LabelSecondary}"
+                                       Text="Отклонение применяется к T1 и T2 для всех выбранных точек."/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="10" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Margin="0,0,0,14" Height="240" ClipToBounds="True" Background="{DynamicResource CardBackgroundAlt}">
+                        <DataGrid x:Name="GridTempSchedule" AutoGenerateColumns="False" CanUserAddRows="False"
+                                  RowEditEnding="GridTempSchedule_RowEditEnding">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Тнв воздуха (°C)" Binding="{Binding Tnv, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                                <DataGridTextColumn Header="T1 подача (°C)" Binding="{Binding T1, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                                <DataGridTextColumn Header="T2 обратка (°C)" Binding="{Binding T2, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                                <DataGridTextColumn Header="Тнв, °C" Binding="{Binding Tnv, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                                <DataGridTextColumn Header="T1, °C" Binding="{Binding T1, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                                <DataGridTextColumn Header="T2, °C" Binding="{Binding T2, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                                <DataGridTextColumn Header="Допуск T1" Binding="{Binding T1Band, Mode=OneWay}" Width="110" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Допуск T2" Binding="{Binding T2Band, Mode=OneWay}" Width="110" IsReadOnly="True"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Border>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="📋 Скопировать из другой точки" Click="BtnPickScheduleSource_Click" Margin="0,0,8,0" Style="{StaticResource AppleGhostButton}"/>
+                        <Button Content="🌐 Применить ко всем точкам" Click="BtnApplyScheduleToAll_Click" Style="{StaticResource AppleGhostButton}"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtScheduleSource" Text="" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
+                               Foreground="{DynamicResource AccentBlue}"/>
 
                     <Grid Margin="0,0,0,16">
                         <Button Content="+ Добавить точку" Click="BtnAddSchedulePoint_Click" HorizontalAlignment="Left" Style="{StaticResource AppleGhostButton}"/>
@@ -1266,41 +1537,78 @@
             </Border>
         </Grid>
         
-        <!-- Модальное окно допусков подпитки -->
-        <Grid x:Name="OverlayPodpitkaLimits" Visibility="Collapsed" Background="#66000000" Panel.ZIndex="130">
-            <Border Background="{DynamicResource CardBackground}" CornerRadius="14" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="440">
+        <!-- Выбор готового температурного графика из другой точки -->
+        <Grid x:Name="OverlayScheduleSource" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="120">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="28" Width="520">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.15"/>
+                </Border.Effect>
                 <StackPanel>
-                    <TextBlock x:Name="TxtPodpitkaLimitsTitle" Text="Допуски подпитки (V1)" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
-                    <TextBlock x:Name="TxtPodpitkaLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,16"/>
-                    <Grid Margin="0,0,0,16">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="130"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="Выбрать температурный график из другой точки" FontWeight="Bold" FontSize="18" Margin="0,0,0,4"
+                               Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock x:Name="TxtScheduleSourceHint" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,14"
+                               Foreground="{DynamicResource LabelSecondary}"
+                               Text="Список точек, у которых уже сохранён график. Будут скопированы все строки графика и допуск."/>
+
+                    <Border CornerRadius="10" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                            Margin="0,0,0,16" Height="260" ClipToBounds="True" Background="{DynamicResource CardBackgroundAlt}">
+                        <ListBox x:Name="ListScheduleSources" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="6,8">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="13"
+                                                   Foreground="{DynamicResource LabelPrimary}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Description}" FontSize="11" Margin="0,2,0,0"
+                                                   Foreground="{DynamicResource LabelSecondary}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Отмена" Click="BtnCancelScheduleSource_Click" Margin="0,0,10,0" Padding="12,8" Style="{StaticResource AppleGhostButton}"/>
+                        <Button Content="Выбрать" Click="BtnApplyScheduleSource_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Модальное окно допусков подпитки -->
+        <Grid x:Name="OverlayPodpitkaLimits" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="130">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" Width="330">
+                <StackPanel>
+                    <TextBlock x:Name="TxtPodpitkaLimitsTitle" Text="Допуски подпитки (V1)" FontWeight="Bold" FontSize="17" Margin="0,0,0,2" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock x:Name="TxtPodpitkaLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,12" HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="84"/><ColumnDefinition Width="84"/></Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        
-                        <TextBlock Grid.Column="1" Text="Мин." Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
-                        <TextBlock Grid.Column="2" Text="Макс." Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Отчётный период" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpReportMin" Grid.Row="1" Grid.Column="1" Margin="0,0,8,8"/>
-                        <TextBox x:Name="TxtPodpReportMax" Grid.Row="1" Grid.Column="2" Margin="0,0,0,8"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Вчера" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpDayMin" Grid.Row="2" Grid.Column="1" Margin="0,0,8,8"/>
-                        <TextBox x:Name="TxtPodpDayMax" Grid.Row="2" Grid.Column="2" Margin="0,0,0,8"/>
-                        
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Сегодня" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpTodayMin" Grid.Row="3" Grid.Column="1" Margin="0,0,8,8"/>
-                        <TextBox x:Name="TxtPodpTodayMax" Grid.Row="3" Grid.Column="2" Margin="0,0,0,8"/>
-                        
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Прошлый час" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpHourMin" Grid.Row="4" Grid.Column="1" Margin="0,0,8,0"/>
-                        <TextBox x:Name="TxtPodpHourMax" Grid.Row="4" Grid.Column="2" Margin="0,0,0,0"/>
+
+                        <TextBlock Grid.Column="1" Text="Мин." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
+                        <TextBlock Grid.Column="2" Text="Макс." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Отчётный период" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtPodpReportMin" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                        <TextBox x:Name="TxtPodpReportMax" Grid.Row="1" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Вчера" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtPodpDayMin" Grid.Row="2" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                        <TextBox x:Name="TxtPodpDayMax" Grid.Row="2" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Сегодня" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtPodpTodayMin" Grid.Row="3" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                        <TextBox x:Name="TxtPodpTodayMax" Grid.Row="3" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Прошлый час" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtPodpHourMin" Grid.Row="4" Grid.Column="1" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
+                        <TextBox x:Name="TxtPodpHourMax" Grid.Row="4" Grid.Column="2" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}" ToolTip="Число, дробная часть через запятую или точку"/>
                     </Grid>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Отмена" Click="BtnCancelPodpitkaLimits_Click" Margin="0,0,10,0" Padding="12,8" Style="{StaticResource AppleGhostButton}"/>
-                        <Button Content="Применить" Click="BtnSavePodpitkaLimits_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                        <Button Content="Отмена" Click="BtnCancelPodpitkaLimits_Click" Margin="0,0,8,0" Padding="10,7" FontSize="11" Style="{StaticResource AppleGhostButton}"/>
+                        <Button Content="Применить" Click="BtnSavePodpitkaLimits_Click" Padding="14,8" FontSize="12" Style="{StaticResource ApplePrimaryButton}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
