@@ -2,7 +2,7 @@
 
 # 📊 LersMonitor
 
-**Современный и легковесный десктопный дашборд для диспетчеризации и мониторинга теплоснабжения через REST API «ЛЭРС УЧЁТ».**
+**Современный и легковесный десктопный дашборд для диспетчеризации и мониторинга объектов учёта через REST API «ЛЭРС УЧЁТ».**
 
 [![Platform](https://img.shields.io/badge/Platform-Windows-blue.svg)](https://microsoft.com/windows)
 [![Framework](https://img.shields.io/badge/.NET-WPF%20%7C%20C%23-512BD4.svg)](https://dotnet.microsoft.com/)
