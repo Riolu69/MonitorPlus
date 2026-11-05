@@ -35,6 +35,8 @@ namespace LersMonitor
         private bool _showV = true; public bool ShowV { get => _showV; set { _showV = value; OnPropertyChanged(); } }
         private bool _showM = true; public bool ShowM { get => _showM; set { _showM = value; OnPropertyChanged(); } }
         private bool _showQ = true; public bool ShowQ { get => _showQ; set { _showQ = value; OnPropertyChanged(); } }
+        private bool _showDeltaT = true; public bool ShowDeltaT { get => _showDeltaT; set { _showDeltaT = value; OnPropertyChanged(); } }
+        private bool _showDeltaP = true; public bool ShowDeltaP { get => _showDeltaP; set { _showDeltaP = value; OnPropertyChanged(); } }
     }
 
     public partial class MainWindow : Window
@@ -44,6 +46,8 @@ namespace LersMonitor
         private string _baseUrl = "";
         
         public static double? CurrentGlobalTnv { get; set; }
+        public static double TnvCorrection { get; set; } = 0;
+        public static UserSettings? AppSettings { get; set; }
 
         private List<MeasurePointItem> _allPoints = new();
         private readonly ObservableCollection<PointResultViewModel> _results = new();
@@ -180,6 +184,10 @@ namespace LersMonitor
 
                         CmbPodpitkaInterval.SelectedItem = _settings.PodpitkaIntervalMin > 0 ? _settings.PodpitkaIntervalMin : 30;
 
+                        TnvCorrection = _settings.TnvCorrection;
+                        AppSettings = _settings;
+                        if (BtnArchive != null) BtnArchive.Visibility = _settings.ExperimentalArchive ? Visibility.Visible : Visibility.Collapsed;
+
                         if (_settings.LastResults != null && _settings.LastResults.Any())
                         {
                             foreach (var r in _settings.LastResults)
@@ -200,6 +208,7 @@ namespace LersMonitor
             
             _themeTimer.Start();
             ApplyThemeLogic();
+            ApplySectionVisibility();
         }
 
         private void SaveUserSettings(List<int>? selectedPointIds = null)
@@ -517,8 +526,8 @@ namespace LersMonitor
                             var tnv = ExtractParameterValue(doc.RootElement, "t_out_env", "t_nv", "T_nv", "outdoorTemp", "t_outdoor", "t_env");
                             if (tnv.HasValue)
                             {
-                                CurrentGlobalTnv = tnv;
-                                TxtGlobalTnv.Text = tnv.Value.ToString("F1");
+                                CurrentGlobalTnv = tnv + TnvCorrection;
+                                TxtGlobalTnv.Text = CurrentGlobalTnv.Value.ToString("F1");
                                 TxtTnvCardUpdated.Text = $"Обновлено в {DateTime.Now:HH:mm:ss}";
                                 foreach (var p in _dashboardFlatPoints) p.RefreshColors();
                                 foreach (var p in _results) p.RefreshColors();
@@ -662,6 +671,8 @@ namespace LersMonitor
             DashSettings.Instance.ShowV = ChkDashV.IsChecked == true;
             DashSettings.Instance.ShowM = ChkDashM.IsChecked == true;
             DashSettings.Instance.ShowQ = ChkDashQ.IsChecked == true;
+            DashSettings.Instance.ShowDeltaT = ChkDashDeltaT.IsChecked == true;
+            DashSettings.Instance.ShowDeltaP = ChkDashDeltaP.IsChecked == true;
         }
 
         private void BtnSettingsShared_Click(object sender, RoutedEventArgs e)
@@ -1257,6 +1268,7 @@ namespace LersMonitor
         {
             var pts = _podpitkaNodes.SelectMany(n => n.Points.Select(p => (p, n))).ToList();
             var now = DateTime.Now;
+            // startDay/endDay are read inside RefreshAsync from AppSettings
 
             // 1. Сразу читаем готовые регламентные архивы из базы ЛЭРС
             await Task.WhenAll(pts.Select(async x =>
@@ -1412,6 +1424,574 @@ namespace LersMonitor
             BtnPodpitkaForce.IsEnabled = false;
             try { await PodpitkaCycleAsync(false, _podCts!.Token); }
             finally { BtnPodpitkaForce.IsEnabled = true; }
+        }
+
+        // --- Кнопка настроек (шестерёнка) ---
+
+        private bool _settingsGearInitialLoad = true;
+
+        private void BtnSettingsGear_Click(object sender, RoutedEventArgs e)
+        {
+            _settingsGearInitialLoad = true;
+            ChkExperimentalArchive.IsChecked = _settings.ExperimentalArchive;
+            ChkExperimentalReportPeriod.IsChecked = _settings.ExperimentalReportPeriod;
+            ChkSectionGeneral.IsChecked = !_settings.HideGeneral;
+            ChkSectionTrend.IsChecked = !_settings.HideTrend;
+            ChkSectionDashboard.IsChecked = !_settings.HideDashboard;
+            ChkSectionPodpitka.IsChecked = !_settings.HidePodpitka;
+            PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
+
+            // Populate day ComboBoxes 1-31
+            var days = Enumerable.Range(1, 31).Select(d => d.ToString()).ToList();
+            CmbReportPeriodStartDay.ItemsSource = days;
+            CmbReportPeriodEndDay.ItemsSource = days.ToList();
+            CmbReportPeriodStartDay.SelectedItem = _settings.ReportPeriodStartDay.ToString();
+            CmbReportPeriodEndDay.SelectedItem = _settings.ReportPeriodEndDay.ToString();
+
+            _settingsGearInitialLoad = false;
+            OverlayAppSettings.Visibility = Visibility.Visible;
+        }
+
+        private void BtnCloseAppSettings_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayAppSettings.Visibility = Visibility.Collapsed;
+        }
+
+        private void SectionToggle_Click(object sender, RoutedEventArgs e)
+        {
+            if (_settingsGearInitialLoad) return;
+            _settings.HideGeneral = ChkSectionGeneral.IsChecked != true;
+            _settings.HideTrend = ChkSectionTrend.IsChecked != true;
+            _settings.HideDashboard = ChkSectionDashboard.IsChecked != true;
+            _settings.HidePodpitka = ChkSectionPodpitka.IsChecked != true;
+            ApplySectionVisibility();
+            SaveUserSettings();
+        }
+
+        private void ApplySectionVisibility()
+        {
+            TabAll.Visibility = _settings.HideGeneral ? Visibility.Collapsed : Visibility.Visible;
+            TabSingle.Visibility = _settings.HideTrend ? Visibility.Collapsed : Visibility.Visible;
+            TabDashboard.Visibility = _settings.HideDashboard ? Visibility.Collapsed : Visibility.Visible;
+            TabPodpitka.Visibility = _settings.HidePodpitka ? Visibility.Collapsed : Visibility.Visible;
+            if (TabAll.IsChecked == true && _settings.HideGeneral) SwitchToFirstVisibleTab();
+            else if (TabSingle.IsChecked == true && _settings.HideTrend) SwitchToFirstVisibleTab();
+            else if (TabDashboard.IsChecked == true && _settings.HideDashboard) SwitchToFirstVisibleTab();
+            else if (TabPodpitka.IsChecked == true && _settings.HidePodpitka) SwitchToFirstVisibleTab();
+        }
+
+        private void SwitchToFirstVisibleTab()
+        {
+            if (!_settings.HideGeneral) TabAll.IsChecked = true;
+            else if (!_settings.HideTrend) TabSingle.IsChecked = true;
+            else if (!_settings.HideDashboard) TabDashboard.IsChecked = true;
+            else if (!_settings.HidePodpitka) TabPodpitka.IsChecked = true;
+        }
+
+        private void ExperimentalToggle_Click(object sender, RoutedEventArgs e)
+        {
+            if (_settingsGearInitialLoad) return;
+            _settings.ExperimentalArchive = ChkExperimentalArchive.IsChecked == true;
+            _settings.ExperimentalReportPeriod = ChkExperimentalReportPeriod.IsChecked == true;
+            PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
+            BtnArchive.Visibility = _settings.ExperimentalArchive ? Visibility.Visible : Visibility.Collapsed;
+            SaveUserSettings();
+        }
+
+        // --- Корректировка Тнв ---
+
+        private void BtnTnvCorrection_Click(object sender, RoutedEventArgs e)
+        {
+            TxtTnvCorrectionValue.Text = TnvCorrection == 0 ? "0" : TnvCorrection.ToString("+0.#;-0.#;0", CultureInfo.CurrentCulture);
+            UpdateTnvCorrectionPreview();
+            OverlayTnvCorrection.Visibility = Visibility.Visible;
+        }
+
+        private void BtnTnvCorrectionStep_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && double.TryParse(btn.Tag?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double step))
+            {
+                double current = ParseDouble(TxtTnvCorrectionValue.Text) ?? 0;
+                double newVal = current + step;
+                TxtTnvCorrectionValue.Text = newVal.ToString("+0.#;-0.#;0", CultureInfo.CurrentCulture);
+                UpdateTnvCorrectionPreview();
+            }
+        }
+
+        private void BtnTnvCorrectionReset_Click(object sender, RoutedEventArgs e)
+        {
+            TxtTnvCorrectionValue.Text = "0";
+            UpdateTnvCorrectionPreview();
+        }
+
+        private void UpdateTnvCorrectionPreview()
+        {
+            double correction = ParseDouble(TxtTnvCorrectionValue.Text) ?? 0;
+            double? rawTnv = CurrentGlobalTnv - TnvCorrection;
+            if (rawTnv.HasValue)
+            {
+                double corrected = rawTnv.Value + correction;
+                TxtTnvRawValue.Text = $"{rawTnv.Value:F1} °C";
+                TxtTnvCorrectedPreview.Text = $"С поправкой: {corrected:F1} °C";
+            }
+            else
+            {
+                TxtTnvRawValue.Text = "—";
+                TxtTnvCorrectedPreview.Text = "";
+            }
+        }
+
+        private void BtnApplyTnvCorrection_Click(object sender, RoutedEventArgs e)
+        {
+            double correction = ParseDouble(TxtTnvCorrectionValue.Text) ?? 0;
+            TnvCorrection = correction;
+            _settings.TnvCorrection = correction;
+            SaveUserSettings();
+            _ = UpdateGlobalTnvAsync();
+            OverlayTnvCorrection.Visibility = Visibility.Collapsed;
+        }
+
+        private void BtnCancelTnvCorrection_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayTnvCorrection.Visibility = Visibility.Collapsed;
+        }
+
+        // --- Архив показаний ---
+
+        private void BtnArchive_Click(object sender, RoutedEventArgs e)
+        {
+            if (_allPoints == null || !_allPoints.Any())
+            {
+                MessageBox.Show("Сначала подключитесь к ЛЭРС.", "Архив", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            CmbArchivePoint.ItemsSource = _allPoints;
+            if (CmbArchivePoint.SelectedIndex < 0 && _allPoints.Any()) CmbArchivePoint.SelectedIndex = 0;
+            CmbArchiveKind.SelectedIndex = 1; // Часовые по умолчанию
+            DpArchiveFrom.SelectedDate = DateTime.Now.AddDays(-7);
+            DpArchiveTo.SelectedDate = DateTime.Now;
+            CmbArchiveDays.SelectedIndex = 1;
+            RbArchivePreset.IsChecked = true;
+            GridArchive.ItemsSource = null;
+            TxtArchiveStatus.Text = "";
+            OverlayArchive.Visibility = Visibility.Visible;
+        }
+
+        private void BtnCloseArchive_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayArchive.Visibility = Visibility.Collapsed;
+        }
+
+        private void RbArchiveMode_Changed(object sender, RoutedEventArgs e)
+        {
+            if (CmbArchiveDays == null) return;
+            bool isPreset = RbArchivePreset.IsChecked == true;
+            CmbArchiveDays.IsEnabled = isPreset;
+            DpArchiveFrom.IsEnabled = !isPreset;
+            DpArchiveTo.IsEnabled = !isPreset;
+        }
+
+        private async void BtnArchiveLoad_Click(object sender, RoutedEventArgs e)
+        {
+            if (CmbArchivePoint.SelectedItem is not MeasurePointItem pt)
+            {
+                TxtArchiveStatus.Text = "Выберите точку учёта.";
+                return;
+            }
+            int kindIndex = Math.Max(0, CmbArchiveKind.SelectedIndex);
+            TxtArchiveStatus.Text = "Загрузка данных из ЛЭРС...";
+            GridArchive.ItemsSource = null;
+
+            try
+            {
+                DateTime now = DateTime.Now;
+                DateTime from, to;
+
+                if (RbArchivePreset.IsChecked == true)
+                {
+                    int days = CmbArchiveDays.SelectedIndex switch
+                    {
+                        0 => 1, 1 => 7, 2 => 14, 3 => 30, _ => 7
+                    };
+                    from = now.AddDays(-days);
+                    to = now;
+                }
+                else
+                {
+                    from = DpArchiveFrom.SelectedDate ?? now.AddDays(-7);
+                    to = DpArchiveTo.SelectedDate ?? now;
+                    if (to < from) (from, to) = (to, from);
+                    to = to.Date.AddDays(1); // include the selected "to" day
+                }
+
+                // Тип данных ЛЭРС и соответствующий массив в ответе
+                string kindParam = kindIndex switch
+                {
+                    0 => "Current", 1 => "Hour", 2 => "Day", 3 => "Month", _ => "Day"
+                };
+                string kindRu = kindIndex switch
+                {
+                    0 => "текущие", 1 => "часовые", 2 => "суточные", 3 => "месячные", _ => "суточные"
+                };
+
+                string fromDate = from.ToString("yyyy-MM-dd");
+                string toDate = to.ToString("yyyy-MM-dd");
+
+                // Основной документированный формат ЛЭРС: путь с датами.
+                // Сервер сам выбирает набор доступных архивов и возвращает их в отдельных массивах.
+                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}";
+
+                using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                using var res = await _http.SendAsync(req);
+
+                if (!res.IsSuccessStatusCode)
+                {
+                    var statusCode = res.StatusCode.ToString();
+                    TxtArchiveStatus.Text = $"Нет данных. Код: {statusCode}. Возможно, для этой точки нет архива за период {fromDate} – {toDate}.";
+                    return;
+                }
+
+                var json = await res.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
+                {
+                    TxtArchiveStatus.Text = $"Сервер вернул пустой ответ за период {fromDate} – {toDate}.";
+                    return;
+                }
+
+                var parsed = ParseArchiveResponse(json, kindParam);
+                var rows = parsed.Rows;
+
+                if (rows.Count == 0)
+                {
+                    // Ничего не нашлось — сообщаем, какие именно архивы есть в ответе
+                    var avail = parsed.AvailableKinds.Count > 0
+                        ? "В ответе ЛЭРС есть: " + string.Join(", ", parsed.AvailableKinds.Select(k => k.ToLowerInvariant()))
+                        : "Ответ ЛЭРС не содержит архивов";
+                    TxtArchiveStatus.Text =
+                        $"{kindRu.capitalize()} показаний за период {fromDate} – {toDate} на сервере нет. {avail}.";
+                    return;
+                }
+
+                GridArchive.AutoGenerateColumns = true;
+                GridArchive.ItemsSource = rows;
+                TxtArchiveStatus.Text =
+                    $"Загружено записей: {rows.Count} ({kindRu}, период {fromDate} – {toDate})";
+            }
+            catch (Exception ex)
+            {
+                TxtArchiveStatus.Text = "Ошибка: " + ex.Message;
+            }
+        }
+
+        /// <summary>Результат разбора ответа ЛЭРС: строки + список реально доступных типов архивов.</summary>
+        private sealed class ArchiveParseResult
+        {
+            public List<Dictionary<string, string>> Rows { get; } = new();
+            public List<string> AvailableKinds { get; } = new();
+        }
+
+        /// <summary>Парсит ответ ЛЭРС для архива показаний.
+        ///
+        /// Формат ответа ЛЭРС:
+        /// {
+        ///   "monthConsumption":   [ ... ],
+        ///   "dayConsumption":     [ { dateTime, values:[ {dataParameter, value}, ... ] } ],
+        ///   "hourConsumption":    [ ... ],
+        ///   "currentConsumption": [ ... ],
+        ///   "dataParametersUnit": [ {dataParameterCategory, unit} ]   ← метаданные, НЕ данные
+        /// }
+        ///
+        /// Массив выбирается строго по запрошенному типу (Current/Hour/Day/Month),
+        /// чтобы метаданные и чужие архивы не попадали в таблицу.
+        /// Поддерживается также legacy-формат .NET Hashtable ({Comparer, Count, Keys, Values}).
+        /// </summary>
+        private static ArchiveParseResult ParseArchiveResponse(string json, string kind)
+        {
+            var result = new ArchiveParseResult();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (root.ValueKind != JsonValueKind.Object && root.ValueKind != JsonValueKind.Array)
+                return result;
+
+            // --- Legacy-формат .NET Hashtable: {"Comparer":..,"Count":N,"Keys":[..],"Values":[..]} ---
+            if (root.ValueKind == JsonValueKind.Object &&
+                root.TryGetProperty("Keys", out var htKeys) && htKeys.ValueKind == JsonValueKind.Array &&
+                root.TryGetProperty("Values", out var htValues) && htValues.ValueKind == JsonValueKind.Array)
+            {
+                var keyArr = htKeys.EnumerateArray().ToList();
+                var valArr = htValues.EnumerateArray().ToList();
+                for (int i = 0; i < valArr.Count; i++)
+                {
+                    var val = valArr[i];
+                    if (val.ValueKind == JsonValueKind.Object)
+                    {
+                        var row = FlattenRecord(val);
+                        if (row.Count > 0) result.Rows.Add(row);
+                    }
+                    else if (i < keyArr.Count && keyArr[i].ValueKind == JsonValueKind.String)
+                    {
+                        result.Rows.Add(new Dictionary<string, string> { [keyArr[i].GetString() ?? "value"] = ScalarToString(val) });
+                    }
+                }
+                if (result.Rows.Count > 0) result.AvailableKinds.Add(kind);
+                return result;
+            }
+
+            // --- Стандартный формат: выбираем массив по типу ---
+            string[] kindArrayNames = kind switch
+            {
+                "Current" => new[] { "currentConsumption", "currentConsumptions" },
+                "Hour" => new[] { "hourConsumption", "hourConsumptions" },
+                "Month" => new[] { "monthConsumption", "monthConsumptions" },
+                _ => new[] { "dayConsumption", "dayConsumptions" }
+            };
+
+            // Список всех массивов-архивов, которые реально присутствуют в ответе (для диагностики)
+            foreach (var prop in root.EnumerateObject())
+            {
+                if (prop.Value.ValueKind == JsonValueKind.Array &&
+                    prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase) &&
+                    prop.Value.GetArrayLength() > 0)
+                    result.AvailableKinds.Add(prop.Name);
+            }
+
+            JsonElement? selected = null;
+
+            // 1) Прямое совпадение по имени массива нужного типа
+            foreach (var name in kindArrayNames)
+            {
+                if (root.TryGetProperty(name, out var direct) && direct.ValueKind == JsonValueKind.Array)
+                {
+                    selected = direct;
+                    break;
+                }
+            }
+
+            // 2) Фолбэк: если нужный массив пуст — берём любой непустой массив-архив,
+            //    исключая dataParametersUnit (это метаданные единиц, а не показания)
+            if (selected is null || selected.Value.GetArrayLength() == 0)
+            {
+                foreach (var prop in root.EnumerateObject())
+                {
+                    if (prop.Value.ValueKind != JsonValueKind.Array) continue;
+                    if (prop.Value.GetArrayLength() == 0) continue;
+                    if (prop.Name.Equals("dataParametersUnit", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase)) continue;
+                    selected = prop.Value;
+                    break;
+                }
+            }
+
+            // 3) Фолбэк: корневой массив
+            if (selected is null && root.ValueKind == JsonValueKind.Array)
+                selected = root;
+
+            if (selected is null) return result;
+
+            foreach (var record in selected.Value.EnumerateArray())
+            {
+                if (record.ValueKind != JsonValueKind.Object) continue;
+                var row = FlattenRecord(record);
+                if (row.Count > 0) result.Rows.Add(row);
+            }
+
+            return result;
+        }
+
+        /// <summary>Разворачивает одну запись архива в плоскую строку:
+        /// прямые поля + вложенный массив values [{dataParameter, value}].</summary>
+        private static Dictionary<string, string> FlattenRecord(JsonElement record)
+        {
+            var row = new Dictionary<string, string>();
+
+            foreach (var prop in record.EnumerateObject())
+            {
+                if (prop.Value.ValueKind == JsonValueKind.Array)
+                {
+                    // Массив параметров [{ dataParameter: "T_in", value: 72.8 }]
+                    foreach (var item in prop.Value.EnumerateArray())
+                    {
+                        if (item.ValueKind != JsonValueKind.Object) continue;
+
+                        string? paramName = null;
+                        if (item.TryGetProperty("dataParameter", out var dp)) paramName = dp.GetString();
+                        else if (item.TryGetProperty("parameter", out var p2)) paramName = p2.GetString();
+                        else if (item.TryGetProperty("name", out var n2)) paramName = n2.GetString();
+
+                        string? valStr = null;
+                        if (item.TryGetProperty("value", out var v)) valStr = ScalarToString(v);
+                        else if (item.TryGetProperty("val", out v)) valStr = ScalarToString(v);
+
+                        if (!string.IsNullOrEmpty(paramName) && valStr != null)
+                            row[paramName] = valStr;
+                    }
+                }
+                else
+                {
+                    row[prop.Name] = ScalarToString(prop.Value);
+                }
+            }
+
+            return row;
+        }
+
+        private static string ScalarToString(JsonElement e) => e.ValueKind switch
+        {
+            JsonValueKind.Number => e.GetRawText(),
+            JsonValueKind.String => e.GetString() ?? "",
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            JsonValueKind.Null => "",
+            JsonValueKind.Undefined => "",
+            _ => e.GetRawText()
+        };
+
+        // --- Отчётный период (экспериментальный) ---
+
+        private void CmbReportPeriodStartDay_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (_settingsGearInitialLoad || CmbReportPeriodStartDay?.SelectedItem == null) return;
+            if (int.TryParse(CmbReportPeriodStartDay.SelectedItem.ToString(), out int day))
+            {
+                _settings.ReportPeriodStartDay = day;
+                SaveUserSettings();
+            }
+        }
+
+        private void CmbReportPeriodEndDay_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (_settingsGearInitialLoad || CmbReportPeriodEndDay?.SelectedItem == null) return;
+            if (int.TryParse(CmbReportPeriodEndDay.SelectedItem.ToString(), out int day))
+            {
+                _settings.ReportPeriodEndDay = day;
+                SaveUserSettings();
+            }
+        }
+
+        // --- Экспорт / импорт настроек ---
+
+        private void BtnExportSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Файл настроек LersMonitor (*.lers.json)|*.lers.json|Все файлы (*.*)|*.*",
+                FileName = "LersMonitor_Settings.lers.json",
+                Title = "Экспорт настроек"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                // Создаём копию настроек без учётных данных
+                var exportObj = new UserSettings
+                {
+                    Host = _settings.Host,
+                    Port = _settings.Port,
+                    // НЕ копируем Login, PasswordBase64, RememberCredentials
+                    ThemeMode = _settings.ThemeMode,
+                    TimeLightStr = _settings.TimeLightStr,
+                    TimeDarkStr = _settings.TimeDarkStr,
+                    UiScale = _settings.UiScale,
+                    SelectedPointIds = _settings.SelectedPointIds,
+                    TnvSourcePointId = _settings.TnvSourcePointId,
+                    PointLimits = _settings.PointLimits,
+                    LastResults = _settings.LastResults,
+                    PodpitkaPointIds = _settings.PodpitkaPointIds,
+                    PodpitkaIntervalMin = _settings.PodpitkaIntervalMin,
+                    PodpitkaLimits = _settings.PodpitkaLimits,
+                    TnvCorrection = _settings.TnvCorrection,
+                    HideGeneral = _settings.HideGeneral,
+                    HideTrend = _settings.HideTrend,
+                    HideDashboard = _settings.HideDashboard,
+                    HidePodpitka = _settings.HidePodpitka,
+                    ExperimentalArchive = _settings.ExperimentalArchive,
+                    ExperimentalReportPeriod = _settings.ExperimentalReportPeriod,
+                    ReportPeriodStartDay = _settings.ReportPeriodStartDay,
+                    ReportPeriodEndDay = _settings.ReportPeriodEndDay
+                };
+
+                var opts = new JsonSerializerOptions { WriteIndented = true };
+                var json = JsonSerializer.Serialize(exportObj, opts);
+                File.WriteAllText(dlg.FileName, json);
+                MessageBox.Show($"Настройки успешно сохранены в файл:\n{dlg.FileName}\n\nЛогин, пароль, сервер и порт НЕ включены в экспорт.",
+                    "Экспорт настроек", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при экспорте настроек:\n" + ex.Message,
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnImportSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Файл настроек LersMonitor (*.lers.json)|*.lers.json|Все файлы (*.*)|*.*",
+                Title = "Импорт настроек"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                var json = File.ReadAllText(dlg.FileName);
+                var imported = JsonSerializer.Deserialize<UserSettings>(json);
+                if (imported == null)
+                {
+                    MessageBox.Show("Не удалось прочитать файл настроек.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Сохраняем текущие учётные данные
+                var savedHost = _settings.Host;
+                var savedPort = _settings.Port;
+                var savedLogin = _settings.Login;
+                var savedPassword = _settings.PasswordBase64;
+                var savedRemember = _settings.RememberCredentials;
+
+                // Применяем импортированные настройки
+                _settings.ThemeMode = imported.ThemeMode;
+                _settings.TimeLightStr = imported.TimeLightStr;
+                _settings.TimeDarkStr = imported.TimeDarkStr;
+                _settings.UiScale = imported.UiScale;
+                _settings.SelectedPointIds = imported.SelectedPointIds ?? new();
+                _settings.TnvSourcePointId = imported.TnvSourcePointId;
+                _settings.PointLimits = imported.PointLimits ?? new();
+                _settings.LastResults = imported.LastResults ?? new();
+                _settings.PodpitkaPointIds = imported.PodpitkaPointIds ?? new();
+                _settings.PodpitkaIntervalMin = imported.PodpitkaIntervalMin;
+                _settings.PodpitkaLimits = imported.PodpitkaLimits ?? new();
+                _settings.TnvCorrection = imported.TnvCorrection;
+                _settings.HideGeneral = imported.HideGeneral;
+                _settings.HideTrend = imported.HideTrend;
+                _settings.HideDashboard = imported.HideDashboard;
+                _settings.HidePodpitka = imported.HidePodpitka;
+                _settings.ExperimentalArchive = imported.ExperimentalArchive;
+                _settings.ExperimentalReportPeriod = imported.ExperimentalReportPeriod;
+                _settings.ReportPeriodStartDay = imported.ReportPeriodStartDay;
+                _settings.ReportPeriodEndDay = imported.ReportPeriodEndDay;
+
+                // Восстанавливаем учётные данные
+                _settings.Host = savedHost;
+                _settings.Port = savedPort;
+                _settings.Login = savedLogin;
+                _settings.PasswordBase64 = savedPassword;
+                _settings.RememberCredentials = savedRemember;
+
+                SaveUserSettings();
+                MessageBox.Show($"Настройки успешно импортированы из файла:\n{dlg.FileName}\n\nУчётные данные (логин, пароль, сервер, порт) сохранены текущими.",
+                    "Импорт настроек", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Применяем видимость разделов и тему
+                ApplySectionVisibility();
+                OverlayAppSettings.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при импорте настроек:\n" + ex.Message,
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void BtnPodpitkaRetry_Click(object sender, RoutedEventArgs e)
@@ -1676,6 +2256,15 @@ namespace LersMonitor
         public List<int> PodpitkaPointIds { get; set; } = new();
         public int PodpitkaIntervalMin { get; set; } = 30;
         public Dictionary<int, VolumeThresholds> PodpitkaLimits { get; set; } = new();
+        public double TnvCorrection { get; set; } = 0;
+        public bool HideGeneral { get; set; } = false;
+        public bool HideTrend { get; set; } = false;
+        public bool HideDashboard { get; set; } = false;
+        public bool HidePodpitka { get; set; } = false;
+        public bool ExperimentalArchive { get; set; } = false;
+        public bool ExperimentalReportPeriod { get; set; } = false;
+        public int ReportPeriodStartDay { get; set; } = 25;
+        public int ReportPeriodEndDay { get; set; } = 24;
     }
 
     public class DashboardNodeViewModel : INotifyPropertyChanged
@@ -1749,6 +2338,9 @@ namespace LersMonitor
             OnPropertyChanged(nameof(SingleStatusColor));
             OnPropertyChanged(nameof(PointTitleColor));
             OnPropertyChanged(nameof(RetryVisibility));
+            OnPropertyChanged(nameof(DeltaT)); OnPropertyChanged(nameof(DeltaP));
+            OnPropertyChanged(nameof(DeltaTColor)); OnPropertyChanged(nameof(DeltaPColor));
+            OnPropertyChanged(nameof(DeltaTDashBg)); OnPropertyChanged(nameof(DeltaPDashBg));
 
             // Заданные значения по температурному графику зависят от Тнв и настроек графика.
             OnPropertyChanged(nameof(ScheduleTargetVisibility));
@@ -1913,16 +2505,16 @@ namespace LersMonitor
         private string _title = string.Empty; public string Title { get => _title; set { _title = value; OnPropertyChanged(); } }
         private DateTime? _deviceTime; public DateTime? DeviceTime { get => _deviceTime; set { _deviceTime = value; OnPropertyChanged(); } }
         
-        private double? _t1; public double? T1 { get => _t1; set { _t1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T1Color)); OnPropertyChanged(nameof(T1DashBg)); OnPropertyChanged(nameof(T1DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); } }
+        private double? _t1; public double? T1 { get => _t1; set { _t1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T1Color)); OnPropertyChanged(nameof(T1DashBg)); OnPropertyChanged(nameof(T1DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(DeltaT)); OnPropertyChanged(nameof(DeltaTColor)); OnPropertyChanged(nameof(DeltaTDashBg)); } }
         [System.Text.Json.Serialization.JsonIgnore] public Brush T1Color => (IsBreached(T1, Limits?.T1Min, Limits?.T1Max) || IsT1ScheduleBreached(T1, Limits?.Schedule)) ? Brushes.Red : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black);
         
-        private double? _t2; public double? T2 { get => _t2; set { _t2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T2Color)); OnPropertyChanged(nameof(T2DashBg)); OnPropertyChanged(nameof(T2DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); } }
+        private double? _t2; public double? T2 { get => _t2; set { _t2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T2Color)); OnPropertyChanged(nameof(T2DashBg)); OnPropertyChanged(nameof(T2DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(DeltaT)); OnPropertyChanged(nameof(DeltaTColor)); OnPropertyChanged(nameof(DeltaTDashBg)); } }
         [System.Text.Json.Serialization.JsonIgnore] public Brush T2Color => (IsBreached(T2, Limits?.T2Min, Limits?.T2Max) || IsT2ScheduleBreached(T2, Limits?.Schedule)) ? Brushes.Red : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black);
         
-        private double? _p1; public double? P1 { get => _p1; set { _p1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(P1Color)); OnPropertyChanged(nameof(P1DashBg)); OnPropertyChanged(nameof(P1DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); } }
+        private double? _p1; public double? P1 { get => _p1; set { _p1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(P1Color)); OnPropertyChanged(nameof(P1DashBg)); OnPropertyChanged(nameof(P1DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(DeltaP)); OnPropertyChanged(nameof(DeltaPColor)); OnPropertyChanged(nameof(DeltaPDashBg)); } }
         [System.Text.Json.Serialization.JsonIgnore] public Brush P1Color => GetColor(P1, Limits?.P1Min, Limits?.P1Max);
         
-        private double? _p2; public double? P2 { get => _p2; set { _p2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(P2Color)); OnPropertyChanged(nameof(P2DashBg)); OnPropertyChanged(nameof(P2DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); } }
+        private double? _p2; public double? P2 { get => _p2; set { _p2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(P2Color)); OnPropertyChanged(nameof(P2DashBg)); OnPropertyChanged(nameof(P2DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(DeltaP)); OnPropertyChanged(nameof(DeltaPColor)); OnPropertyChanged(nameof(DeltaPDashBg)); } }
         [System.Text.Json.Serialization.JsonIgnore] public Brush P2Color => GetColor(P2, Limits?.P2Min, Limits?.P2Max);
         
         private double? _v1; public double? V1 { get => _v1; set { _v1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(V1Color)); OnPropertyChanged(nameof(V1DashBg)); OnPropertyChanged(nameof(V1DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); } }
@@ -1939,6 +2531,13 @@ namespace LersMonitor
         
         private double? _q; public double? Q { get => _q; set { _q = value; OnPropertyChanged(); OnPropertyChanged(nameof(QColor)); OnPropertyChanged(nameof(QDashBg)); OnPropertyChanged(nameof(QDashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); } }
         [System.Text.Json.Serialization.JsonIgnore] public Brush QColor => GetColor(Q, Limits?.QMin, Limits?.QMax);
+        
+        [System.Text.Json.Serialization.JsonIgnore] public double? DeltaT => (T1.HasValue && T2.HasValue) ? T1 - T2 : null;
+        [System.Text.Json.Serialization.JsonIgnore] public double? DeltaP => (P1.HasValue && P2.HasValue) ? P1 - P2 : null;
+        [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaTColor => DeltaT.HasValue ? ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black) : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelSecondary") ?? Brushes.Gray);
+        [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaPColor => DeltaP.HasValue ? ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black) : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelSecondary") ?? Brushes.Gray);
+        [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaTDashBg => GetDashBg(null, null, null);
+        [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaPDashBg => GetDashBg(null, null, null);
         
         private string _status = string.Empty; public string Status { get => _status; set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(RetryVisibility)); } }
     }
@@ -2564,20 +3163,74 @@ namespace LersMonitor
     {
         public static readonly int[] IntervalsMin = { 10, 20, 30, 40, 50, 60, 120 };
 
-        /// <summary>Последний ЗАКРЫТЫЙ отчётный период 25-е → 24-е (включительно).
-        /// 4 ноября → 25 сентября – 24 октября.
-        /// 25 ноября → 25 октября – 24 ноября.
-        /// 13 октября → 25.08–24.09; 29 октября → 25.09–24.10.</summary>
-        public static Period Report(DateTime now)
+        /// <summary>Последний ЗАКРЫТЫЙ отчётный период.
+        /// По умолчанию 25-е → 24-е. Если заданы startDay/endDay — используются они.
+        /// Поддерживаются любые комбинации, например: 1→31, 25→24, 15→14 и т.д.</summary>
+        public static Period Report(DateTime now) => Report(now, 25, 24);
+
+        public static Period Report(DateTime now, int startDay) => Report(now, startDay, startDay == 1 ? 31 : startDay - 1);
+
+        /// <summary>
+        /// Вычисляет последний ЗАКРЫТЫЙ отчётный период по произвольной паре день-начала / день-конца.
+        /// startDay и endDay — числа от 1 до 31.
+        /// Если startDay &lt;= endDay: период в пределах одного месяца (например 1→31, 1→15).
+        /// Если startDay &gt; endDay: период переходит через границу месяца (например 25→24).
+        /// Период считается закрытым, когда прошёл день-конца текущего кандидата.
+        /// </summary>
+        public static Period Report(DateTime now, int startDay, int endDay)
         {
-            // Если сегодня 25-е или позже — отчётный период начался в этом месяце 25-го
-            // Если сегодня до 25-го — отчётный период начался в прошлом месяце 25-го
-            var start = now.Day >= 25
-                ? new DateTime(now.Year, now.Month, 25)
-                : new DateTime(now.Year, now.Month, 25).AddMonths(-1);
-            // Период длится до 24-го числа следующего месяца (эксклюзивно = 25-е)
-            var endExclusive = start.AddMonths(1);
-            return new Period(start, endExclusive);
+            startDay = Math.Clamp(startDay, 1, 31);
+            endDay = Math.Clamp(endDay, 1, 31);
+
+            // Реальный день конца с учётом длины месяца (например, endDay=31 в феврале → 28/29)
+            int LastDayOfMonth(DateTime d) => DateTime.DaysInMonth(d.Year, d.Month);
+            int ClampDayToMonth(int day, DateTime monthDate) => Math.Min(day, LastDayOfMonth(monthDate));
+
+            if (startDay <= endDay)
+            {
+                // Период в одном месяце: startDay..endDay этого месяца.
+                // Закрыт, если сегодня > endDay (с учётом длины месяца).
+                var candidateMonth = new DateTime(now.Year, now.Month, 1);
+                int realEnd = ClampDayToMonth(endDay, candidateMonth);
+                var endDate = new DateTime(now.Year, now.Month, realEnd);
+                // Если конец ещё не наступил — берём предыдущий месяц
+                if (now <= endDate)
+                    candidateMonth = candidateMonth.AddMonths(-1);
+
+                int realStart = ClampDayToMonth(startDay, candidateMonth);
+                int realEndFinal = ClampDayToMonth(endDay, candidateMonth);
+                var from = new DateTime(candidateMonth.Year, candidateMonth.Month, realStart);
+                var toExclusive = new DateTime(candidateMonth.Year, candidateMonth.Month, realEndFinal).AddDays(1);
+                return new Period(from, toExclusive);
+            }
+            else
+            {
+                // Период переходит через месяц: startDay в месяце A, endDay в месяце A+1.
+                // Например 25→24: с 25 сентября по 24 октября.
+                // Закрыт, когда прошёл endDay в месяце, следующем за месяцем старта.
+                // Текущий кандидат: старт в прошлом месяце, конец в текущем.
+                var startMonth = now.AddMonths(-1);
+                int realStart = ClampDayToMonth(startDay, startMonth);
+                var from = new DateTime(startMonth.Year, startMonth.Month, realStart);
+
+                var endMonth = startMonth.AddMonths(1);
+                int realEnd = ClampDayToMonth(endDay, endMonth);
+                var endDate = new DateTime(endMonth.Year, endMonth.Month, realEnd);
+
+                // Если период ещё не закрыт (сегодня <= endDate) — сдвигаем на месяц назад
+                if (now <= endDate)
+                {
+                    startMonth = startMonth.AddMonths(-1);
+                    realStart = ClampDayToMonth(startDay, startMonth);
+                    from = new DateTime(startMonth.Year, startMonth.Month, realStart);
+                    endMonth = startMonth.AddMonths(1);
+                    realEnd = ClampDayToMonth(endDay, endMonth);
+                    endDate = new DateTime(endMonth.Year, endMonth.Month, realEnd);
+                }
+
+                var toExclusive = endDate.AddDays(1);
+                return new Period(from, toExclusive);
+            }
         }
 
         /// <summary>Вчерашние сутки: 00:00 вчерашнего дня → 00:00 сегодняшнего дня (эксклюзивно).</summary>
@@ -2701,10 +3354,16 @@ namespace LersMonitor
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
+            // Если сервер вернул один объект, а не массив — пробуем извлечь из него
+            if (root.ValueKind == JsonValueKind.Object)
+            {
+                var singleVal = ExtractVolume(root);
+                if (singleVal.HasValue) return singleVal;
+            }
+
             JsonElement array = root;
             if (root.ValueKind != JsonValueKind.Array)
             {
-                // Если сервер обернул массив в свойство records / values / consumption
                 bool found = false;
                 foreach (var prop in root.EnumerateObject())
                 {
@@ -2820,17 +3479,23 @@ namespace LersMonitor
                 }
             }
 
+            // 3. Если есть поле value и нет других параметров — пробуем как прямой объём
+            if (elem.TryGetProperty("value", out var vProp) && vProp.ValueKind == JsonValueKind.Number && vProp.TryGetDouble(out var v))
+                return v;
+
             return null;
         }
 
         public async Task RefreshAsync(PodpitkaPointViewModel vm, DateTime now, CancellationToken ct)
         {
-            var r = PodpitkaPeriods.Report(now);
+            int startDay = MainWindow.AppSettings?.ReportPeriodStartDay ?? 25;
+            int endDay = MainWindow.AppSettings?.ReportPeriodEndDay ?? 24;
+            var r = PodpitkaPeriods.Report(now, startDay, endDay);
             var y = PodpitkaPeriods.Yesterday(now);
             var t = PodpitkaPeriods.Today(now);
             var h = PodpitkaPeriods.PrevHour(now);
 
-            // 1. Отчётный месяц (25→24): суточный архив Day за весь период
+            // 1. Отчётный период (например 25→24): суточный архив Day за весь период
             var taskReport = SumV1Async(vm.Id, r.From, r.ToExclusive.AddDays(-1), false, ct);
 
             // 2. Вчера: суточный архив Day за вчерашний день
@@ -3132,6 +3797,17 @@ namespace LersMonitor
 
             // Auto-scroll to bottom
             _scrollViewer.ScrollToBottom();
+        }
+    }
+
+    /// <summary>Мелкие вспомогательные расширения строк.</summary>
+    internal static class StringExtensions
+    {
+        /// <summary>Первая буква заглавная, остальные — как есть. "часовые" → "Часовые".</summary>
+        public static string capitalize(this string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            return char.ToUpper(s[0], CultureInfo.CurrentCulture) + s.Substring(1);
         }
     }
 

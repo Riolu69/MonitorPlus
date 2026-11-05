@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:LersMonitor"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="ЛЭРС УЧЁТ — Экспресс Мониторинг" 
         Height="860" Width="1400"
         MinHeight="720" MinWidth="1100"
@@ -585,6 +586,7 @@
                                     <TextBlock Text=" °C" FontSize="12" Foreground="{DynamicResource LabelSecondary}"/>
                                 </StackPanel>
                             </Border>
+                            <Button x:Name="BtnTnvCorrection" Content="±" Style="{StaticResource AppleGhostButton}" Margin="4,0,0,0" ToolTip="Корректировка датчика наружного воздуха" Click="BtnTnvCorrection_Click"/>
                         </StackPanel>
                     </StackPanel>
                     
@@ -593,14 +595,25 @@
             </Border>
 
             <!-- Segmented Control — навигация -->
-            <Border Grid.Row="1" Background="{DynamicResource SegmentedBg}" CornerRadius="10" Padding="3" HorizontalAlignment="Left" Margin="0,0,0,12">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="TabAll" Content="Общий мониторинг" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="TabMode_Checked"/>
-                    <RadioButton x:Name="TabSingle" Content="Текущие" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
-                    <RadioButton x:Name="TabDashboard" Content="Дашборд" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
-                    <RadioButton x:Name="TabPodpitka" Content="Подпитка" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+            <Grid Grid.Row="1" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Background="{DynamicResource SegmentedBg}" CornerRadius="10" Padding="3" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="TabAll" Content="Общий мониторинг" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="TabMode_Checked"/>
+                        <RadioButton x:Name="TabSingle" Content="Текущие" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                        <RadioButton x:Name="TabDashboard" Content="Дашборд" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                        <RadioButton x:Name="TabPodpitka" Content="Подпитка" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                    </StackPanel>
+                </Border>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnArchive" Content=" Архив" Style="{StaticResource AppleGhostButton}" Click="BtnArchive_Click" Visibility="Collapsed" ToolTip="Архив показаний точки учёта"/>
+                    <Button x:Name="BtnSettingsGear" Content="⚙" Style="{StaticResource AppleGhostButton}" Click="BtnSettingsGear_Click" Margin="6,0,0,0" ToolTip="Настройки приложения"/>
                 </StackPanel>
-            </Border>
+            </Grid>
 
             <!-- Экран 1: Общий мониторинг точек -->
             <Grid x:Name="ViewGeneral" Grid.Row="2">
@@ -715,6 +728,8 @@
                             <CheckBox Content="M1" IsChecked="True" Margin="0,0,12,6" Click="ColumnToggle_Click"/>
                             <CheckBox Content="M2" IsChecked="True" Margin="0,0,12,6" Click="ColumnToggle_Click"/>
                             <CheckBox Content="Q"  IsChecked="True" Margin="0,0,12,6" Click="ColumnToggle_Click"/>
+                            <CheckBox Content="ΔT" IsChecked="True" Margin="0,0,12,6" Click="ColumnToggle_Click"/>
+                            <CheckBox Content="ΔP" IsChecked="True" Margin="0,0,0,6" Click="ColumnToggle_Click"/>
                         </WrapPanel>
 
                         <Border Grid.Row="2" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Background="{DynamicResource CardBackgroundAlt}">
@@ -730,12 +745,18 @@
                                     <DataGridTextColumn Header="T2 (°C)" Binding="{Binding T2, StringFormat=\{0:F1\}}" Width="65">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding T2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    
+                                    <DataGridTextColumn Header="ΔT (°C)" Binding="{Binding DeltaT, StringFormat=\{0:F1\}}" Width="60" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaTColor}"/></Style></DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
                                     <DataGridTextColumn Header="P1 (атм)" Binding="{Binding P1, StringFormat=\{0:F1\}}" Width="65">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
                                     <DataGridTextColumn Header="P2 (атм)" Binding="{Binding P2, StringFormat=\{0:F1\}}" Width="65" Visibility="Collapsed">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P2Color}"/></Style></DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="ΔP (атм)" Binding="{Binding DeltaP, StringFormat=\{0:F2\}}" Width="60" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaPColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
                                     
                                     <DataGridTextColumn Header="V1 (м³/ч)" Binding="{Binding V1, StringFormat=\{0:F2\}}" Width="70">
@@ -794,11 +815,17 @@
                                     <DataGridTextColumn Header="T2 (°C)" Binding="{Binding T2, StringFormat=\{0:F1\}}" Width="80">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding T2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
+                                    <DataGridTextColumn Header="ΔT (°C)" Binding="{Binding DeltaT, StringFormat=\{0:F1\}}" Width="70" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaTColor}"/></Style></DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
                                     <DataGridTextColumn Header="P1 (атм)" Binding="{Binding P1, StringFormat=\{0:F1\}}" Width="80">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
                                     <DataGridTextColumn Header="P2 (атм)" Binding="{Binding P2, StringFormat=\{0:F1\}}" Width="80">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P2Color}"/></Style></DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="ΔP (атм)" Binding="{Binding DeltaP, StringFormat=\{0:F2\}}" Width="70" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaPColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
                                     <DataGridTextColumn Header="V1 (м³/ч)" Binding="{Binding V1, StringFormat=\{0:F2\}}" Width="80">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding V1Color}"/></Style></DataGridTextColumn.ElementStyle>
@@ -893,7 +920,9 @@
                                     <CheckBox x:Name="ChkDashP" Content="P" IsChecked="True" Click="DashFilter_Click"/>
                                     <CheckBox x:Name="ChkDashV" Content="V" IsChecked="True" Click="DashFilter_Click"/>
                                     <CheckBox x:Name="ChkDashM" Content="M" IsChecked="True" Click="DashFilter_Click"/>
-                                    <CheckBox x:Name="ChkDashQ" Content="Q" IsChecked="True" Margin="0" Click="DashFilter_Click"/>
+                                    <CheckBox x:Name="ChkDashQ" Content="Q" IsChecked="True" Margin="0,0,8,0" Click="DashFilter_Click"/>
+                                    <CheckBox x:Name="ChkDashDeltaT" Content="ΔT" IsChecked="True" Click="DashFilter_Click"/>
+                                    <CheckBox x:Name="ChkDashDeltaP" Content="ΔP" IsChecked="True" Margin="0" Click="DashFilter_Click"/>
                                 </StackPanel>
 
                                 <!-- Кнопки и масштаб -->
@@ -923,14 +952,14 @@
                                 </StackPanel>
                             </StackPanel>
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <WrapPanel ItemWidth="210" ItemHeight="140">
-                                    <WrapPanel.LayoutTransform>
+                                <local:CompactColumnsPanel Spacing="12" MinColumnWidth="190">
+                                    <local:CompactColumnsPanel.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}" 
                                                         ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
-                                    </WrapPanel.LayoutTransform>
+                                    </local:CompactColumnsPanel.LayoutTransform>
 
                                     <!-- Тнв: та же точка, что выбрана в «Источник Тнв (улица)» -->
-                                    <Border Background="{DynamicResource AccentTeal}" CornerRadius="16" Margin="0,0,16,16" Padding="18"
+                                    <Border Width="190" Height="120" Background="{DynamicResource AccentTeal}" CornerRadius="16" Padding="18"
                                             ToolTip="Температура наружного воздуха из точки, выбранной в «Источник Тнв (улица)»">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
@@ -954,7 +983,7 @@
                                         </Grid>
                                     </Border>
 
-                                    <Border Background="{Binding T1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding T1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <Grid.RowDefinitions>
@@ -974,7 +1003,7 @@
                                             </StackPanel>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding T2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding T2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <Grid.RowDefinitions>
@@ -994,56 +1023,70 @@
                                             </StackPanel>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding P1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding DeltaTDashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
+                                        <Grid>
+                                            <TextBlock Text="ΔT (°C)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
+                                            <TextBlock Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                    </Border>
+                                    <Border Width="190" Height="120" Background="{Binding P1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="P1 (атм)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding P2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding P2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="P2 (атм)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding V1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding DeltaPDashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
+                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
+                                        <Grid>
+                                            <TextBlock Text="ΔP (атм)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
+                                            <TextBlock Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                    </Border>
+                                    <Border Width="190" Height="120" Background="{Binding V1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="V1 (м³/ч)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding V2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding V2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="V2 (м³/ч)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding M1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding M1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="M1 (т)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding M2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding M2DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="M2 (т)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                    <Border Background="{Binding QDashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}" CornerRadius="16" Margin="0,0,16,16" Padding="18">
+                                    <Border Width="190" Height="120" Background="{Binding QDashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
                                             <TextBlock Text="Q (Гкал)" Foreground="{Binding TileForeground}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.85"/>
                                             <TextBlock Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='-'}" Foreground="{Binding TileForeground}" FontSize="34" FontWeight="Bold" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
-                                </WrapPanel>
+                                </local:CompactColumnsPanel>
                             </ScrollViewer>
                         </Grid>
                         
@@ -1140,6 +1183,8 @@
                                                                             <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
                                                                                 <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding T1DashForeground}"/><Run Text="/" Foreground="#80FFFFFF"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding T2DashForeground}"/>
                                                                             </TextBlock>
+                                                                            <TextBlock Text="ΔT" FontSize="9" Opacity="0.75" Foreground="White" Margin="0,2,0,0"/>
+                                                                            <TextBlock Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='-'}" FontSize="12" FontWeight="Bold" Foreground="White"/>
                                                                         </StackPanel>
                                                                         
                                                                         <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}">
@@ -1147,6 +1192,8 @@
                                                                             <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
                                                                                 <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding P1DashForeground}"/><Run Text="/" Foreground="#80FFFFFF"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='-'}" Foreground="{Binding P2DashForeground}"/>
                                                                             </TextBlock>
+                                                                            <TextBlock Text="ΔP" FontSize="9" Opacity="0.75" Foreground="White" Margin="0,2,0,0"/>
+                                                                            <TextBlock Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='-'}" FontSize="12" FontWeight="Bold" Foreground="White"/>
                                                                         </StackPanel>
 
                                                                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}">
@@ -1610,6 +1657,175 @@
                         <Button Content="Отмена" Click="BtnCancelPodpitkaLimits_Click" Margin="0,0,8,0" Padding="10,7" FontSize="11" Style="{StaticResource AppleGhostButton}"/>
                         <Button Content="Применить" Click="BtnSavePodpitkaLimits_Click" Padding="14,8" FontSize="12" Style="{StaticResource ApplePrimaryButton}"/>
                     </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Модальное окно корректировки Тнв -->
+        <Grid x:Name="OverlayTnvCorrection" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="140">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="28" Width="420">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.15"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Корректировка датчика Тнв" FontWeight="Bold" FontSize="18" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock Text="Если датчик наружного воздуха показывает неточно, введите поправку (±°C). Значение прибавляется к показаниям датчика и используется для температурного графика."
+                               FontSize="12" TextWrapping="Wrap" Margin="0,0,0,14" Foreground="{DynamicResource LabelSecondary}"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Текущий Тнв с датчика:" FontSize="11" Foreground="{DynamicResource LabelSecondary}"/>
+                            <TextBlock x:Name="TxtTnvRawValue" Text="—" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}" Margin="0,2,0,8"/>
+                            <TextBlock Text="Поправка (°C, можно отрицательную):" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtTnvCorrectionValue" Grid.Column="0" Style="{StaticResource CompactNumericTextBox}" ToolTip="Например: -1.5 или +2"/>
+                                <Button Grid.Column="1" Content="-0.5" Style="{StaticResource AppleGhostButton}" Margin="4,0,0,0" Click="BtnTnvCorrectionStep_Click" Tag="-0.5"/>
+                                <Button Grid.Column="2" Content="+0.5" Style="{StaticResource AppleGhostButton}" Margin="4,0,0,0" Click="BtnTnvCorrectionStep_Click" Tag="0.5"/>
+                                <Button Grid.Column="3" Content="Сброс" Style="{StaticResource AppleGhostButton}" Margin="4,0,0,0" Click="BtnTnvCorrectionReset_Click"/>
+                            </Grid>
+                            <TextBlock x:Name="TxtTnvCorrectedPreview" Text="" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource AccentBlue}" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Отмена" Click="BtnCancelTnvCorrection_Click" Margin="0,0,10,0" Padding="12,8" Style="{StaticResource AppleGhostButton}"/>
+                        <Button Content="Применить" Click="BtnApplyTnvCorrection_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Модальное окно настроек (шестерёнка) -->
+        <Grid x:Name="OverlayAppSettings" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="150">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="28" Width="460">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.15"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="⚙ Настройки" FontWeight="Bold" FontSize="18" Margin="0,0,0,14" Foreground="{DynamicResource LabelPrimary}"/>
+
+                    <!-- Видимость разделов -->
+                    <TextBlock Text="Видимость разделов" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                        <StackPanel>
+                            <CheckBox x:Name="ChkSectionGeneral" Content="Общий мониторинг" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionTrend" Content="Текущие (тренд)" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionDashboard" Content="Дашборд" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionPodpitka" Content="Подпитка" IsChecked="True" Margin="0,0,0,0" Click="SectionToggle_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Экспериментальные функции -->
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Экспериментальные функции" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Функции, которые не до конца отлажены либо нужны только для тестирования. Включайте на своё усмотрение."
+                                       FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,10"/>
+                            <CheckBox x:Name="ChkExperimentalArchive" Content="Архив показаний (текущие/часовые/суточные/месячные)" IsChecked="False" Margin="0,0,0,6" Click="ExperimentalToggle_Click"/>
+                            <CheckBox x:Name="ChkExperimentalReportPeriod" Content="Настраиваемый отчётный период" IsChecked="False" Margin="0,0,0,0" Click="ExperimentalToggle_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Отчётный период (экспериментальный) -->
+                    <Border x:Name="PanelReportPeriodSettings" Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="14,10" Margin="0,0,0,14" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="Отчётный период подпитки" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,8"/>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="С (день):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="CmbReportPeriodStartDay" Grid.Column="1" SelectionChanged="CmbReportPeriodStartDay_Changed"/>
+                                <TextBlock Grid.Column="2" Text="По (день):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="8,0,8,0"/>
+                                <ComboBox x:Name="CmbReportPeriodEndDay" Grid.Column="3" SelectionChanged="CmbReportPeriodEndDay_Changed"/>
+                            </Grid>
+                            <TextBlock Text="Например: с 25-го по 24-е, с 1-го по 31-е и т.д."
+                                       FontSize="10" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Экспорт / импорт настроек -->
+                    <TextBlock Text="Перенос настроек" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Сохраняет все настройки (графики, границы, выбранные точки, темы) в файл для переноса на другой ПК. Логин и пароль не включаются."
+                                       FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,10"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content=" Экспортировать" Style="{StaticResource ApplePrimaryButton}" Margin="0,0,8,0" Click="BtnExportSettings_Click"/>
+                                <Button Content=" Импортировать" Style="{StaticResource AppleGhostButton}" Click="BtnImportSettings_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Закрыть" Click="BtnCloseAppSettings_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Модальное окно архива показаний -->
+        <Grid x:Name="OverlayArchive" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="160">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="28" Width="820">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.15"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Архив показаний" FontWeight="Bold" FontSize="18" Margin="0,0,0,14" Foreground="{DynamicResource LabelPrimary}"/>
+
+                    <!-- Выбор точки и типа данных -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="130"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="CmbArchivePoint" Grid.Column="0" DisplayMemberPath="DisplayName" Margin="0,0,8,0"/>
+                        <ComboBox x:Name="CmbArchiveKind" Grid.Column="1" Width="130">
+                            <ComboBoxItem Content="Текущие"/>
+                            <ComboBoxItem Content="Часовые"/>
+                            <ComboBoxItem Content="Суточные"/>
+                            <ComboBoxItem Content="Месячные"/>
+                        </ComboBox>
+                    </Grid>
+
+                    <!-- Выбор периода: быстрые пресеты + произвольный -->
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="12,8" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Период данных:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,6"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="RbArchivePreset" Content="За:" IsChecked="True" VerticalAlignment="Center" Margin="0,0,8,0" Checked="RbArchiveMode_Changed"/>
+                                <ComboBox x:Name="CmbArchiveDays" Width="70" SelectedIndex="1" Margin="0,0,8,0">
+                                    <ComboBoxItem Content="1"/>
+                                    <ComboBoxItem Content="7"/>
+                                    <ComboBoxItem Content="14"/>
+                                    <ComboBoxItem Content="30"/>
+                                </ComboBox>
+                                <TextBlock Text="дней" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="RbArchiveCustom" Content="С:" VerticalAlignment="Center" Margin="0,0,8,0" Checked="RbArchiveMode_Changed"/>
+                                <DatePicker x:Name="DpArchiveFrom" Width="120" Margin="0,0,8,0" SelectedDate="{x:Static sys:DateTime.Now}"/>
+                                <TextBlock Text="по:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <DatePicker x:Name="DpArchiveTo" Width="120" Margin="0,0,8,0" SelectedDate="{x:Static sys:DateTime.Now}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+                        <Button x:Name="BtnArchiveLoad" Content="Загрузить" Style="{StaticResource ApplePrimaryButton}" Margin="0,0,8,0" Click="BtnArchiveLoad_Click"/>
+                        <Button Content="Закрыть" Style="{StaticResource AppleGhostButton}" Click="BtnCloseArchive_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtArchiveStatus" Text="" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
+                    <Border CornerRadius="10" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Height="350" ClipToBounds="True" Background="{DynamicResource CardBackgroundAlt}">
+                        <DataGrid x:Name="GridArchive" AutoGenerateColumns="True" IsReadOnly="True" ColumnWidth="*"/>
+                    </Border>
                 </StackPanel>
             </Border>
         </Grid>
