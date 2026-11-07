@@ -590,7 +590,10 @@ public actor LersCoordinator {
         "m_in", "M_in", "m1", "M1", "m_mu", "M_mu", "mass1", "mass", "m", "M",
         "v_delta", "V_delta", "m_delta", "M_delta", "v_out", "V_out", "v2", "V2"
     ]
-    private static let volumeKeys: Set<String> = Set(Self.volumeKeyList.map { $0.lowercased() })
+    /// `Self` — ковариантный тип, его нельзя использовать в инициализаторе
+    /// хранимого static-свойства (ошибка Swift 6). Ссылаемся на тип по имени.
+    private static let volumeKeys: Set<String> =
+        Set(LersCoordinator.volumeKeyList.map { $0.lowercased() })
 
     /// Суммарный объём V1 за период. Три формата URL + фильтрация почасовых записей.
     public func sumV1(pointId: Int, from: Date, to: Date, hourly: Bool,
