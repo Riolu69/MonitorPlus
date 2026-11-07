@@ -19,6 +19,13 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
+      - name: Install ldid (ad-hoc signer for jailbroken installs)
+        run: |
+          if ! command -v ldid >/dev/null 2>&1; then
+            brew install ldid || echo "WARNING: ldid install failed, will try manual fallback"
+          fi
+          ldid 2>&1 | head -2 || true
+
       - name: Create Project Spec
         run: |
           cat << 'EOF' > iOS/project.yml
@@ -103,6 +110,48 @@ jobs:
           /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c "Print :CFBundlePackageType" "$APP/Info.plist"
 
+      - name: Verify ATS configuration in built bundle
+        working-directory: iOS
+        run: |
+          APP="build/Build/Products/Release-iphoneos/LersMonitor.app"
+          echo "---- ATS dump from built Info.plist ----"
+          /usr/libexec/PlistBuddy -c "Print :NSAppTransportSecurity" "$APP/Info.plist" || {
+            echo "!!! NSAppTransportSecurity IS MISSING IN THE BUNDLE !!!"
+            echo "!!! ATS will block plain HTTP. Aborting build. !!!"
+            exit 1
+          }
+          ALLOW=$(/usr/libexec/PlistBuddy -c "Print :NSAppTransportSecurity:NSAllowsArbitraryLoads" "$APP/Info.plist")
+          echo "NSAllowsArbitraryLoads = $ALLOW"
+          if [ "$ALLOW" != "true" ]; then
+            echo "!!! NSAllowsArbitraryLoads is $ALLOW, expected true. Aborting. !!!"
+            exit 1
+          fi
+          echo "ATS configuration verified OK"
+
+      - name: Enforce ATS keys in final bundle (safety net)
+        working-directory: iOS
+        run: |
+          APP="build/Build/Products/Release-iphoneos/LersMonitor.app"
+          # Belt-and-braces: force ATS keys into the compiled bundle's Info.plist.
+          /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$APP/Info.plist" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsArbitraryLoads bool true" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsArbitraryLoadsInWebContent bool true" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsLocalNetworking bool true" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSExceptionDomains dict" "$APP/Info.plist"
+          for d in localhost 127.0.0.1 81.200.30.86; do
+            /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSExceptionDomains:$d dict" "$APP/Info.plist"
+            /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSExceptionDomains:$d:NSExceptionAllowsInsecureHTTPLoads bool true" "$APP/Info.plist"
+            /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSExceptionDomains:$d:NSIncludesSubdomains bool true" "$APP/Info.plist"
+          done
+          echo "---- Final ATS state ----"
+          /usr/libexec/PlistBuddy -c "Print :NSAppTransportSecurity" "$APP/Info.plist"
+          # Re-sign after touching the plist so the signature covers the modified bundle
+          if command -v ldid >/dev/null 2>&1; then
+            ldid -S "$APP/LersMonitor"
+            echo "Re-signed after plist modification"
+          fi
+
       - name: Package IPA
         working-directory: iOS
         run: |
@@ -116,15 +165,13 @@ jobs:
           chmod +x "Payload/LersMonitor.app/LersMonitor"
 
           # Ad-hoc sign with ldid (required for jailbroken / Sileo / Zebra installs)
-          if ! command -v ldid >/dev/null 2>&1; then
-            echo "ldid not found, installing via Homebrew..."
-            brew install ldid || true
-          fi
           if command -v ldid >/dev/null 2>&1; then
             ldid -S Payload/LersMonitor.app/LersMonitor
             echo "ldid signature applied"
           else
-            echo "WARNING: ldid unavailable, app will be left unsigned"
+            echo "ldid unavailable — falling back to codesign ad-hoc"
+            codesign --force --sign - --timestamp=none Payload/LersMonitor.app 2>&1 || \
+              echo "WARNING: could not sign app bundle"
           fi
 
           # Sign embedded frameworks / dylibs if any
