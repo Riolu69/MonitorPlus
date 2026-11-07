@@ -19,50 +19,8 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Create Info.plist & Project Spec
+      - name: Create Project Spec
         run: |
-          cat << 'EOF' > iOS/Info.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleDevelopmentRegion</key>
-              <string>ru</string>
-              <key>CFBundleDisplayName</key>
-              <string>LersMonitor</string>
-              <key>CFBundleExecutable</key>
-              <string>LersMonitor</string>
-              <key>CFBundleIdentifier</key>
-              <string>com.lersmonitor.app</string>
-              <key>CFBundleInfoDictionaryVersion</key>
-              <string>6.0</string>
-              <key>CFBundleName</key>
-              <string>LersMonitor</string>
-              <key>CFBundlePackageType</key>
-              <string>APPL</string>
-              <key>CFBundleShortVersionString</key>
-              <string>1.0.0</string>
-              <key>CFBundleVersion</key>
-              <string>1</string>
-              <key>LSRequiresIPhoneOS</key>
-              <true/>
-              <key>UILaunchScreen</key>
-              <dict/>
-              <key>UISupportedInterfaceOrientations</key>
-              <array>
-                  <string>UIInterfaceOrientationPortrait</string>
-                  <string>UIInterfaceOrientationLandscapeLeft</string>
-                  <string>UIInterfaceOrientationLandscapeRight</string>
-              </array>
-              <key>NSAppTransportSecurity</key>
-              <dict>
-                  <key>NSAllowsArbitraryLoads</key>
-                  <true/>
-              </dict>
-          </dict>
-          </plist>
-          EOF
-
           cat << 'EOF' > iOS/project.yml
           name: LersMonitor
           options:
@@ -77,14 +35,10 @@ jobs:
               sources:
                 - path: .
                   excludes:
-                    - "Info.plist"
                     - "project.yml"
-              info:
-                path: Info.plist
+                    - "Info.plist"
               settings:
                 base:
-                  GENERATE_INFOPLIST_FILE: NO
-                  INFOPLIST_FILE: Info.plist
                   PRODUCT_BUNDLE_IDENTIFIER: com.lersmonitor.app
                   CURRENT_PROJECT_VERSION: 1
                   MARKETING_VERSION: 1.0.0
@@ -110,11 +64,25 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Package to IPA
+      - name: Inject ATS into built .app and Package to IPA
         working-directory: iOS
         run: |
+          APP_PATH="build/Build/Products/Release-iphoneos/LersMonitor.app"
+          PLIST_PATH="$APP_PATH/Info.plist"
+
+          echo "Injecting NSAppTransportSecurity into $PLIST_PATH..."
+          # Удаляем старую секцию, если она есть
+          /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$PLIST_PATH" 2>/dev/null || true
+          # Добавляем словарь и ключ NSAllowsArbitraryLoads = true
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsArbitraryLoads bool true" "$PLIST_PATH"
+
+          # Проверяем в логах, что ключ записан
+          /usr/libexec/PlistBuddy -c "Print :NSAppTransportSecurity" "$PLIST_PATH"
+
+          # Упаковываем в IPA
           mkdir -p Payload
-          cp -r build/Build/Products/Release-iphoneos/LersMonitor.app Payload/
+          cp -r "$APP_PATH" Payload/
           zip -r LersMonitor.ipa Payload
           rm -rf Payload
 
