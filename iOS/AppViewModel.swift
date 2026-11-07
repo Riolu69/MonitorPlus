@@ -130,6 +130,12 @@ public final class AppViewModel {
                 statusText = "Ошибка: таймаут (сервер недоступен)"
             } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorCannotConnectToHost {
                 statusText = "Ошибка: нет связи с \(cleanHost):\(port)"
+            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorAppTransportSecurityRequiresSecureConnection {
+                statusText = "Ошибка: ATS блокирует HTTP.\n\(AppViewModel.atsDiagnostics())"
+            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorSecureConnectionFailed {
+                statusText = "Ошибка: не удалось установить защищённое соединение"
+            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorNotConnectedToInternet {
+                statusText = "Ошибка: нет интернета"
             } else {
                 statusText = "Ошибка сети: \(error.localizedDescription)"
             }
@@ -365,6 +371,27 @@ public final class AppViewModel {
         p.m1 = get(["m_in", "m1"])
         p.m2 = get(["m_out", "m2"])
         p.q  = get(["q_delta", "q", "q_in"])
+    }
+
+    /// Диагностика конфигурации ATS прямо из установленного бандла.
+    /// Показывает, применились ли ключи NSAppTransportSecurity из Info.plist.
+    public static func atsDiagnostics() -> String {
+        guard let bundle = Bundle.main.infoDictionary else {
+            return "Info.plist не найден в бандле"
+        }
+        guard let ats = bundle["NSAppTransportSecurity"] as? [String: Any] else {
+            return "NSAppTransportSecurity ОТСУТСТВУЕТ в бандле — Info.plist не применился"
+        }
+        let arbitrary = (ats["NSAllowsArbitraryLoads"] as? Bool) ?? false
+        let local = (ats["NSAllowsLocalNetworking"] as? Bool) ?? false
+        var lines = [
+            "NSAllowsArbitraryLoads: \(arbitrary)",
+            "NSAllowsLocalNetworking: \(local)"
+        ]
+        if let exc = ats["NSExceptionDomains"] as? [String: Any] {
+            lines.append("ExceptionDomains: \(exc.keys.sorted().joined(separator: ", "))")
+        }
+        return lines.joined(separator: "\n")
     }
 
     // MARK: - Settings persistence (password in Keychain)

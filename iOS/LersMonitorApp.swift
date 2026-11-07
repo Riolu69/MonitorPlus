@@ -33,6 +33,8 @@ struct SettingsView: View {
     @State private var rawPassword: String = ""
     @State private var isConnecting: Bool = false
     @State private var showPassword: Bool = false
+    @State private var showATSDiagnostics: Bool = false
+    @State private var atsInfo: String = ""
 
     var body: some View {
         NavigationStack {
@@ -159,8 +161,25 @@ struct SettingsView: View {
                          ? "Пароль хранится в Keychain — защищённом хранилище iOS."
                          : "Пароль не сохраняется. Введите его при каждом подключении.")
                 }
+
+                // MARK: - Diagnostics
+                Section {
+                    Button("Показать настройки сети (ATS)") {
+                        atsInfo = AppViewModel.atsDiagnostics()
+                        showATSDiagnostics = true
+                    }
+                } header: {
+                    Text("Диагностика")
+                } footer: {
+                    Text("Проверяет, разрешено ли приложению обращаться к серверу по HTTP (незашифрованному) протоколу.")
+                }
             }
             .navigationTitle("Настройки")
+            .alert("Настройки ATS", isPresented: $showATSDiagnostics) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(atsInfo)
+            }
             .onAppear {
                 if rawPassword.isEmpty {
                     rawPassword = vm.loadPassword()
