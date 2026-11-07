@@ -29,22 +29,67 @@ struct LersMonitorApp: App {
 struct SettingsView: View {
     @Bindable var vm: AppViewModel
     @State private var rawPassword: String = ""
+    @State private var isConnecting: Bool = false
     
     var body: some View {
         NavigationStack {
             Form {
-                Section("Подключение к ЛЭРС") {
-                    TextField("Сервер", text: $vm.settings.host)
-                    TextField("Порт", value: $vm.settings.port, format: .number)
+                Section("Подключение к ЛЭРС УЧЁТ") {
+                    TextField("Сервер (IP или домен)", text: $vm.settings.host)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                    
+                    HStack {
+                        Text("Порт:")
+                        Spacer()
+                        TextField("10000", value: $vm.settings.port, format: .number)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    
                     TextField("Логин", text: $vm.settings.login)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                    
                     SecureField("Пароль", text: $rawPassword)
-                    Button(vm.isConnected ? "Переподключиться" : "Подключиться") {
+                    
+                    Button {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        isConnecting = true
+                        
                         if !rawPassword.isEmpty {
                             vm.settings.passwordBase64 = Data(rawPassword.utf8).base64EncodedString()
                         }
-                        Task { await vm.connect() }
+                        
+                        Task {
+                            await vm.connect()
+                            isConnecting = false
+                        }
+                    } label: {
+                        HStack {
+                            Spacer()
+                            if isConnecting {
+                                ProgressView()
+                                    .padding(.trailing, 8)
+                            }
+                            Text(vm.isConnected ? "Переподключиться" : "Подключиться")
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
                     }
-                    .bold()
+                    .disabled(isConnecting)
+                }
+                
+                Section("Статус подключения") {
+                    HStack {
+                        Circle()
+                            .fill(vm.isConnected ? Color.green : (vm.statusText.contains("Ошибка") || vm.statusText.contains("Сбой") ? Color.red : Color.orange))
+                            .frame(width: 10, height: 10)
+                        Text(vm.statusText)
+                            .font(.subheadline)
+                            .foregroundStyle(vm.isConnected ? .primary : .secondary)
+                    }
                 }
                 
                 Section("Датчик наружного воздуха (Тнв)") {
@@ -59,6 +104,7 @@ struct SettingsView: View {
                         Spacer()
                         TextField("0.0", value: $vm.settings.tnvCorrection, format: .number)
                             .frame(width: 60)
+                            .multilineTextAlignment(.trailing)
                         Text("°C")
                     }
                 }
@@ -70,6 +116,14 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Настройки")
+            .onAppear {
+                if rawPassword.isEmpty, !vm.settings.passwordBase64.isEmpty {
+                    if let data = Data(base64Encoded: vm.settings.passwordBase64),
+                       let pass = String(data: data, encoding: .utf8) {
+                        rawPassword = pass
+                    }
+                }
+            }
         }
     }
 }
