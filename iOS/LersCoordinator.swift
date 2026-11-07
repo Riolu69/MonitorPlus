@@ -1,6 +1,6 @@
 import Foundation
 
-public struct PointSnapshot: Sendable {
+public struct PointSnapshot: @unchecked Sendable {
     public let pointId: Int
     public let deviceTime: Date?
     public let rawJson: [String: Any]
