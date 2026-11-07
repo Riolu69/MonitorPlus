@@ -1050,10 +1050,15 @@ namespace LersMonitor
             vm.T2 = ExtractParameterValue(root, "t_out", "t2", "temperatureOut", "T2", "t2Value", "T_out", "t_return");
             vm.P1 = ExtractParameterValue(root, "p_in", "p1", "pressureIn", "P1", "p1Value", "P_in", "p_supply");
             vm.P2 = ExtractParameterValue(root, "p_out", "p2", "pressureOut", "P2", "p2Value", "P_out", "p_return");
-            vm.V1 = ExtractParameterValue(root, "v_in", "v1", "volume1", "V1", "V_in", "volume_supply");
-            vm.V2 = ExtractParameterValue(root, "v_out", "v2", "volume2", "V2", "V_out", "volume_return");
-            vm.M1 = ExtractParameterValue(root, "m_in", "m1", "mass1", "M1", "M_in", "mass_supply");
-            vm.M2 = ExtractParameterValue(root, "m_out", "m2", "mass2", "M2", "M_out", "mass_return");
+            
+            // Добавлены ключи "g_v_in" и "v_flow_in" в начало для получения расхода (м³/ч) вместо нарастающего объема
+            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "v_in", "v1", "volume1", "V1", "V_in", "volume_supply");
+            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "v_out", "v2", "volume2", "V2", "V_out", "volume_return");
+            
+            // Для массы тоже имеет смысл сначала искать массовый расход (т/ч), а затем интегратор (т)
+            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "m_in", "m1", "mass1", "M1", "M_in", "mass_supply");
+            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "m_out", "m2", "mass2", "M2", "M_out", "mass_return");
+            
             vm.Q  = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy");
         }
 
@@ -2383,7 +2388,7 @@ namespace LersMonitor
         private (double? expT1, double? expT2) GetExpectedTemps(List<TempSchedulePoint>? schedule)
             => TempScheduleMath.Expected(MainWindow.CurrentGlobalTnv, schedule);
 
-        /// <summary>Настроенный用户对 точки допуск; для старых настроек — 3.0 °C.</summary>
+        /// <summary>Настроенный пользовательский допуск; для старых настроек — 3.0 °C.</summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public double ScheduleTolerance =>
             Math.Max(0, Limits?.ScheduleTolerance ?? TempScheduleMath.DefaultTolerance);
