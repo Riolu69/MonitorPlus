@@ -17,7 +17,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install XcodeGen
-        run: brew install xcodegen
+        run: |
+          brew install xcodegen
+          # xcbeautify используется в шаге сборки; без него xcodebuild запускался бы дважды
+          brew install xcbeautify || echo "WARNING: xcbeautify unavailable, raw build log will be used"
 
       - name: Install ldid (ad-hoc signer for jailbroken installs)
         run: |
@@ -70,28 +73,26 @@ jobs:
         working-directory: iOS
         run: |
           set -o pipefail
-          xcodebuild clean build \
-            -project LersMonitor.xcodeproj \
-            -scheme LersMonitor \
-            -configuration Release \
-            -sdk iphoneos \
-            -derivedDataPath build \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            ONLY_ACTIVE_ARCH=NO \
-            ARCHS=arm64 \
-            | xcbeautify || xcodebuild clean build \
-            -project LersMonitor.xcodeproj \
-            -scheme LersMonitor \
-            -configuration Release \
-            -sdk iphoneos \
-            -derivedDataPath build \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            ONLY_ACTIVE_ARCH=NO \
+          # Один запуск xcodebuild. pipefail сохраняет реальный код завершения,
+          # даже если вывод прогнан через xcbeautify.
+          ARGS=(
+            clean build
+            -project LersMonitor.xcodeproj
+            -scheme LersMonitor
+            -configuration Release
+            -sdk iphoneos
+            -derivedDataPath build
+            CODE_SIGN_IDENTITY=""
+            CODE_SIGNING_REQUIRED=NO
+            CODE_SIGNING_ALLOWED=NO
+            ONLY_ACTIVE_ARCH=NO
             ARCHS=arm64
+          )
+          if command -v xcbeautify >/dev/null 2>&1; then
+            xcodebuild "${ARGS[@]}" | xcbeautify
+          else
+            xcodebuild "${ARGS[@]}"
+          fi
 
       - name: Verify app bundle contents
         working-directory: iOS
