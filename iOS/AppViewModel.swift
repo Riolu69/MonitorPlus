@@ -29,8 +29,6 @@ public final class AppViewModel {
     ]
     
     public let coordinator = LersCoordinator()
-    private var dashboardTimer: Task<Void, Never>?
-    private var podpitkaTimer: Task<Void, Never>?
     
     public init() {
         loadSettings()
@@ -38,24 +36,50 @@ public final class AppViewModel {
     
     public func connect() async {
         statusText = "Подключение..."
-        await coordinator.configure(host: settings.host, port: settings.port, token: nil)
         
-        let urlStr = "http://\(settings.host):\(settings.port)/api/v1/Login"
-        guard let url = URL(string: urlStr) else { return }
+        let cleanHost = settings.host
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "http://", with: "")
+            .replacingOccurrences(of: "https://", with: "")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        
+        let port = settings.port > 0 ? settings.port : 10000
+        let urlStr = "http://\(cleanHost):\(port)/api/v1/Login"
+        guard let url = URL(string: urlStr) else {
+            statusText = "Ошибка: некорректный адрес сервера"
+            return
+        }
+        
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
+        req.timeoutInterval = 15
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let pass = String(data: Data(base64Encoded: settings.passwordBase64) ?? Data(), encoding: .utf8) ?? ""
-        let body: [String: String] = ["login": settings.login, "password": pass, "application": "LersMonitor iOS"]
+        let body: [String: String] = [
+            "login": settings.login.trimmingCharacters(in: .whitespacesAndNewlines),
+            "password": pass,
+            "application": "LersMonitor iOS"
+        ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         do {
             let (data, res) = try await URLSession.shared.data(for: req)
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                statusText = "Ошибка авторизации"
+            guard let httpRes = res as? HTTPURLResponse else {
+                statusText = "Ошибка: не получен HTTP-ответ"
                 return
             }
+            
+            if httpRes.statusCode == 401 || httpRes.statusCode == 403 {
+                statusText = "Ошибка: неверный логин или пароль"
+                return
+            }
+            
+            guard httpRes.statusCode == 200 else {
+                statusText = "Ошибка сервера: код \(httpRes.statusCode)"
+                return
+            }
+            
             var token = ""
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let t = json["token"] as? String {
                 token = t
@@ -63,21 +87,34 @@ public final class AppViewModel {
                 token = s
             }
             
-            await coordinator.configure(host: settings.host, port: settings.port, token: token)
-            await loadPoints(token: token)
+            if token.isEmpty {
+                statusText = "Ошибка: пустой токен авторизации"
+                return
+            }
+            
+            statusText = "Загрузка точек учёта..."
+            await coordinator.configure(host: cleanHost, port: port, token: token)
+            await loadPoints(host: cleanHost, port: port, token: token)
+            
             self.isConnected = true
-            self.statusText = "Подключено: \(allPoints.count) точек"
+            self.statusText = "Подключено: точек \(allPoints.count)"
             saveSettings()
             
-            // Запуск обновления Тнв
             Task { await updateGlobalTnv() }
         } catch {
-            statusText = "Сбой сети: \(error.localizedDescription)"
+            let err = error as NSError
+            if err.domain == NSURLErrorDomain && err.code == NSURLErrorTimedOut {
+                statusText = "Ошибка: таймаут (сервер недоступен)"
+            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorCannotConnectToHost {
+                statusText = "Ошибка: нет связи с \(cleanHost):\(port)"
+            } else {
+                statusText = "Ошибка сети: \(error.localizedDescription)"
+            }
         }
     }
     
-    private func loadPoints(token: String) async {
-        guard let url = URL(string: "http://\(settings.host):\(settings.port)/api/v1/Core/MeasurePoints?type=Regular&getCustomers=true") else { return }
+    private func loadPoints(host: String, port: Int, token: String) async {
+        guard let url = URL(string: "http://\(host):\(port)/api/v1/Core/MeasurePoints?type=Regular&getCustomers=true") else { return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
