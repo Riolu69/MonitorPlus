@@ -7,99 +7,106 @@ public final class AppViewModel {
     public var settings = UserSettings()
     public var isConnected: Bool = false
     public var statusText: String = "Готово к работе"
-    
+    public var isPollingAll: Bool = false
+
     public var allPoints: [MeasurePointItem] = []
     public var filteredPoints: [MeasurePointItem] = []
     public var dashboardGroups: [DashboardNodeGroup] = []
     public var podpitkaGroups: [PodpitkaNodeGroup] = []
     public var trendHistory: [PointResultData] = []
-    
-    // Фильтры
+
+    // Filters
     public var searchText: String = "" { didSet { applyFilter() } }
     public var selectedNodeFilter: String = "Все объекты" { didSet { applyFilter() } }
     public var selectedSystemFilter: String = "Все системы" { didSet { applyFilter() } }
-    
-    // Текущий Тнв
+
+    // Current outdoor temperature
     public var globalTnv: Double? = nil
-    
-    // Колонки таблицы
+
+    // Table columns
     public var showCols: [String: Bool] = [
         "T1": true, "T2": true, "ΔT": true, "P1": true, "P2": false,
         "ΔP": true, "V1": true, "V2": false, "M1": true, "M2": true, "Q": true
     ]
-    
+
     public let coordinator = LersCoordinator()
-    
+
+    // Connection info for reconnect
+    private var connectionInfo: (host: String, port: Int, token: String)?
+
     public init() {
         loadSettings()
     }
-    
+
+    // MARK: - Connect
     public func connect() async {
         statusText = "Подключение..."
-        
+
         let cleanHost = settings.host
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "http://", with: "")
             .replacingOccurrences(of: "https://", with: "")
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        
+
         let port = settings.port > 0 ? settings.port : 10000
         let urlStr = "http://\(cleanHost):\(port)/api/v1/Login"
         guard let url = URL(string: urlStr) else {
             statusText = "Ошибка: некорректный адрес сервера"
             return
         }
-        
+
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.timeoutInterval = 15
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let pass = String(data: Data(base64Encoded: settings.passwordBase64) ?? Data(), encoding: .utf8) ?? ""
+
+        // Password from Keychain
+        let pass = KeychainHelper.loadPassword() ?? ""
         let body: [String: String] = [
             "login": settings.login.trimmingCharacters(in: .whitespacesAndNewlines),
             "password": pass,
             "application": "LersMonitor iOS"
         ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        
+
         do {
             let (data, res) = try await URLSession.shared.data(for: req)
             guard let httpRes = res as? HTTPURLResponse else {
                 statusText = "Ошибка: не получен HTTP-ответ"
                 return
             }
-            
+
             if httpRes.statusCode == 401 || httpRes.statusCode == 403 {
                 statusText = "Ошибка: неверный логин или пароль"
                 return
             }
-            
+
             guard httpRes.statusCode == 200 else {
                 statusText = "Ошибка сервера: код \(httpRes.statusCode)"
                 return
             }
-            
+
             var token = ""
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let t = json["token"] as? String {
                 token = t
             } else if let s = String(data: data, encoding: .utf8)?.trimmingCharacters(in: CharacterSet(charactersIn: "\" \n\r")) {
                 token = s
             }
-            
+
             if token.isEmpty {
                 statusText = "Ошибка: пустой токен авторизации"
                 return
             }
-            
+
             statusText = "Загрузка точек учёта..."
+            connectionInfo = (cleanHost, port, token)
             await coordinator.configure(host: cleanHost, port: port, token: token)
             await loadPoints(host: cleanHost, port: port, token: token)
-            
+
             self.isConnected = true
             self.statusText = "Подключено: точек \(allPoints.count)"
             saveSettings()
-            
+
             Task { await updateGlobalTnv() }
         } catch {
             let err = error as NSError
@@ -112,30 +119,57 @@ public final class AppViewModel {
             }
         }
     }
-    
+
+    // MARK: - Reconnect (uses stored token if still valid, otherwise re-login)
+    public func reconnectIfNeeded() async {
+        guard let info = connectionInfo else { return }
+
+        // Try a lightweight API call with the existing token
+        let urlStr = "http://\(info.host):\(info.port)/api/v1/Core/MeasurePoints?type=Regular"
+        guard let url = URL(string: urlStr) else { return }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(info.token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = 10
+
+        let (_, res) = try? await URLSession.shared.data(for: req)
+        if let httpRes = res as? HTTPURLResponse {
+            if httpRes.statusCode == 401 || httpRes.statusCode == 403 {
+                // Token expired — need full re-login
+                isConnected = false
+                statusText = "Сессия истекла. Переподключитесь."
+                await connect()
+            }
+        } else {
+            // Network error — keep connection state, will retry later
+            statusText = "Потеря связи с сервером"
+        }
+    }
+
+    // MARK: - Load points
     private func loadPoints(host: String, port: Int, token: String) async {
         guard let url = URL(string: "http://\(host):\(port)/api/v1/Core/MeasurePoints?type=Regular&getCustomers=true") else { return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
+
         guard let (data, _) = try? await URLSession.shared.data(for: req),
               let json = try? JSONSerialization.jsonObject(with: data) else { return }
-        
+
         let array: [[String: Any]]
         if let arr = json as? [[String: Any]] { array = arr }
         else if let dict = json as? [String: Any], let arr = dict["measurePoints"] as? [[String: Any]] { array = arr }
         else { array = [] }
-        
+
         self.allPoints = array.compactMap { d in
             guard let id = d["id"] as? Int else { return nil }
             return MeasurePointItem(id: id, title: (d["title"] as? String) ?? "Точка", nodeTitle: (d["nodeTitle"] as? String) ?? "Объект")
         }.sorted { ($0.nodeTitle, $0.title) < ($1.nodeTitle, $1.title) }
-        
+
         applyFilter()
         buildDashboardGroups()
         buildPodpitkaGroups()
     }
-    
+
+    // MARK: - Filters
     public func applyFilter() {
         var list = allPoints
         if !searchText.isEmpty {
@@ -149,7 +183,8 @@ public final class AppViewModel {
         }
         self.filteredPoints = list
     }
-    
+
+    // MARK: - Build groups
     public func buildDashboardGroups() {
         let grouped = Dictionary(grouping: allPoints) { $0.nodeTitle }
         self.dashboardGroups = grouped.map { node, pts in
@@ -159,7 +194,7 @@ public final class AppViewModel {
             return DashboardNodeGroup(nodeTitle: node, points: vmPoints)
         }.sorted { $0.nodeTitle < $1.nodeTitle }
     }
-    
+
     public func buildPodpitkaGroups() {
         let targets = allPoints.filter { settings.podpitkaPointIds.contains($0.id) }
         let grouped = Dictionary(grouping: targets) { $0.nodeTitle }
@@ -170,7 +205,8 @@ public final class AppViewModel {
             return PodpitkaNodeGroup(nodeTitle: node, points: vmPoints)
         }.sorted { $0.nodeTitle < $1.nodeTitle }
     }
-    
+
+    // MARK: - Poll single point
     public func pollSinglePoint(_ p: PointResultData) async {
         p.state = .polling
         p.status = "Идет опрос..."
@@ -182,34 +218,68 @@ public final class AppViewModel {
             p.deviceTime = Date()
         }
     }
-    
+
+    // MARK: - Poll all points in parallel (TaskGroup with concurrency limit in coordinator)
+    public func pollAllPoints() async {
+        guard !isPollingAll else { return }
+        isPollingAll = true
+        statusText = "Опрос всех точек..."
+
+        // Collect all non-paused points
+        let allPoints: [PointResultData] = dashboardGroups.flatMap { g in
+            g.isPaused ? [] : g.points
+        }
+
+        await withTaskGroup(of: Void.self) { group in
+            for pt in allPoints {
+                group.addTask { [weak self] in
+                    await self?.pollSinglePoint(pt)
+                }
+            }
+            // Wait for all
+            for await _ in group {}
+        }
+
+        isPollingAll = false
+        statusText = "Опрос завершен: \(allPoints.count) точек"
+    }
+
+    // MARK: - Refresh podpitka data in parallel
     public func refreshPodpitka() async {
         let now = Date()
         let rPer = PodpitkaPeriod.report(now: now, startDay: settings.reportPeriodStartDay, endDay: settings.reportPeriodEndDay)
         let yPer = PodpitkaPeriod.yesterday(now: now)
         let tPer = PodpitkaPeriod.today(now: now)
         let hPer = PodpitkaPeriod.prevHour(now: now)
-        
-        for g in podpitkaGroups {
-            for p in g.points {
+
+        // Collect all podpitka points
+        let allPts: [PodpitkaPointData] = podpitkaGroups.flatMap { $0.points }
+
+        await withTaskGroup(of: (PodpitkaPointData, Double?, Double?, Double?, Double?).self) { group in
+            for p in allPts {
                 p.state = .polling
-                async let rep = coordinator.sumV1(pointId: p.id, from: rPer.from, to: rPer.toExclusive, hourly: false)
-                async let day = coordinator.sumV1(pointId: p.id, from: yPer.from, to: yPer.toExclusive, hourly: false)
-                async let today = coordinator.sumV1(pointId: p.id, from: tPer.from, to: tPer.toExclusive, hourly: true)
-                async let hour = coordinator.sumV1(pointId: p.id, from: hPer.from, to: hPer.toExclusive, hourly: true)
-                
-                let res = await (rep, day, today, hour)
-                p.report = res.0
-                p.day = res.1
-                p.today = res.2
-                p.hour = res.3
+                let pid = p.id
+                group.addTask { [weak self] in
+                    async let rep = self?.coordinator.sumV1(pointId: pid, from: rPer.from, to: rPer.toExclusive, hourly: false) ?? nil
+                    async let day = self?.coordinator.sumV1(pointId: pid, from: yPer.from, to: yPer.toExclusive, hourly: false) ?? nil
+                    async let today = self?.coordinator.sumV1(pointId: pid, from: tPer.from, to: tPer.toExclusive, hourly: true) ?? nil
+                    async let hour = self?.coordinator.sumV1(pointId: pid, from: hPer.from, to: hPer.toExclusive, hourly: true) ?? nil
+                    return (p, await rep, await day, await today, await hour)
+                }
+            }
+            for await (p, rep, day, today, hour) in group {
+                p.report = rep
+                p.day = day
+                p.today = today
+                p.hour = hour
                 p.updatedAt = Date()
                 p.state = .ok
                 p.message = "Обновлено в \(Date().formatted(date: .omitted, time: .standard))"
             }
         }
     }
-    
+
+    // MARK: - Update outdoor temperature
     public func updateGlobalTnv() async {
         guard let id = settings.tnvSourcePointId else { return }
         let (_, _, raw) = await coordinator.pollPoint(pointId: id, nodeTitle: "Тнв", ignoreCache: false)
@@ -221,7 +291,8 @@ public final class AppViewModel {
             }
         }
     }
-    
+
+    // MARK: - Parse point data from JSON
     private func parsePointData(_ p: PointResultData, json: [String: Any]) {
         func get(_ keys: [String]) -> Double? {
             for k in keys {
@@ -249,17 +320,32 @@ public final class AppViewModel {
         p.m2 = get(["m_out", "m2"])
         p.q  = get(["q_delta", "q", "q_in"])
     }
-    
+
+    // MARK: - Settings persistence (password in Keychain)
     private func loadSettings() {
         if let data = UserDefaults.standard.data(forKey: "LersSettings"),
            let set = try? JSONDecoder().decode(UserSettings.self, from: data) {
             self.settings = set
         }
     }
-    
+
     public func saveSettings() {
         if let d = try? JSONEncoder().encode(settings) {
             UserDefaults.standard.set(d, forKey: "LersSettings")
         }
+    }
+
+    /// Save password to Keychain (called from SettingsView when user enters it)
+    public func savePassword(_ password: String) {
+        if settings.rememberCredentials {
+            KeychainHelper.savePassword(password)
+        } else {
+            KeychainHelper.deletePassword()
+        }
+    }
+
+    /// Load password from Keychain for display in SettingsView
+    public func loadPassword() -> String {
+        return KeychainHelper.loadPassword() ?? ""
     }
 }

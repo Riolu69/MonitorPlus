@@ -1,67 +1,88 @@
 import SwiftUI
 
-// MARK: - Модальное окно журнала опроса
+// MARK: - Poll log sheet (AsyncStream push, no polling loop)
 public struct PollLogSheetView: View {
     let pointId: Int
     let pointTitle: String
     let coordinator: LersCoordinator
     @Environment(\.dismiss) private var dismiss
     @State private var entries: [PollLogEntry] = []
-    
+
     public init(pointId: Int, pointTitle: String, coordinator: LersCoordinator) {
         self.pointId = pointId
         self.pointTitle = pointTitle
         self.coordinator = coordinator
     }
-    
+
     public var body: some View {
         NavigationStack {
-            List(entries) { entry in
-                HStack(alignment: .top, spacing: 8) {
-                    Circle()
-                        .fill(stateColor(entry.state))
-                        .frame(width: 8, height: 8)
-                        .padding(.top, 5)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Text(entry.timestamp.formatted(date: .omitted, time: .standard))
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(.secondary)
-                            Text("[\(entry.phase)]")
-                                .font(.caption2.bold())
-                                .foregroundStyle(.blue)
-                        }
-                        Text(entry.message)
-                            .font(.system(.footnote, design: .monospaced))
-                    }
+            Group {
+                if entries.isEmpty {
+                    ContentUnavailableView(
+                        "Нет записей",
+                        systemImage: "doc.text.magnifyingglass",
+                        description: Text("Журнал опроса пуст. Запросите опрос точки, чтобы увидеть ход выполнения.")
+                    )
+                } else {
+                    logList
                 }
             }
-            .listStyle(.plain)
-            .navigationTitle("Ход опроса: \(pointTitle)")
+            .navigationTitle("Журнал: \(pointTitle)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Очистить") {
+                    Button("Очистить", role: .destructive) {
                         Task {
                             await coordinator.clearLogs(pointId: pointId)
                             entries = []
                         }
                     }
+                    .disabled(entries.isEmpty)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Закрыть") { dismiss() }
                 }
             }
             .task {
-                while !Task.isCancelled {
-                    self.entries = await coordinator.getLogs(pointId: pointId)
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                // Stream new log entries as they arrive (push, no polling)
+                let stream = await coordinator.logStream(pointId: pointId)
+                for await entry in stream {
+                    entries.append(entry)
+                    if entries.count > 150 {
+                        entries.removeFirst(entries.count - 150)
+                    }
                 }
             }
         }
     }
-    
+
+    private var logList: some View {
+        List {
+            ForEach(entries.reversed()) { entry in
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: stateIcon(entry.state))
+                        .foregroundStyle(stateColor(entry.state))
+                        .font(.caption)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text(entry.timestamp.formatted(date: .omitted, time: .standard))
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                            Text(entry.phase)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.blue)
+                        }
+                        Text(entry.message)
+                            .font(.footnote)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .listStyle(.plain)
+    }
+
     private func stateColor(_ st: PollState) -> Color {
         switch st {
         case .ok, .okCached: return .green
@@ -70,79 +91,84 @@ public struct PollLogSheetView: View {
         default: return .gray
         }
     }
+
+    private func stateIcon(_ st: PollState) -> String {
+        switch st {
+        case .ok: return "checkmark.circle.fill"
+        case .okCached: return "clock.arrow.circlepath"
+        case .error: return "exclamationmark.triangle.fill"
+        case .polling: return "arrow.triangle.2.circlepath"
+        case .queued: return "hourglass"
+        case .paused: return "pause.circle.fill"
+        case .pending: return "circle.dotted"
+        }
+    }
 }
 
-// MARK: - Модальное окно настройки границ точки
+// MARK: - Limits editor sheet (Apple-style Form)
 public struct LimitsEditorSheet: View {
     let pointId: Int
     let title: String
     @Bindable var vm: AppViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var limits: PointThresholds = PointThresholds()
     @State private var showScheduleEditor = false
-    
+
     public init(pointId: Int, title: String, vm: AppViewModel) {
         self.pointId = pointId
         self.title = title
         self.vm = vm
     }
-    
+
     public var body: some View {
         NavigationStack {
             Form {
-                Section("Температурный график") {
+                // Temperature schedule
+                Section {
                     HStack {
-                        Text("Узловых точек графика:")
+                        Text("Узловых точек")
                         Spacer()
                         Text("\(limits.schedule.count)")
                             .foregroundStyle(.secondary)
                     }
                     HStack {
-                        Text("Допуск (±):")
+                        Text("Допуск (±)")
                         Spacer()
                         TextField("3.0", value: $limits.scheduleTolerance, format: .number)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
+                            .frame(width: 70)
                         Text("°C")
+                            .foregroundStyle(.secondary)
                     }
-                    Button("📈 Открыть редактор графика") {
+                    Button {
                         showScheduleEditor = true
+                    } label: {
+                        Label("Открыть редактор графика", systemImage: "chart.line.uptrend.xyaxis")
                     }
+                } header: {
+                    Text("Температурный график")
+                } footer: {
+                    Text("График определяет ожидаемые температуры T1/T2 в зависимости от Тнв. Допуск — отклонение, при котором фиксируется нарушение.")
                 }
-                
-                Section("Границы температур (°C)") {
-                    HStack {
-                        TextField("T1 Мин", value: $limits.t1Min, format: .number)
-                        TextField("T1 Макс", value: $limits.t1Max, format: .number)
-                    }
-                    HStack {
-                        TextField("T2 Мин", value: $limits.t2Min, format: .number)
-                        TextField("T2 Макс", value: $limits.t2Max, format: .number)
-                    }
+
+                // Temperature limits
+                Section("Температуры (°C)") {
+                    limitRow("T1", min: $limits.t1Min, max: $limits.t1Max)
+                    limitRow("T2", min: $limits.t2Min, max: $limits.t2Max)
                 }
-                
-                Section("Границы давления (атм)") {
-                    HStack {
-                        TextField("P1 Мин", value: $limits.p1Min, format: .number)
-                        TextField("P1 Макс", value: $limits.p1Max, format: .number)
-                    }
-                    HStack {
-                        TextField("P2 Мин", value: $limits.p2Min, format: .number)
-                        TextField("P2 Макс", value: $limits.p2Max, format: .number)
-                    }
+
+                // Pressure limits
+                Section("Давление (атм)") {
+                    limitRow("P1", min: $limits.p1Min, max: $limits.p1Max)
+                    limitRow("P2", min: $limits.p2Min, max: $limits.p2Max)
                 }
-                
-                Section("Расход и масса") {
-                    HStack {
-                        TextField("V1 Мин", value: $limits.v1Min, format: .number)
-                        TextField("V1 Макс", value: $limits.v1Max, format: .number)
-                    }
-                    HStack {
-                        TextField("Q Мин", value: $limits.qMin, format: .number)
-                        TextField("Q Макс", value: $limits.qMax, format: .number)
-                    }
+
+                // Flow and heat
+                Section("Расход и теплоэнергия") {
+                    limitRow("V1", min: $limits.v1Min, max: $limits.v1Max, unit: "м³/ч")
+                    limitRow("Q", min: $limits.qMin, max: $limits.qMax, unit: "Гкал")
                 }
             }
             .navigationTitle("Границы")
@@ -151,17 +177,17 @@ public struct LimitsEditorSheet: View {
                 self.limits = vm.settings.pointLimits[pointId] ?? PointThresholds()
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Отмена") { dismiss() }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Сохранить") {
                         vm.settings.pointLimits[pointId] = limits
                         vm.saveSettings()
                         vm.buildDashboardGroups()
                         dismiss()
                     }
-                    .bold()
+                    .fontWeight(.semibold)
                 }
             }
             .sheet(isPresented: $showScheduleEditor) {
@@ -169,44 +195,108 @@ public struct LimitsEditorSheet: View {
             }
         }
     }
+
+    @ViewBuilder
+    private func limitRow(_ label: String, min: Binding<Double?>, max: Binding<Double?>, unit: String = "") -> some View {
+        HStack {
+            Text(label)
+                .frame(width: 35, alignment: .leading)
+            TextField("Мин", value: min, format: .number)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.center)
+            Text("—")
+                .foregroundStyle(.secondary)
+            TextField("Макс", value: max, format: .number)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.center)
+            if !unit.isEmpty {
+                Text(unit)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
 }
 
-// MARK: - Таблица узлов температурного графика
+// MARK: - Schedule table sheet (Apple-style List with inline editing)
 public struct ScheduleTableSheet: View {
     @Binding var schedule: [TempSchedulePoint]
     @Environment(\.dismiss) private var dismiss
-    
+
     public init(schedule: Binding<[TempSchedulePoint]>) {
         self._schedule = schedule
     }
-    
+
     public var body: some View {
         NavigationStack {
-            List {
-                ForEach($schedule) { $pt in
-                    HStack {
-                        Text("Тнв:")
-                        TextField("0", value: $pt.tnv, format: .number).frame(width: 45)
-                        Text("T1:")
-                        TextField("70", value: $pt.t1, format: .number).frame(width: 45)
-                        Text("T2:")
-                        TextField("50", value: $pt.t2, format: .number).frame(width: 45)
-                    }
-                    .font(.footnote)
+            Group {
+                if schedule.isEmpty {
+                    ContentUnavailableView(
+                        "Нет узлов графика",
+                        systemImage: "chart.line.uptrend.xyaxis",
+                        description: Text("Добавьте узловые точки температурного графика")
+                    )
+                } else {
+                    list
                 }
-                .onDelete { schedule.remove(atOffsets: $0) }
             }
             .navigationTitle("Узлы графика")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Добавить") {
+                    Button {
                         schedule.append(TempSchedulePoint(tnv: 0, t1: 70, t2: 50))
+                    } label: {
+                        Label("Добавить", systemImage: "plus")
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Готово") { dismiss() }.bold()
+                    Button("Готово") { dismiss() }
+                        .fontWeight(.semibold)
                 }
             }
+        }
+    }
+
+    private var list: some View {
+        List {
+            Section {
+                ForEach($schedule) { $pt in
+                    HStack {
+                        Text("Тнв")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 35, alignment: .leading)
+                        TextField("0", value: $pt.tnv, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.center)
+                        Text("T1")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 35, alignment: .leading)
+                        TextField("70", value: $pt.t1, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.center)
+                        Text("T2")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 35, alignment: .leading)
+                        TextField("50", value: $pt.t2, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .onDelete { schedule.remove(atOffsets: $0) }
+                .onMove { schedule.move(fromOffsets: $0, toOffset: $1) }
+            } header: {
+                Text("Узловые точки графика")
+            } footer: {
+                Text("Укажите температуру наружного воздуха и соответствующие температуры подачи (T1) и обратки (T2). Между узлами значения интерполируются.")
+            }
+        }
+        .listStyle(.insetGrouped)
+        .toolbar {
+            EditButton()
         }
     }
 }

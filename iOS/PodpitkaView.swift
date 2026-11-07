@@ -2,78 +2,145 @@ import SwiftUI
 
 public struct PodpitkaView: View {
     @Bindable var vm: AppViewModel
-    
+
     public var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 14) {
-                    // Панель управления периодом и опросом
-                    HStack {
-                        Text("Период: \(vm.settings.reportPeriodStartDay)→\(vm.settings.reportPeriodEndDay)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button("Опросить архивы V1") {
-                            Task { await vm.refreshPodpitka() }
-                        }
-                        .font(.footnote.bold())
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding(.horizontal)
-                    
-                    // Сетка карточек объектов
-                    ForEach(vm.podpitkaGroups) { group in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(group.nodeTitle)
-                                .font(.headline)
-                                .padding(.horizontal, 4)
-                            
-                            ForEach(group.points) { pt in
-                                VStack(alignment: .leading, spacing: 6) {
-                                    HStack {
-                                        Text(pt.title).font(.subheadline.bold())
-                                        Spacer()
-                                        Text(pt.message).font(.caption2).foregroundStyle(.secondary)
-                                    }
-                                    
-                                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 6) {
-                                        VolumeCell(title: "Отчётный V1", val: pt.report, breach: pt.reportBreach)
-                                        VolumeCell(title: "Вчера V1", val: pt.day, breach: pt.dayBreach)
-                                        VolumeCell(title: "Сегодня V1", val: pt.today, breach: pt.todayBreach)
-                                        VolumeCell(title: "Прошлый час V1", val: pt.hour, breach: pt.hourBreach, format: "%.2f")
-                                    }
-                                }
-                                .padding(10)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                            }
-                        }
+            Group {
+                if !vm.isConnected {
+                    ContentUnavailableView(
+                        "Нет подключения",
+                        systemImage: "wifi.slash",
+                        description: Text("Подключитесь к серверу ЛЭРС УЧЁТ в настройках")
+                    )
+                } else if vm.podpitkaGroups.isEmpty {
+                    ContentUnavailableView(
+                        "Нет точек подпитки",
+                        systemImage: "drop",
+                        description: Text("Добавьте точки в список подпитки на вкладке «Точки учёта»")
+                    )
+                } else {
+                    podpitkaContent
+                }
+            }
+            .navigationTitle("Подпитка")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Task { await vm.refreshPodpitka() }
+                    } label: {
+                        Label("Опросить", systemImage: "arrow.clockwise")
                     }
                 }
-                .padding(.vertical)
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Подпитка")
+        }
+    }
+
+    private var podpitkaContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // Period info banner
+                HStack {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(.secondary)
+                    Text("Отчётный период: \(vm.settings.reportPeriodStartDay) → \(vm.settings.reportPeriodEndDay)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal)
+
+                ForEach(vm.podpitkaGroups) { group in
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(group.nodeTitle)
+                            .font(.headline)
+                            .padding(.horizontal, 4)
+
+                        ForEach(group.points) { pt in
+                            PodpitkaCardView(pt: pt)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            .padding(.vertical, 12)
+        }
+        .background(Color(.systemGroupedBackground))
+        .refreshable {
+            await vm.refreshPodpitka()
         }
     }
 }
 
+// MARK: - Podpitka card (Apple-style: system bg, red accent for breach)
+struct PodpitkaCardView: View {
+    let pt: PodpitkaPointData
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Header
+            HStack {
+                Image(systemName: pt.hasBreach ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                    .foregroundStyle(pt.hasBreach ? .red : .green)
+                    .font(.callout)
+                Text(pt.title)
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                if let updatedAt = pt.updatedAt {
+                    Text(updatedAt.formatted(date: .omitted, time: .shortened))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if !pt.message.isEmpty && pt.state != .ok {
+                Text(pt.message)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider()
+
+            // Volume grid
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                VolumeCell(title: "Отчётный", value: pt.report, breach: pt.reportBreach)
+                VolumeCell(title: "Вчера", value: pt.day, breach: pt.dayBreach)
+                VolumeCell(title: "Сегодня", value: pt.today, breach: pt.todayBreach)
+                VolumeCell(title: "Прошлый час", value: pt.hour, breach: pt.hourBreach)
+            }
+        }
+        .padding(14)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(alignment: .topLeading) {
+            if pt.hasBreach {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.red.opacity(0.3), lineWidth: 1)
+            }
+        }
+    }
+}
+
+// MARK: - Volume cell (system background, not solid color fill)
 struct VolumeCell: View {
     let title: String
-    let val: Double?
+    let value: Double?
     let breach: Bool
-    var format: String = "%.1f"
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.system(size: 9)).foregroundStyle(.white.opacity(0.8))
-            Text(val != nil ? String(format: "\(format) м³", val!) : "—")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(breach ? .yellow : .white)
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value != nil ? String(format: "%.1f", value!) : "—")
+                    .font(.body.weight(breach ? .bold : .regular))
+                    .foregroundStyle(breach ? .red : .primary)
+                Text("м³")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(6)
-        .background(breach ? Color.red : Color.green)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .padding(10)
+        .background(breach ? Color.red.opacity(0.08) : Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
     }
 }
