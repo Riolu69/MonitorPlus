@@ -1,6 +1,22 @@
 import Foundation
 import SwiftUI
 
+// Sendable struct to hold connection info (tuples aren't Sendable in Swift 6)
+struct ConnectionInfo: Sendable {
+    let host: String
+    let port: Int
+    let token: String
+}
+
+// Sendable result for parallel podpitka queries
+struct PodpitkaResult: Sendable {
+    let pointId: Int
+    let report: Double?
+    let day: Double?
+    let today: Double?
+    let hour: Double?
+}
+
 @Observable
 @MainActor
 public final class AppViewModel {
@@ -31,8 +47,8 @@ public final class AppViewModel {
 
     public let coordinator = LersCoordinator()
 
-    // Connection info for reconnect
-    private var connectionInfo: (host: String, port: Int, token: String)?
+    // Connection info for reconnect (Sendable struct)
+    private var connectionInfo: ConnectionInfo?
 
     public init() {
         loadSettings()
@@ -99,7 +115,7 @@ public final class AppViewModel {
             }
 
             statusText = "Загрузка точек учёта..."
-            connectionInfo = (cleanHost, port, token)
+            connectionInfo = ConnectionInfo(host: cleanHost, port: port, token: token)
             await coordinator.configure(host: cleanHost, port: port, token: token)
             await loadPoints(host: cleanHost, port: port, token: token)
 
@@ -210,7 +226,9 @@ public final class AppViewModel {
     public func pollSinglePoint(_ p: PointResultData) async {
         p.state = .polling
         p.status = "Идет опрос..."
-        let (st, msg, raw) = await coordinator.pollPoint(pointId: p.id, nodeTitle: p.nodeTitle, ignoreCache: true)
+        let pointId = p.id
+        let nodeTitle = p.nodeTitle
+        let (st, msg, raw) = await coordinator.pollPoint(pointId: pointId, nodeTitle: nodeTitle, ignoreCache: true)
         p.state = st
         p.status = msg
         if let raw = raw {
@@ -226,14 +244,18 @@ public final class AppViewModel {
         statusText = "Опрос всех точек..."
 
         // Collect all non-paused points
-        let allPoints: [PointResultData] = dashboardGroups.flatMap { g in
+        let allPts: [PointResultData] = dashboardGroups.flatMap { g in
             g.isPaused ? [] : g.points
         }
 
+        // pollSinglePoint mutates PointResultData (a @MainActor @Observable class),
+        // so we must keep it on the MainActor. The coordinator handles concurrency
+        // limiting internally (4 device slots), so even though tasks are spawned
+        // concurrently, the actual device polls are serialized at the coordinator level.
         await withTaskGroup(of: Void.self) { group in
-            for pt in allPoints {
-                group.addTask { [weak self] in
-                    await self?.pollSinglePoint(pt)
+            for pt in allPts {
+                group.addTask { @MainActor in
+                    await self.pollSinglePoint(pt)
                 }
             }
             // Wait for all
@@ -241,10 +263,11 @@ public final class AppViewModel {
         }
 
         isPollingAll = false
-        statusText = "Опрос завершен: \(allPoints.count) точек"
+        statusText = "Опрос завершен: \(allPts.count) точек"
     }
 
     // MARK: - Refresh podpitka data in parallel
+    // Uses point IDs in the TaskGroup to avoid passing non-Sendable references.
     public func refreshPodpitka() async {
         let now = Date()
         let rPer = PodpitkaPeriod.report(now: now, startDay: settings.reportPeriodStartDay, endDay: settings.reportPeriodEndDay)
@@ -252,30 +275,47 @@ public final class AppViewModel {
         let tPer = PodpitkaPeriod.today(now: now)
         let hPer = PodpitkaPeriod.prevHour(now: now)
 
-        // Collect all podpitka points
+        // Collect all podpitka point IDs
         let allPts: [PodpitkaPointData] = podpitkaGroups.flatMap { $0.points }
+        for p in allPts {
+            p.state = .polling
+        }
 
-        await withTaskGroup(of: (PodpitkaPointData, Double?, Double?, Double?, Double?).self) { group in
+        // Capture coordinator reference before entering TaskGroup
+        // (coordinator is a Sendable actor, safe to pass across isolation boundaries)
+        let coordinator = self.coordinator
+
+        // Run network calls in parallel — return only Sendable data
+        let results = await withTaskGroup(of: PodpitkaResult.self) { group in
             for p in allPts {
-                p.state = .polling
                 let pid = p.id
-                group.addTask { [weak self] in
-                    async let rep = self?.coordinator.sumV1(pointId: pid, from: rPer.from, to: rPer.toExclusive, hourly: false) ?? nil
-                    async let day = self?.coordinator.sumV1(pointId: pid, from: yPer.from, to: yPer.toExclusive, hourly: false) ?? nil
-                    async let today = self?.coordinator.sumV1(pointId: pid, from: tPer.from, to: tPer.toExclusive, hourly: true) ?? nil
-                    async let hour = self?.coordinator.sumV1(pointId: pid, from: hPer.from, to: hPer.toExclusive, hourly: true) ?? nil
-                    return (p, await rep, await day, await today, await hour)
+                group.addTask {
+                    let rep = await coordinator.sumV1(pointId: pid, from: rPer.from, to: rPer.toExclusive, hourly: false)
+                    let day = await coordinator.sumV1(pointId: pid, from: yPer.from, to: yPer.toExclusive, hourly: false)
+                    let today = await coordinator.sumV1(pointId: pid, from: tPer.from, to: tPer.toExclusive, hourly: true)
+                    let hour = await coordinator.sumV1(pointId: pid, from: hPer.from, to: hPer.toExclusive, hourly: true)
+                    return PodpitkaResult(pointId: pid, report: rep, day: day, today: today, hour: hour)
                 }
             }
-            for await (p, rep, day, today, hour) in group {
-                p.report = rep
-                p.day = day
-                p.today = today
-                p.hour = hour
-                p.updatedAt = Date()
-                p.state = .ok
-                p.message = "Обновлено в \(Date().formatted(date: .omitted, time: .standard))"
+            var collected: [PodpitkaResult] = []
+            for await result in group {
+                collected.append(result)
             }
+            return collected
+        }
+
+        // Apply results back on MainActor
+        let resultMap = Dictionary(uniqueKeysWithValues: results.map { ($0.pointId, ($0.report, $0.day, $0.today, $0.hour)) })
+        for p in allPts {
+            if let vals = resultMap[p.id] {
+                p.report = vals.0
+                p.day = vals.1
+                p.today = vals.2
+                p.hour = vals.3
+            }
+            p.updatedAt = Date()
+            p.state = .ok
+            p.message = "Обновлено в \(Date().formatted(date: .omitted, time: .standard))"
         }
     }
 

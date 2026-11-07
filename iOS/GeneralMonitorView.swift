@@ -33,7 +33,7 @@ public struct GeneralMonitorView: View {
             }
             .sheet(isPresented: $showLimitsSheet) {
                 if let pt = targetPointForLimits {
-                    LimitsEditorSheet(pointId: pt.id, title: pt.displayName, vm: vm)
+                    LimitsEditorSheet(vm: vm, pointId: pt.id, title: pt.displayName)
                 }
             }
         }

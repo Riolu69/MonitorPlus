@@ -26,8 +26,17 @@ public actor LersCoordinator {
     private var cache: [Int: PointSnapshot] = [:]
 
     // Log storage + stream subscribers
+    // We use a simple Int counter as subscriber ID since AsyncStream.Continuation
+    // is a struct (value type) and cannot be compared by reference identity.
     private var logs: [Int: [PollLogEntry]] = [:]
-    private var logSubscribers: [Int: [AsyncStream<PollLogEntry>.Continuation]] = [:]
+    private var logSubscribers: [Int: [SubscriberEntry]] = [:]
+    private var nextSubscriberId: Int = 0
+
+    // Simple struct to hold subscriber info
+    private struct SubscriberEntry {
+        let id: Int
+        let continuation: AsyncStream<PollLogEntry>.Continuation
+    }
 
     // Concurrency limit for device polls
     private let maxDeviceSlots = 4
@@ -58,8 +67,8 @@ public actor LersCoordinator {
 
         // Push to all subscribers for this point
         if let subs = logSubscribers[pointId] {
-            for cont in subs {
-                cont.yield(entry)
+            for sub in subs {
+                sub.continuation.yield(entry)
             }
         }
     }
@@ -70,33 +79,58 @@ public actor LersCoordinator {
 
     public func clearLogs(pointId: Int) {
         logs[pointId] = []
+        // Finish all subscribers so streams end gracefully
+        if let subs = logSubscribers[pointId] {
+            for sub in subs {
+                sub.continuation.finish()
+            }
+            logSubscribers[pointId] = nil
+        }
     }
 
     /// Subscribe to real-time log updates for a specific point.
     /// Returns an AsyncStream that yields new log entries as they happen,
     /// plus immediately replays existing logs.
-    public func logStream(pointId: Int) -> AsyncStream<PollLogEntry> {
-        AsyncStream { continuation in
-            // Replay existing logs
-            if let existing = logs[pointId] {
-                for entry in existing {
-                    continuation.yield(entry)
-                }
-            }
-            // Register as subscriber
-            logSubscribers[pointId, default: []].append(continuation)
+    ///
+    /// This method is async because it needs to access actor-isolated state
+    /// (existing logs, subscriber registry) before creating the stream.
+    public func logStream(pointId: Int) async -> AsyncStream<PollLogEntry> {
+        // Capture existing logs to replay (copied while on the actor)
+        let existingLogs = logs[pointId] ?? []
 
-            continuation.onTermination = { [weak self] _ in
+        // Allocate a subscriber ID
+        let subscriberId = nextSubscriberId
+        nextSubscriberId += 1
+
+        // Create the stream — the closure runs in a non-isolated context,
+        // so we capture `self` and call async actor methods from within.
+        return AsyncStream { continuation in
+            // Replay existing logs
+            for entry in existingLogs {
+                continuation.yield(entry)
+            }
+
+            // Register as subscriber — must go through actor isolation
+            let coordinator = self
+            Task {
+                await coordinator.registerSubscriber(pointId: pointId, id: subscriberId, continuation: continuation)
+            }
+
+            continuation.onTermination = { _ in
                 Task {
-                    await self?.removeSubscriber(pointId: pointId, continuation: continuation)
+                    await coordinator.removeSubscriber(pointId: pointId, subscriberId: subscriberId)
                 }
             }
         }
     }
 
-    private func removeSubscriber(pointId: Int, continuation: AsyncStream<PollLogEntry>.Continuation) {
+    private func registerSubscriber(pointId: Int, id: Int, continuation: AsyncStream<PollLogEntry>.Continuation) {
+        logSubscribers[pointId, default: []].append(SubscriberEntry(id: id, continuation: continuation))
+    }
+
+    private func removeSubscriber(pointId: Int, subscriberId: Int) {
         if var subs = logSubscribers[pointId] {
-            subs.removeAll { $0 === continuation }
+            subs.removeAll { $0.id == subscriberId }
             if subs.isEmpty {
                 logSubscribers.removeValue(forKey: pointId)
             } else {

@@ -42,7 +42,7 @@ public struct PodpitkaPeriod: Sendable {
         let currentMonth = calendar.component(.month, from: now)
 
         if sDay <= eDay {
-            var comp = DateComponents(year: currentYear, month: currentMonth, day: 1)
+            let comp = DateComponents(year: currentYear, month: currentMonth, day: 1)
             var candMonth = calendar.date(from: comp) ?? now
             let range = calendar.range(of: .day, in: .month, for: candMonth)!
             let realEnd = min(eDay, range.count)

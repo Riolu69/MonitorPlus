@@ -107,18 +107,18 @@ public struct PollLogSheetView: View {
 
 // MARK: - Limits editor sheet (Apple-style Form)
 public struct LimitsEditorSheet: View {
+    @Bindable var vm: AppViewModel
     let pointId: Int
     let title: String
-    @Bindable var vm: AppViewModel
     @Environment(\.dismiss) private var dismiss
 
     @State private var limits: PointThresholds = PointThresholds()
     @State private var showScheduleEditor = false
 
-    public init(pointId: Int, title: String, vm: AppViewModel) {
+    public init(vm: AppViewModel, pointId: Int, title: String) {
+        self.vm = vm
         self.pointId = pointId
         self.title = title
-        self.vm = vm
     }
 
     public var body: some View {
@@ -133,7 +133,7 @@ public struct LimitsEditorSheet: View {
                             .foregroundStyle(.secondary)
                     }
                     HStack {
-                        Text("Допуск (±)")
+                        Text("Допуск")
                         Spacer()
                         TextField("3.0", value: $limits.scheduleTolerance, format: .number)
                             .keyboardType(.decimalPad)
@@ -145,7 +145,7 @@ public struct LimitsEditorSheet: View {
                     Button {
                         showScheduleEditor = true
                     } label: {
-                        Label("Открыть редактор графика", systemImage: "chart.line.uptrend.xyaxis")
+                        Label("Редактор графика", systemImage: "chart.line.uptrend.xyaxis")
                     }
                 } header: {
                     Text("Температурный график")
@@ -154,13 +154,13 @@ public struct LimitsEditorSheet: View {
                 }
 
                 // Temperature limits
-                Section("Температуры (°C)") {
+                Section("Температуры, °C") {
                     limitRow("T1", min: $limits.t1Min, max: $limits.t1Max)
                     limitRow("T2", min: $limits.t2Min, max: $limits.t2Max)
                 }
 
                 // Pressure limits
-                Section("Давление (атм)") {
+                Section("Давление, атм") {
                     limitRow("P1", min: $limits.p1Min, max: $limits.p1Max)
                     limitRow("P2", min: $limits.p2Min, max: $limits.p2Max)
                 }
