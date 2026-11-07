@@ -45,6 +45,7 @@ jobs:
                   CODE_SIGNING_ALLOWED: NO
                   CODE_SIGNING_REQUIRED: NO
                   CODE_SIGN_IDENTITY: ""
+                  INFOPLIST_FILE: Info.plist
           EOF
 
       - name: Generate .xcodeproj
@@ -64,23 +65,14 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Inject ATS into built .app and Package to IPA
+      - name: Package IPA
         working-directory: iOS
         run: |
           APP_PATH="build/Build/Products/Release-iphoneos/LersMonitor.app"
-          PLIST_PATH="$APP_PATH/Info.plist"
 
-          echo "Injecting NSAppTransportSecurity into $PLIST_PATH..."
-          # Удаляем старую секцию, если она есть
-          /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$PLIST_PATH" 2>/dev/null || true
-          # Добавляем словарь и ключ NSAllowsArbitraryLoads = true
-          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$PLIST_PATH"
-          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsArbitraryLoads bool true" "$PLIST_PATH"
+          # ATS settings are now in Info.plist (included at build time),
+          # no need for post-build plist injection.
 
-          # Проверяем в логах, что ключ записан
-          /usr/libexec/PlistBuddy -c "Print :NSAppTransportSecurity" "$PLIST_PATH"
-
-          # Упаковываем в IPA
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           zip -r LersMonitor.ipa Payload
