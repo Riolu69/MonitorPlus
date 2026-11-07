@@ -89,9 +89,19 @@ jobs:
             ARCHS=arm64
           )
           if command -v xcbeautify >/dev/null 2>&1; then
-            xcodebuild "${ARGS[@]}" | xcbeautify
+            xcodebuild "${ARGS[@]}" 2>&1 | tee xcodebuild.log | xcbeautify
           else
-            xcodebuild "${ARGS[@]}"
+            xcodebuild "${ARGS[@]}" 2>&1 | tee xcodebuild.log
+          fi
+
+      - name: Print all compiler errors on failure
+        if: failure()
+        working-directory: iOS
+        run: |
+          if [ -f xcodebuild.log ]; then
+            echo "==== ALL error: LINES FROM BUILD ===="
+            grep -E "error:|warning: .*(Sendable|concurrency|deprecated)" xcodebuild.log || true
+            echo "==== END ===="
           fi
 
       - name: Verify app bundle contents
