@@ -144,7 +144,6 @@ struct PointCardView: View {
                 Image(systemName: statusIcon)
                     .foregroundStyle(statusColor)
                     .font(.callout)
-                    .symbolEffect(.rotate, isActive: pt.state == .polling)
             }
 
             Divider()

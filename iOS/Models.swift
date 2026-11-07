@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 // MARK: - Poll states
-public enum PollState: String, Codable, CaseIterable {
+public enum PollState: String, Codable, CaseIterable, Sendable {
     case pending = "Ожидание"
     case queued = "В очереди"
     case polling = "Опрос..."

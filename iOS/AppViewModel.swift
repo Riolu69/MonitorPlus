@@ -147,15 +147,21 @@ public final class AppViewModel {
         req.setValue("Bearer \(info.token)", forHTTPHeaderField: "Authorization")
         req.timeoutInterval = 10
 
-        let (_, res) = try? await URLSession.shared.data(for: req)
-        if let httpRes = res as? HTTPURLResponse {
-            if httpRes.statusCode == 401 || httpRes.statusCode == 403 {
-                // Token expired — need full re-login
-                isConnected = false
-                statusText = "Сессия истекла. Переподключитесь."
-                await connect()
-            }
-        } else {
+        let result: (Data, URLResponse)?
+        do {
+            result = try await URLSession.shared.data(for: req)
+        } catch {
+            result = nil
+        }
+
+        if let (_, res) = result,
+           let httpRes = res as? HTTPURLResponse,
+           httpRes.statusCode == 401 || httpRes.statusCode == 403 {
+            // Token expired — need full re-login
+            isConnected = false
+            statusText = "Сессия истекла. Переподключитесь."
+            await connect()
+        } else if result == nil {
             // Network error — keep connection state, will retry later
             statusText = "Потеря связи с сервером"
         }
