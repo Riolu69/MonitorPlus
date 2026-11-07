@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-ipa:
-    runs-on: macos-lates # macOS на Apple Silicon с предустановленным Xcode 15/16
+    runs-on: macos-26 # macOS на Apple Silicon с предустановленным Xcode 15/16
 
     steps:
       - name: Checkout repository
