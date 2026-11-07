@@ -114,6 +114,7 @@ public struct LimitsEditorSheet: View {
 
     @State private var limits: PointThresholds = PointThresholds()
     @State private var showScheduleEditor = false
+    @State private var applyToAll = false
 
     public init(vm: AppViewModel, pointId: Int, title: String) {
         self.vm = vm
@@ -168,7 +169,21 @@ public struct LimitsEditorSheet: View {
                 // Flow and heat
                 Section("Расход и теплоэнергия") {
                     limitRow("V1", min: $limits.v1Min, max: $limits.v1Max, unit: "м³/ч")
+                    limitRow("V2", min: $limits.v2Min, max: $limits.v2Max, unit: "м³/ч")
+                    limitRow("M1", min: $limits.m1Min, max: $limits.m1Max, unit: "т")
+                    limitRow("M2", min: $limits.m2Min, max: $limits.m2Max, unit: "т")
                     limitRow("Q", min: $limits.qMin, max: $limits.qMax, unit: "Гкал")
+                }
+
+                Section {
+                    Toggle("Применить ко всем точкам", isOn: $applyToAll)
+                    Button("Сбросить границы", role: .destructive) {
+                        limits = PointThresholds()
+                    }
+                } header: {
+                    Text("Область применения")
+                } footer: {
+                    Text("Границы и температурный график используются для подсветки нарушений на дашборде, в списке точек и тренде.")
                 }
             }
             .navigationTitle("Границы")
@@ -182,9 +197,7 @@ public struct LimitsEditorSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Сохранить") {
-                        vm.settings.pointLimits[pointId] = limits
-                        vm.saveSettings()
-                        vm.buildDashboardGroups()
+                        vm.setLimits(limits, for: pointId, applyToAll: applyToAll)
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -244,10 +257,20 @@ public struct ScheduleTableSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        schedule.append(TempSchedulePoint(tnv: 0, t1: 70, t2: 50))
+                    Menu {
+                        Button {
+                            schedule.append(TempSchedulePoint(tnv: 0, t1: 70, t2: 50))
+                        } label: {
+                            Label("Добавить узел", systemImage: "plus")
+                        }
+                        Button {
+                            schedule.sort { $0.tnv < $1.tnv }
+                        } label: {
+                            Label("Сортировать по Тнв", systemImage: "arrow.up.arrow.down")
+                        }
+                        .disabled(schedule.count < 2)
                     } label: {
-                        Label("Добавить", systemImage: "plus")
+                        Label("Узлы", systemImage: "ellipsis.circle")
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {

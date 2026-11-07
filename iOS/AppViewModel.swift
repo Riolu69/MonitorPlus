@@ -1,204 +1,62 @@
 import Foundation
 import SwiftUI
 
-// Sendable struct to hold connection info (tuples aren't Sendable in Swift 6)
-struct ConnectionInfo: Sendable {
+// MARK: - Sendable DTOs
+
+/// Информация о текущем соединении (для диагностики и переподключения).
+public struct ConnectionInfo: Sendable {
     let host: String
     let port: Int
     let token: String
 }
 
-// Sendable result for parallel podpitka queries
-struct PodpitkaResult: Sendable {
+/// Результат параллельного расчёта объёмов подпитки.
+public struct PodpitkaResult: Sendable {
     let pointId: Int
-    let report: Double?
-    let day: Double?
-    let today: Double?
-    let hour: Double?
+    let volumes: PodpitkaVolumes
 }
 
+/// Какие списки выбора точек существуют в приложении.
+public enum PointSelectionList: Sendable, Equatable {
+    case general
+    case dashboard
+    case podpitka
+}
+
+// MARK: - AppViewModel
+/// Центральное состояние приложения. Порт логики MainWindow.xaml.cs:
+/// подключение, загрузка /Core/Nodes и /Core/MeasurePoints, фильтры,
+/// выбор точек, опрос, Тнв, тренд, планировщики дашборда и подпитки,
+/// архив показаний, сохранение настроек и последних результатов.
 @Observable
 @MainActor
 public final class AppViewModel {
+
+    // MARK: - Connection state
+
     public var settings = UserSettings()
     public var isConnected: Bool = false
     public var statusText: String = "Готово к работе"
     public var isPollingAll: Bool = false
+    public var isPollingSelected: Bool = false
+
+    public var isTrendRunning: Bool = false
+    public var trendRemainingText: String = ""
+    public var isDashboardSchedulerRunning: Bool = false
+    public var isPodpitkaSchedulerRunning: Bool = false
+    public var dashboardNextRun: Date?
+    public var podpitkaNextRun: Date?
+
+    // MARK: - Points and filters
 
     public var allPoints: [MeasurePointItem] = []
-    public var filteredPoints: [MeasurePointItem] = []
-    public var dashboardGroups: [DashboardNodeGroup] = []
-    public var podpitkaGroups: [PodpitkaNodeGroup] = []
-    public var trendHistory: [PointResultData] = []
+    public var availableNodes: [String] = ["Все объекты"]
+    public let systemTypes: [String] = SystemTypes.all
 
-    // Filters
-    public var searchText: String = "" { didSet { applyFilter() } }
-    public var selectedNodeFilter: String = "Все объекты" { didSet { applyFilter() } }
-    public var selectedSystemFilter: String = "Все системы" { didSet { applyFilter() } }
-
-    // Current outdoor temperature
-    public var globalTnv: Double? = nil
-
-    // Table columns
-    public var showCols: [String: Bool] = [
-        "T1": true, "T2": true, "ΔT": true, "P1": true, "P2": false,
-        "ΔP": true, "V1": true, "V2": false, "M1": true, "M2": true, "Q": true
-    ]
-
-    public let coordinator = LersCoordinator()
-
-    // Connection info for reconnect (Sendable struct)
-    private var connectionInfo: ConnectionInfo?
-
-    public init() {
-        loadSettings()
-    }
-
-    // MARK: - Connect
-    public func connect() async {
-        statusText = "Подключение..."
-
-        let cleanHost = settings.host
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "http://", with: "")
-            .replacingOccurrences(of: "https://", with: "")
-            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-
-        let port = settings.port > 0 ? settings.port : 10000
-        let urlStr = "http://\(cleanHost):\(port)/api/v1/Login"
-        guard let url = URL(string: urlStr) else {
-            statusText = "Ошибка: некорректный адрес сервера"
-            return
-        }
-
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.timeoutInterval = 15
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Password from Keychain
-        let pass = KeychainHelper.loadPassword() ?? ""
-        let body: [String: String] = [
-            "login": settings.login.trimmingCharacters(in: .whitespacesAndNewlines),
-            "password": pass,
-            "application": "LersMonitor iOS"
-        ]
-        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
-
-        do {
-            let (data, res) = try await URLSession.shared.data(for: req)
-            guard let httpRes = res as? HTTPURLResponse else {
-                statusText = "Ошибка: не получен HTTP-ответ"
-                return
-            }
-
-            if httpRes.statusCode == 401 || httpRes.statusCode == 403 {
-                statusText = "Ошибка: неверный логин или пароль"
-                return
-            }
-
-            guard httpRes.statusCode == 200 else {
-                statusText = "Ошибка сервера: код \(httpRes.statusCode)"
-                return
-            }
-
-            var token = ""
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let t = json["token"] as? String {
-                token = t
-            } else if let s = String(data: data, encoding: .utf8)?.trimmingCharacters(in: CharacterSet(charactersIn: "\" \n\r")) {
-                token = s
-            }
-
-            if token.isEmpty {
-                statusText = "Ошибка: пустой токен авторизации"
-                return
-            }
-
-            statusText = "Загрузка точек учёта..."
-            connectionInfo = ConnectionInfo(host: cleanHost, port: port, token: token)
-            await coordinator.configure(host: cleanHost, port: port, token: token)
-            await loadPoints(host: cleanHost, port: port, token: token)
-
-            self.isConnected = true
-            self.statusText = "Подключено: точек \(allPoints.count)"
-            saveSettings()
-
-            Task { await updateGlobalTnv() }
-        } catch {
-            let err = error as NSError
-            if err.domain == NSURLErrorDomain && err.code == NSURLErrorTimedOut {
-                statusText = "Ошибка: таймаут (сервер недоступен)"
-            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorCannotConnectToHost {
-                statusText = "Ошибка: нет связи с \(cleanHost):\(port)"
-            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorAppTransportSecurityRequiresSecureConnection {
-                statusText = "Ошибка: ATS блокирует HTTP.\n\(AppViewModel.atsDiagnostics())"
-            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorSecureConnectionFailed {
-                statusText = "Ошибка: не удалось установить защищённое соединение"
-            } else if err.domain == NSURLErrorDomain && err.code == NSURLErrorNotConnectedToInternet {
-                statusText = "Ошибка: нет интернета"
-            } else {
-                statusText = "Ошибка сети: \(error.localizedDescription)"
-            }
-        }
-    }
-
-    // MARK: - Reconnect (uses stored token if still valid, otherwise re-login)
-    public func reconnectIfNeeded() async {
-        guard let info = connectionInfo else { return }
-
-        // Try a lightweight API call with the existing token
-        let urlStr = "http://\(info.host):\(info.port)/api/v1/Core/MeasurePoints?type=Regular"
-        guard let url = URL(string: urlStr) else { return }
-        var req = URLRequest(url: url)
-        req.setValue("Bearer \(info.token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 10
-
-        let result: (Data, URLResponse)?
-        do {
-            result = try await URLSession.shared.data(for: req)
-        } catch {
-            result = nil
-        }
-
-        if let (_, res) = result,
-           let httpRes = res as? HTTPURLResponse,
-           httpRes.statusCode == 401 || httpRes.statusCode == 403 {
-            // Token expired — need full re-login
-            isConnected = false
-            statusText = "Сессия истекла. Переподключитесь."
-            await connect()
-        } else if result == nil {
-            // Network error — keep connection state, will retry later
-            statusText = "Потеря связи с сервером"
-        }
-    }
-
-    // MARK: - Load points
-    private func loadPoints(host: String, port: Int, token: String) async {
-        guard let url = URL(string: "http://\(host):\(port)/api/v1/Core/MeasurePoints?type=Regular&getCustomers=true") else { return }
-        var req = URLRequest(url: url)
-        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        guard let (data, _) = try? await URLSession.shared.data(for: req),
-              let json = try? JSONSerialization.jsonObject(with: data) else { return }
-
-        let array: [[String: Any]]
-        if let arr = json as? [[String: Any]] { array = arr }
-        else if let dict = json as? [String: Any], let arr = dict["measurePoints"] as? [[String: Any]] { array = arr }
-        else { array = [] }
-
-        self.allPoints = array.compactMap { d in
-            guard let id = d["id"] as? Int else { return nil }
-            return MeasurePointItem(id: id, title: (d["title"] as? String) ?? "Точка", nodeTitle: (d["nodeTitle"] as? String) ?? "Объект")
-        }.sorted { ($0.nodeTitle, $0.title) < ($1.nodeTitle, $1.title) }
-
-        applyFilter()
-        buildDashboardGroups()
-        buildPodpitkaGroups()
-    }
-
-    // MARK: - Filters
-    public func applyFilter() {
+    /// Вычисляемое, а не хранимое: `@Observable` не поддерживает didSet/willSet
+    /// на отслеживаемых свойствах. Observation сам проследит зависимости
+    /// (allPoints / searchText / фильтры) и обновит все читающие view.
+    public var filteredPoints: [MeasurePointItem] {
         var list = allPoints
         if !searchText.isEmpty {
             list = list.filter { $0.displayName.localizedCaseInsensitiveContains(searchText) }
@@ -207,174 +65,595 @@ public final class AppViewModel {
             list = list.filter { $0.nodeTitle == selectedNodeFilter }
         }
         if selectedSystemFilter != "Все системы" {
-            list = list.filter { $0.title.localizedCaseInsensitiveContains(selectedSystemFilter) }
+            list = list.filter { $0.matches(systemType: selectedSystemFilter) }
         }
-        self.filteredPoints = list
+        return list
     }
 
-    // MARK: - Build groups
-    public func buildDashboardGroups() {
-        let grouped = Dictionary(grouping: allPoints) { $0.nodeTitle }
-        self.dashboardGroups = grouped.map { node, pts in
-            let vmPoints = pts.map { p in
-                PointResultData(id: p.id, title: p.title, nodeTitle: p.nodeTitle, limits: settings.pointLimits[p.id])
+    public var searchText: String = ""
+    public var selectedNodeFilter: String = "Все объекты"
+    public var selectedSystemFilter: String = "Все системы"
+
+    public var dashboardNodeFilter: String = "Все объекты"
+    public var dashboardSystemFilter: String = "Все системы"
+    public var podpitkaNodeFilter: String = "Все объекты"
+    public var podpitkaSystemFilter: String = "Все системы"
+
+    // MARK: - Results
+
+    public var dashboardGroups: [DashboardNodeGroup] = []
+    public var podpitkaGroups: [PodpitkaNodeGroup] = []
+    public var generalResults: [PointResultData] = []
+    public var trendHistory: [PointResultData] = []
+
+    // MARK: - Outdoor temperature
+
+    public var globalTnv: Double? = nil
+    public var globalTnvUpdated: Date?
+    public var globalTnvStatus: String = "Источник не выбран"
+
+    // MARK: - Trend
+
+    public var trendPointId: Int?
+
+    // MARK: - Archive
+
+    public var archivePointId: Int?
+    public var archiveKind: ArchiveKind = .hour
+    public var archiveDays: Int = 7
+    public var archiveRows: [ArchiveRow] = []
+    public var archiveAvailableKinds: [String] = []
+    public var archiveStatus: String = ""
+    public var isLoadingArchive: Bool = false
+
+    // MARK: - Table columns
+
+    public var showCols: [String: Bool] = [
+        "T1": true, "T2": true, "ΔT": true, "P1": true, "P2": false,
+        "ΔP": true, "V1": true, "V2": false, "M1": true, "M2": true, "Q": true
+    ]
+
+    // MARK: - Coordinator
+
+    public let coordinator = LersCoordinator()
+
+    private var connectionInfo: ConnectionInfo?
+    private var tnvTask: Task<Void, Never>?
+    private var trendTask: Task<Void, Never>?
+    private var dashboardTask: Task<Void, Never>?
+    private var podpitkaTask: Task<Void, Never>?
+
+    public init() {
+        loadSettings()
+    }
+
+    // MARK: - Selection helpers
+
+    private func ids(for list: PointSelectionList) -> [Int] {
+        switch list {
+        case .general:   return settings.selectedPointIds
+        case .dashboard: return settings.dashboardPointIds
+        case .podpitka:  return settings.podpitkaPointIds
+        }
+    }
+
+    private func setIds(_ values: [Int], for list: PointSelectionList) {
+        switch list {
+        case .general:   settings.selectedPointIds = values
+        case .dashboard: settings.dashboardPointIds = values
+        case .podpitka:  settings.podpitkaPointIds = values
+        }
+    }
+
+    public func isSelected(_ id: Int, in list: PointSelectionList) -> Bool {
+        ids(for: list).contains(id)
+    }
+
+    public func selectionCount(in list: PointSelectionList) -> Int {
+        ids(for: list).count
+    }
+
+    public func toggleSelection(_ id: Int, in list: PointSelectionList) {
+        var values = ids(for: list)
+        if let idx = values.firstIndex(of: id) { values.remove(at: idx) }
+        else { values.append(id) }
+        setIds(values, for: list)
+        if list == .dashboard { buildDashboardGroups() }
+        if list == .podpitka { buildPodpitkaGroups() }
+        saveSettings()
+    }
+
+    public func selectAll(_ points: [MeasurePointItem], in list: PointSelectionList) {
+        setIds(points.map(\.id), for: list)
+        if list == .dashboard { buildDashboardGroups() }
+        if list == .podpitka { buildPodpitkaGroups() }
+        saveSettings()
+    }
+
+    public func clearSelection(in list: PointSelectionList) {
+        setIds([], for: list)
+        if list == .dashboard { buildDashboardGroups() }
+        if list == .podpitka { buildPodpitkaGroups() }
+        saveSettings()
+    }
+
+    // MARK: - Connect (порт BtnConnect_Click)
+
+    public func connect() async {
+        statusText = "Подключение к серверу..."
+        let cleanHost = Self.cleanHost(settings.host)
+        let port = settings.port > 0 ? settings.port : 10000
+
+        await coordinator.configure(host: cleanHost, port: port, token: nil)
+
+        do {
+            let token = try await coordinator.login(
+                login: settings.login,
+                password: KeychainHelper.loadPassword() ?? ""
+            )
+            connectionInfo = ConnectionInfo(host: cleanHost, port: port, token: token)
+            statusText = "Загрузка объектов и точек учёта..."
+
+            allPoints = await coordinator.fetchPoints()
+            availableNodes = ["Все объекты"] + Array(Set(allPoints.map(\.nodeTitle))).sorted()
+            isConnected = true
+
+            buildDashboardGroups()
+            buildPodpitkaGroups()
+            restoreLastResults()
+            saveSettings()
+
+            statusText = "Подключено к \(cleanHost):\(port). Загружено точек: \(allPoints.count)"
+            startTnvTimer()
+            await updateGlobalTnv()
+
+            // Оригинал сразу считывает архивные данные за закрытые периоды.
+            await refreshPodpitka()
+        } catch let err as LersNetworkError {
+            isConnected = false
+            if case .atsBlocked = err {
+                statusText = "ATS блокирует HTTP.\n\(Self.atsDiagnostics())"
+            } else {
+                statusText = "Ошибка: \(err.errorDescription ?? err.localizedDescription)"
             }
-            return DashboardNodeGroup(nodeTitle: node, points: vmPoints)
+        } catch {
+            isConnected = false
+            statusText = "Ошибка подключения: \(error.localizedDescription)"
+        }
+    }
+
+    public func reconnectIfNeeded() async {
+        let code = await coordinator.ping()
+        if code == 401 || code == 403 {
+            isConnected = false
+            statusText = "Сессия истекла. Переподключение..."
+            await connect()
+        } else if code == 0 {
+            statusText = "Потеря связи с сервером"
+        }
+    }
+
+    private static func cleanHost(_ raw: String) -> String {
+        raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "http://", with: "")
+            .replacingOccurrences(of: "https://", with: "")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+
+    // MARK: - Filters (порт ApplyFilters / ApplyFiltersDashboard / ApplyFiltersPodpitka)
+
+    public var filteredDashboardPoints: [MeasurePointItem] {
+        allPoints.filter {
+            (dashboardNodeFilter == "Все объекты" || $0.nodeTitle == dashboardNodeFilter) &&
+            (dashboardSystemFilter == "Все системы" || $0.matches(systemType: dashboardSystemFilter))
+        }
+    }
+
+    public var filteredPodpitkaPoints: [MeasurePointItem] {
+        allPoints.filter {
+            (podpitkaNodeFilter == "Все объекты" || $0.nodeTitle == podpitkaNodeFilter) &&
+            (podpitkaSystemFilter == "Все системы" || $0.matches(systemType: podpitkaSystemFilter))
+        }
+    }
+
+    // MARK: - Groups (порт RefreshDashboardNodes / RefreshPodpitkaNodes)
+
+    public func buildDashboardGroups() {
+        // Если пользователь ничего не выбрал — показываем все точки (удобно на iOS).
+        let chosen = settings.dashboardPointIds.isEmpty
+            ? allPoints.map(\.id)
+            : settings.dashboardPointIds
+        let targets = allPoints.filter { chosen.contains($0.id) }
+        let grouped = Dictionary(grouping: targets) { $0.nodeTitle }
+        let previousPaused = Dictionary(uniqueKeysWithValues: dashboardGroups.map { ($0.nodeTitle, $0.isPaused) })
+
+        dashboardGroups = grouped.map { node, pts in
+            DashboardNodeGroup(
+                nodeTitle: node,
+                points: pts.map {
+                    PointResultData(id: $0.id, title: $0.title, nodeTitle: $0.nodeTitle,
+                                    limits: settings.pointLimits[$0.id])
+                },
+                isPaused: previousPaused[node] ?? false
+            )
         }.sorted { $0.nodeTitle < $1.nodeTitle }
+        restoreLastResults()
     }
 
     public func buildPodpitkaGroups() {
-        let targets = allPoints.filter { settings.podpitkaPointIds.contains($0.id) }
+        var chosen = settings.podpitkaPointIds
+        if chosen.isEmpty {
+            // Автовыбор: точки, в названии которых есть «подпит».
+            chosen = allPoints.filter { $0.title.localizedCaseInsensitiveContains("подпит") }.map(\.id)
+        }
+        let targets = allPoints.filter { chosen.contains($0.id) }
         let grouped = Dictionary(grouping: targets) { $0.nodeTitle }
-        self.podpitkaGroups = grouped.map { node, pts in
-            let vmPoints = pts.map { p in
-                PodpitkaPointData(id: p.id, title: p.title, nodeTitle: p.nodeTitle, limits: settings.podpitkaLimits[p.id])
-            }
-            return PodpitkaNodeGroup(nodeTitle: node, points: vmPoints)
+        podpitkaGroups = grouped.map { node, pts in
+            PodpitkaNodeGroup(
+                nodeTitle: node,
+                points: pts.map {
+                    PodpitkaPointData(id: $0.id, title: $0.title, nodeTitle: $0.nodeTitle,
+                                      limits: settings.podpitkaLimits[$0.id])
+                }
+            )
         }.sorted { $0.nodeTitle < $1.nodeTitle }
     }
 
-    // MARK: - Poll single point
+    public func togglePause(nodeTitle: String) {
+        guard let idx = dashboardGroups.firstIndex(where: { $0.nodeTitle == nodeTitle }) else { return }
+        dashboardGroups[idx].isPaused.toggle()
+        statusText = dashboardGroups[idx].isPaused
+            ? "Опрос объекта «\(nodeTitle)» приостановлен"
+            : "Опрос объекта «\(nodeTitle)» возобновлён"
+    }
+
+    // MARK: - Apply poll outcome
+
+    private func apply(_ outcome: PollOutcome, to p: PointResultData) {
+        p.state = outcome.state
+        p.status = outcome.message
+        if let s = outcome.snapshot {
+            p.t1 = s.values.t1
+            p.t2 = s.values.t2
+            p.p1 = s.values.p1
+            p.p2 = s.values.p2
+            p.v1 = s.values.v1
+            p.v2 = s.values.v2
+            p.m1 = s.values.m1
+            p.m2 = s.values.m2
+            p.q = s.values.q
+            p.deviceTime = s.deviceTime
+        }
+    }
+
+    // MARK: - Poll single / all / selected (порт BtnStartMonitor_Click)
+
     public func pollSinglePoint(_ p: PointResultData) async {
         p.state = .polling
         p.status = "Идет опрос..."
-        let pointId = p.id
-        let nodeTitle = p.nodeTitle
-        let (st, msg, raw) = await coordinator.pollPoint(pointId: pointId, nodeTitle: nodeTitle, ignoreCache: true)
-        p.state = st
-        p.status = msg
-        if let raw = raw {
-            parsePointData(p, json: raw)
-            p.deviceTime = Date()
-        }
+        let outcome = await coordinator.pollPoint(pointId: p.id, nodeTitle: p.nodeTitle, ignoreCache: true)
+        apply(outcome, to: p)
+        saveLastResults()
     }
 
-    // MARK: - Poll all points in parallel (TaskGroup with concurrency limit in coordinator)
+    /// Плановый/принудительный опрос дашборда. Кэш 3 минуты уважается.
     public func pollAllPoints() async {
         guard !isPollingAll else { return }
         isPollingAll = true
-        statusText = "Опрос всех точек..."
+        statusText = "Опрос точек дашборда..."
 
-        // Collect all non-paused points
-        let allPts: [PointResultData] = dashboardGroups.flatMap { g in
-            g.isPaused ? [] : g.points
+        let active = dashboardGroups.filter { !$0.isPaused }
+        let allPts = active.flatMap(\.points)
+        for p in allPts where p.state != .polling {
+            p.state = .queued
+            p.status = "В очереди"
         }
 
-        // pollSinglePoint mutates PointResultData (a @MainActor @Observable class),
-        // so we must keep it on the MainActor. The coordinator handles concurrency
-        // limiting internally (4 device slots), so even though tasks are spawned
-        // concurrently, the actual device polls are serialized at the coordinator level.
+        // Как WPF PollCoordinator.Updated: каждая точка обновляется сразу по
+        // завершении своего опроса, а не после окончания всей пачки.
+        let coordinator = self.coordinator
         await withTaskGroup(of: Void.self) { group in
-            for pt in allPts {
+            for p in allPts {
+                let target = PollTarget(pointId: p.id, nodeKey: p.nodeTitle)
                 group.addTask { @MainActor in
-                    await self.pollSinglePoint(pt)
+                    let outcome = await coordinator.poll(target: target, ignoreCache: false)
+                    self.apply(outcome, to: p)
                 }
             }
-            // Wait for all
-            for await _ in group {}
         }
 
+        let ok = allPts.filter { $0.state == .ok || $0.state == .okCached }.count
+        statusText = "Опрос завершён: \(ok) из \(allPts.count) точек"
         isPollingAll = false
-        statusText = "Опрос завершен: \(allPts.count) точек"
+        saveLastResults()
     }
 
-    // MARK: - Refresh podpitka data in parallel
-    // Uses point IDs in the TaskGroup to avoid passing non-Sendable references.
-    public func refreshPodpitka() async {
-        let now = Date()
-        let rPer = PodpitkaPeriod.report(now: now, startDay: settings.reportPeriodStartDay, endDay: settings.reportPeriodEndDay)
-        let yPer = PodpitkaPeriod.yesterday(now: now)
-        let tPer = PodpitkaPeriod.today(now: now)
-        let hPer = PodpitkaPeriod.prevHour(now: now)
-
-        // Collect all podpitka point IDs
-        let allPts: [PodpitkaPointData] = podpitkaGroups.flatMap { $0.points }
-        for p in allPts {
-            p.state = .polling
+    /// Опрос выбранных точек на вкладке «Точки учёта».
+    public func pollSelectedPoints() async {
+        guard !isPollingSelected else { return }
+        let chosen = settings.selectedPointIds.isEmpty
+            ? filteredPoints.map(\.id)
+            : settings.selectedPointIds
+        let points = allPoints.filter { chosen.contains($0.id) }
+        guard !points.isEmpty else {
+            statusText = "Выберите точки учёта в списке"
+            return
         }
 
-        // Capture coordinator reference before entering TaskGroup
-        // (coordinator is a Sendable actor, safe to pass across isolation boundaries)
+        isPollingSelected = true
+        generalResults = points.map {
+            PointResultData(id: $0.id, title: $0.title, nodeTitle: $0.nodeTitle,
+                            limits: settings.pointLimits[$0.id])
+        }
+        for p in generalResults { p.state = .queued; p.status = "В очереди" }
+
+        let coordinator = self.coordinator
+        await withTaskGroup(of: Void.self) { group in
+            for p in generalResults {
+                let target = PollTarget(pointId: p.id, nodeKey: p.nodeTitle)
+                group.addTask { @MainActor in
+                    let outcome = await coordinator.poll(target: target, ignoreCache: false)
+                    self.apply(outcome, to: p)
+                }
+            }
+        }
+
+        let ok = generalResults.filter { $0.state == .ok || $0.state == .okCached }.count
+        statusText = "Мониторинг завершён: \(ok) из \(generalResults.count) точек"
+        isPollingSelected = false
+        saveLastResults()
+    }
+
+    /// Прочитать показания без опроса прибора.
+    public func readOnly(pointId: Int) async {
+        let outcome = await coordinator.readOnly(target: PollTarget(pointId: pointId, nodeKey: ""))
+        for p in dashboardGroups.flatMap(\.points) where p.id == pointId { apply(outcome, to: p) }
+        for p in generalResults where p.id == pointId { apply(outcome, to: p) }
+        statusText = "Считано из ЛЭРС: \(outcome.message)"
+        saveLastResults()
+    }
+
+    // MARK: - Outdoor temperature (порт UpdateGlobalTnvAsync)
+
+    public func updateGlobalTnv() async {
+        guard let id = settings.tnvSourcePointId else {
+            globalTnv = nil
+            globalTnvStatus = "Источник не выбран"
+            return
+        }
+        guard let snap = await coordinator.readLast(pointId: id) else {
+            globalTnvStatus = "Нет ответа от источника"
+            return
+        }
+        if let t = snap.values.tnv ?? snap.values.t1 ?? snap.values.t2 {
+            globalTnv = t + settings.tnvCorrection
+            globalTnvUpdated = Date()
+            globalTnvStatus = "Обновлено в \(Date().formatted(date: .omitted, time: .standard))"
+        } else {
+            globalTnvStatus = "Параметр Тнв не найден"
+        }
+    }
+
+    private func startTnvTimer() {
+        tnvTask?.cancel()
+        tnvTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                if Task.isCancelled { break }
+                await updateGlobalTnv()
+            }
+        }
+    }
+
+    // MARK: - Trend monitoring (порт BtnStartTrend_Click / StopNativeLersTrend)
+
+    public func startTrend(pointId: Int, durationMin: Int = 3) {
+        guard !isTrendRunning else { return }
+        trendPointId = pointId
+        isTrendRunning = true
+        let duration = max(1, durationMin)
+        let end = Date().addingTimeInterval(Double(duration) * 60)
+
+        trendTask = Task {
+            await coordinator.startTrendPolling(pointId: pointId)
+            var lastObserved: Date?
+            while !Task.isCancelled && Date() < end {
+                if let snap = await coordinator.readLast(pointId: pointId) {
+                    let dt = snap.deviceTime ?? snap.readAtUtc
+                    if lastObserved == nil || dt > lastObserved! {
+                        lastObserved = dt
+                        let row = PointResultData(id: pointId,
+                                                  title: allPoints.first { $0.id == pointId }?.title ?? "",
+                                                  nodeTitle: allPoints.first { $0.id == pointId }?.nodeTitle ?? "",
+                                                  limits: settings.pointLimits[pointId])
+                        apply(PollOutcome(pointId: pointId, state: .ok, message: "Снято", snapshot: snap), to: row)
+                        row.state = .ok
+                        row.status = "Снято \(dt.formatted(date: .omitted, time: .standard))"
+                        trendHistory.insert(row, at: 0)
+                        if trendHistory.count > 200 { trendHistory.removeLast(trendHistory.count - 200) }
+                    }
+                }
+                let remain = max(0, end.timeIntervalSinceNow)
+                trendRemainingText = String(format: "Осталось %d мин %d сек",
+                                            Int(remain) / 60, Int(remain) % 60)
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+            }
+            await coordinator.stopTrendPolling(pointId: pointId)
+            isTrendRunning = false
+            trendRemainingText = ""
+            statusText = Date() >= end
+                ? "Лимит времени (\(duration) мин) исчерпан"
+                : "Мониторинг точки остановлен"
+        }
+    }
+
+    public func stopTrend() {
+        trendTask?.cancel()
+        isTrendRunning = false
+        trendRemainingText = ""
+    }
+
+    public func clearTrend() { trendHistory.removeAll() }
+
+    // MARK: - Dashboard scheduler (порт PollScheduler)
+
+    public func startDashboardScheduler() {
+        guard !isDashboardSchedulerRunning else { return }
+        isDashboardSchedulerRunning = true
+        dashboardTask = Task {
+            await pollAllPoints()
+            while !Task.isCancelled {
+                let seconds = UInt64(max(1, settings.dashboardIntervalMin)) * 60
+                dashboardNextRun = Date().addingTimeInterval(Double(seconds))
+                try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
+                if Task.isCancelled { break }
+                await pollAllPoints()
+            }
+            dashboardNextRun = nil
+            isDashboardSchedulerRunning = false
+        }
+    }
+
+    public func stopDashboardScheduler() {
+        dashboardTask?.cancel()
+        isDashboardSchedulerRunning = false
+        dashboardNextRun = nil
+        statusText = "Автоопрос дашборда остановлен"
+    }
+
+    public func forcePollNow() async { await pollAllPoints() }
+
+    // MARK: - Podpitka scheduler + cycle (порт RefreshAsync)
+
+    public func refreshPodpitka() async {
+        let allPts = podpitkaGroups.flatMap(\.points)
+        guard !allPts.isEmpty else { return }
+        for p in allPts { p.state = .polling; p.message = "Чтение архивов..." }
+
+        let now = Date()
+        let startDay = settings.reportPeriodStartDay
+        let endDay = settings.reportPeriodEndDay
         let coordinator = self.coordinator
 
-        // Run network calls in parallel — return only Sendable data
         let results = await withTaskGroup(of: PodpitkaResult.self) { group in
             for p in allPts {
                 let pid = p.id
                 group.addTask {
-                    let rep = await coordinator.sumV1(pointId: pid, from: rPer.from, to: rPer.toExclusive, hourly: false)
-                    let day = await coordinator.sumV1(pointId: pid, from: yPer.from, to: yPer.toExclusive, hourly: false)
-                    let today = await coordinator.sumV1(pointId: pid, from: tPer.from, to: tPer.toExclusive, hourly: true)
-                    let hour = await coordinator.sumV1(pointId: pid, from: hPer.from, to: hPer.toExclusive, hourly: true)
-                    return PodpitkaResult(pointId: pid, report: rep, day: day, today: today, hour: hour)
+                    let volumes = await coordinator.refreshVolumes(
+                        pointId: pid, now: now, startDay: startDay, endDay: endDay
+                    )
+                    return PodpitkaResult(pointId: pid, volumes: volumes)
                 }
             }
             var collected: [PodpitkaResult] = []
-            for await result in group {
-                collected.append(result)
-            }
+            for await result in group { collected.append(result) }
             return collected
         }
 
-        // Apply results back on MainActor
-        let resultMap = Dictionary(uniqueKeysWithValues: results.map { ($0.pointId, ($0.report, $0.day, $0.today, $0.hour)) })
+        let byId = Dictionary(results.map { ($0.pointId, $0.volumes) }, uniquingKeysWith: { first, _ in first })
         for p in allPts {
-            if let vals = resultMap[p.id] {
-                p.report = vals.0
-                p.day = vals.1
-                p.today = vals.2
-                p.hour = vals.3
+            guard let v = byId[p.id] else { continue }
+            p.setVolumes(report: v.report, day: v.day, today: v.today, hour: v.hour)
+            let hasAny = v.report != nil || v.day != nil || v.today != nil || v.hour != nil
+            p.state = hasAny ? .ok : .error
+            p.message = hasAny
+                ? "Обновлено в \(Date().formatted(date: .omitted, time: .standard))"
+                : "Нет архивных данных в ЛЭРС"
+        }
+        statusText = "Подпитка обновлена: \(allPts.count) точек"
+    }
+
+    public func startPodpitkaScheduler() {
+        guard !isPodpitkaSchedulerRunning else { return }
+        isPodpitkaSchedulerRunning = true
+        podpitkaTask = Task {
+            await refreshPodpitka()
+            while !Task.isCancelled {
+                let seconds = UInt64(max(1, settings.podpitkaIntervalMin)) * 60
+                podpitkaNextRun = Date().addingTimeInterval(Double(seconds))
+                try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
+                if Task.isCancelled { break }
+                await refreshPodpitka()
             }
-            p.updatedAt = Date()
-            p.state = .ok
-            p.message = "Обновлено в \(Date().formatted(date: .omitted, time: .standard))"
+            podpitkaNextRun = nil
+            isPodpitkaSchedulerRunning = false
         }
     }
 
-    // MARK: - Update outdoor temperature
-    public func updateGlobalTnv() async {
-        guard let id = settings.tnvSourcePointId else { return }
-        let (_, _, raw) = await coordinator.pollPoint(pointId: id, nodeTitle: "Тнв", ignoreCache: false)
-        if let raw = raw {
-            let dummy = PointResultData(id: id, title: "", nodeTitle: "")
-            parsePointData(dummy, json: raw)
-            if let t = dummy.t1 ?? dummy.t2 {
-                self.globalTnv = t + settings.tnvCorrection
-            }
+    public func stopPodpitkaScheduler() {
+        podpitkaTask?.cancel()
+        isPodpitkaSchedulerRunning = false
+        podpitkaNextRun = nil
+    }
+
+    // MARK: - Archive (порт BtnArchiveLoad_Click)
+
+    public func loadArchive() async {
+        guard let id = archivePointId else {
+            archiveStatus = "Выберите точку учёта."
+            return
+        }
+        isLoadingArchive = true
+        archiveStatus = "Загрузка данных из ЛЭРС..."
+        archiveRows = []
+        archiveAvailableKinds = []
+
+        let now = Date()
+        let from = Calendar.current.date(byAdding: .day, value: -archiveDays, to: now) ?? now
+        let to = Calendar.current.date(byAdding: .day, value: 1, to: now) ?? now
+        let result = await coordinator.loadArchive(pointId: id, kind: archiveKind, from: from, to: to)
+
+        archiveRows = result.rows
+        archiveAvailableKinds = result.availableKinds
+        if result.rows.isEmpty {
+            let avail = result.availableKinds.isEmpty
+                ? "Ответ ЛЭРС не содержит архивов"
+                : "В ответе ЛЭРС есть: \(result.availableKinds.joined(separator: ", "))"
+            archiveStatus = "Архив «\(archiveKind.rawValue)» за выбранный период пуст. \(avail)."
+        } else {
+            archiveStatus = "Загружено записей: \(result.rows.count) (\(archiveKind.rawValue.lowercased()))"
+        }
+        isLoadingArchive = false
+    }
+
+    // MARK: - Limits / schedule
+
+    public func setLimits(_ limits: PointThresholds, for pointId: Int, applyToAll: Bool = false) {
+        if applyToAll {
+            for id in allPoints.map(\.id) { settings.pointLimits[id] = limits }
+        } else {
+            settings.pointLimits[pointId] = limits
+        }
+        for p in dashboardGroups.flatMap(\.points) { p.limits = settings.pointLimits[p.id] }
+        for p in generalResults { p.limits = settings.pointLimits[p.id] }
+        saveSettings()
+    }
+
+    public func setPodpitkaLimits(_ limits: VolumeThresholds, for pointId: Int) {
+        settings.podpitkaLimits[pointId] = limits
+        for p in podpitkaGroups.flatMap(\.points) { p.limits = settings.podpitkaLimits[p.id] }
+        saveSettings()
+    }
+
+    // MARK: - Last results persistence (порт SaveUserSettings с LastResults)
+
+    public func saveLastResults() {
+        settings.lastResults = (dashboardGroups.flatMap(\.points) + generalResults).map { $0.toSaved() }
+        saveSettings()
+    }
+
+    private func restoreLastResults() {
+        let saved = Dictionary(settings.lastResults.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        for p in dashboardGroups.flatMap(\.points) {
+            if let s = saved[p.id] { p.restore(from: s) }
+        }
+        for p in generalResults {
+            if let s = saved[p.id] { p.restore(from: s) }
         }
     }
 
-    // MARK: - Parse point data from JSON
-    private func parsePointData(_ p: PointResultData, json: [String: Any]) {
-        func get(_ keys: [String]) -> Double? {
-            for k in keys {
-                if let v = json[k] as? Double { return v }
-                if let s = json[k] as? String, let d = Double(s.replacingOccurrences(of: ",", with: ".")) { return d }
-            }
-            if let arr = json["values"] as? [[String: Any]] {
-                for it in arr {
-                    let name = ((it["dataParameter"] as? String) ?? "").lowercased()
-                    if keys.contains(name) {
-                        if let v = it["value"] as? Double { return v }
-                        if let s = it["value"] as? String, let d = Double(s.replacingOccurrences(of: ",", with: ".")) { return d }
-                    }
-                }
-            }
-            return nil
-        }
-        p.t1 = get(["t_in", "t1", "t_supply", "t_nv"])
-        p.t2 = get(["t_out", "t2", "t_return"])
-        p.p1 = get(["p_in", "p1"])
-        p.p2 = get(["p_out", "p2"])
-        p.v1 = get(["v_in", "v1"])
-        p.v2 = get(["v_out", "v2"])
-        p.m1 = get(["m_in", "m1"])
-        p.m2 = get(["m_out", "m2"])
-        p.q  = get(["q_delta", "q", "q_in"])
-    }
+    // MARK: - ATS diagnostics
 
-    /// Диагностика конфигурации ATS прямо из установленного бандла.
-    /// Показывает, применились ли ключи NSAppTransportSecurity из Info.plist.
     public static func atsDiagnostics() -> String {
         guard let bundle = Bundle.main.infoDictionary else {
             return "Info.plist не найден в бандле"
@@ -383,9 +662,11 @@ public final class AppViewModel {
             return "NSAppTransportSecurity ОТСУТСТВУЕТ в бандле — Info.plist не применился"
         }
         let arbitrary = (ats["NSAllowsArbitraryLoads"] as? Bool) ?? false
+        let webContent = (ats["NSAllowsArbitraryLoadsInWebContent"] as? Bool) ?? false
         let local = (ats["NSAllowsLocalNetworking"] as? Bool) ?? false
         var lines = [
             "NSAllowsArbitraryLoads: \(arbitrary)",
+            "NSAllowsArbitraryLoadsInWebContent: \(webContent)",
             "NSAllowsLocalNetworking: \(local)"
         ]
         if let exc = ats["NSExceptionDomains"] as? [String: Any] {
@@ -394,12 +675,14 @@ public final class AppViewModel {
         return lines.joined(separator: "\n")
     }
 
-    // MARK: - Settings persistence (password in Keychain)
+    // MARK: - Settings persistence (пароль в Keychain)
+
     private func loadSettings() {
         if let data = UserDefaults.standard.data(forKey: "LersSettings"),
            let set = try? JSONDecoder().decode(UserSettings.self, from: data) {
-            self.settings = set
+            settings = set
         }
+        if let id = settings.tnvSourcePointId { trendPointId = id }
     }
 
     public func saveSettings() {
@@ -408,7 +691,6 @@ public final class AppViewModel {
         }
     }
 
-    /// Save password to Keychain (called from SettingsView when user enters it)
     public func savePassword(_ password: String) {
         if settings.rememberCredentials {
             KeychainHelper.savePassword(password)
@@ -417,8 +699,20 @@ public final class AppViewModel {
         }
     }
 
-    /// Load password from Keychain for display in SettingsView
     public func loadPassword() -> String {
-        return KeychainHelper.loadPassword() ?? ""
+        KeychainHelper.loadPassword() ?? ""
+    }
+
+    /// Полная остановка фоновых задач (при выходе / смене сервера).
+    public func stopAllSchedulers() {
+        tnvTask?.cancel()
+        trendTask?.cancel()
+        dashboardTask?.cancel()
+        podpitkaTask?.cancel()
+        isTrendRunning = false
+        isDashboardSchedulerRunning = false
+        isPodpitkaSchedulerRunning = false
+        dashboardNextRun = nil
+        podpitkaNextRun = nil
     }
 }
