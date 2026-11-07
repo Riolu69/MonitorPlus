@@ -5,12 +5,12 @@ on:
     branches: [ main ]
     paths:
       - 'iOS/**'
-      - '.github/workflows/ios-build.yml'
-  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой в Actions
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 jobs:
   build-ipa:
-    runs-on: macos-26 # macOS на Apple Silicon с предустановленным Xcode 15/16
+    runs-on: macos-26
 
     steps:
       - name: Checkout repository
@@ -19,8 +19,50 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Generate Xcode Project specification
+      - name: Create Info.plist & Project Spec
         run: |
+          cat << 'EOF' > iOS/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleDevelopmentRegion</key>
+              <string>ru</string>
+              <key>CFBundleDisplayName</key>
+              <string>LersMonitor</string>
+              <key>CFBundleExecutable</key>
+              <string>LersMonitor</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.lersmonitor.app</string>
+              <key>CFBundleInfoDictionaryVersion</key>
+              <string>6.0</string>
+              <key>CFBundleName</key>
+              <string>LersMonitor</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0.0</string>
+              <key>CFBundleVersion</key>
+              <string>1</string>
+              <key>LSRequiresIPhoneOS</key>
+              <true/>
+              <key>UILaunchScreen</key>
+              <dict/>
+              <key>UISupportedInterfaceOrientations</key>
+              <array>
+                  <string>UIInterfaceOrientationPortrait</string>
+                  <string>UIInterfaceOrientationLandscapeLeft</string>
+                  <string>UIInterfaceOrientationLandscapeRight</string>
+              </array>
+              <key>NSAppTransportSecurity</key>
+              <dict>
+                  <key>NSAllowsArbitraryLoads</key>
+                  <true/>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
           cat << 'EOF' > iOS/project.yml
           name: LersMonitor
           options:
@@ -34,12 +76,12 @@ jobs:
               deploymentTarget: "17.0"
               sources:
                 - path: .
+              info:
+                path: Info.plist
               settings:
                 base:
+                  GENERATE_INFOPLIST_FILE: NO
                   PRODUCT_BUNDLE_IDENTIFIER: com.lersmonitor.app
-                  INFOPLIST_KEY_CFBundleDisplayName: "LersMonitor"
-                  INFOPLIST_KEY_CFBundleIdentifier: "com.lersmonitor.app"
-                  GENERATE_INFOPLIST_KEY_CFBundleIdentifier: YES
                   CURRENT_PROJECT_VERSION: 1
                   MARKETING_VERSION: 1.0.0
                   CODE_SIGNING_ALLOWED: NO
