@@ -130,7 +130,7 @@ namespace LersMonitor
                 {
                     using var doc = JsonDocument.Parse(u.Snapshot.RawJson);
                     vm.DeviceTime = u.Snapshot.DeviceTime;
-                    UpdatePointValues(vm, doc.RootElement);
+                    UpdatePointValues(vm, doc.RootElement, u.Snapshot);
                 }
                 vm.State = u.State; vm.Status = u.Message; vm.RefreshColors();
             }
@@ -186,7 +186,6 @@ namespace LersMonitor
 
                         TnvCorrection = _settings.TnvCorrection;
                         AppSettings = _settings;
-                        if (BtnArchive != null) BtnArchive.Visibility = _settings.ExperimentalArchive ? Visibility.Visible : Visibility.Collapsed;
 
                         if (_settings.LastResults != null && _settings.LastResults.Any())
                         {
@@ -267,15 +266,21 @@ namespace LersMonitor
 
         private void TabMode_Checked(object sender, RoutedEventArgs e)
         {
-            if (ViewGeneral == null || ViewTrend == null || ViewDashboard == null || ViewPodpitka == null) return;
+            if (ViewGeneral == null || ViewTrend == null || ViewDashboard == null || ViewPodpitka == null || ViewArchive == null) return;
             ViewGeneral.Visibility = Visibility.Collapsed;
             ViewTrend.Visibility = Visibility.Collapsed;
             ViewDashboard.Visibility = Visibility.Collapsed;
             ViewPodpitka.Visibility = Visibility.Collapsed;
+            ViewArchive.Visibility = Visibility.Collapsed;
             if (TabAll.IsChecked == true) ViewGeneral.Visibility = Visibility.Visible;
             else if (TabSingle.IsChecked == true) ViewTrend.Visibility = Visibility.Visible;
             else if (TabDashboard.IsChecked == true) ViewDashboard.Visibility = Visibility.Visible;
             else if (TabPodpitka.IsChecked == true) ViewPodpitka.Visibility = Visibility.Visible;
+            else if (TabArchive.IsChecked == true)
+            {
+                ViewArchive.Visibility = Visibility.Visible;
+                EnsureArchivePointsLoaded();
+            }
         }
 
         private void CmbTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1044,21 +1049,35 @@ namespace LersMonitor
             return null;
         }
 
-        private void UpdatePointValues(PointResultViewModel vm, JsonElement root)
+        private void UpdatePointValues(PointResultViewModel vm, JsonElement root,
+            PointSnapshot? snapshot = null)
         {
             vm.T1 = ExtractParameterValue(root, "t_in", "t1", "temperatureIn", "T1", "t1Value", "T_in", "t_supply");
             vm.T2 = ExtractParameterValue(root, "t_out", "t2", "temperatureOut", "T2", "t2Value", "T_out", "t_return");
             vm.P1 = ExtractParameterValue(root, "p_in", "p1", "pressureIn", "P1", "p1Value", "P_in", "p_supply");
             vm.P2 = ExtractParameterValue(root, "p_out", "p2", "pressureOut", "P2", "p2Value", "P_out", "p_return");
-            
-            // Добавлены ключи "g_v_in" и "v_flow_in" в начало для получения расхода (м³/ч) вместо нарастающего объема
-            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "v_in", "v1", "volume1", "V1", "V_in", "volume_supply");
-            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "v_out", "v2", "volume2", "V2", "V_out", "volume_return");
-            
-            // Для массы тоже имеет смысл сначала искать массовый расход (т/ч), а затем интегратор (т)
-            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "m_in", "m1", "mass1", "M1", "M_in", "mass_supply");
-            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "m_out", "m2", "mass2", "M2", "M_out", "mass_return");
-            
+
+            // V1/V2/M1/M2: расход в м³/ч (или т/ч).
+            //
+            // В ответе ЛЭРС Current для этого прибора параметры V_in/V_out/M_in/M_out —
+            // это РАСХОД (м³/ч и т/ч), а не накопительный счётчик.
+            // Доказано Cross-check'ом: M_in ≈ Q_in / (c × T_in) с точностью ~1.5 т/ч,
+            // V_in ≈ M_in / ρ (ρ≈980 кг/м³ при 65°C).
+            //
+            // Ранее считалось, что это интеграторы, и расход вычислялся через Δсчётчика/Δвремя —
+            // это давало абсурдные значения (153, 10145, 73940 м³/ч), потому что
+            // значения НЕ монотонны (ЛЭРС возвращает разные кэшированные снимки).
+            //
+            // Теперь берём V_in/V_out/M_in/M_out напрямую как значения расхода.
+            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in",
+                "v_in", "V_in", "volume_supply", "volume1");
+            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out",
+                "v_out", "V_out", "volume_return", "volume2");
+            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in",
+                "m_in", "M_in", "mass_supply", "mass1");
+            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out",
+                "m_out", "M_out", "mass_return", "mass2");
+
             vm.Q  = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy");
         }
 
@@ -1427,7 +1446,7 @@ namespace LersMonitor
         {
             if (_podCts == null) StartPodpitkaScheduler();
             BtnPodpitkaForce.IsEnabled = false;
-            try { await PodpitkaCycleAsync(false, _podCts!.Token); }
+            try { await PodpitkaCycleAsync(true, _podCts!.Token); }
             finally { BtnPodpitkaForce.IsEnabled = true; }
         }
 
@@ -1499,7 +1518,6 @@ namespace LersMonitor
             _settings.ExperimentalArchive = ChkExperimentalArchive.IsChecked == true;
             _settings.ExperimentalReportPeriod = ChkExperimentalReportPeriod.IsChecked == true;
             PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
-            BtnArchive.Visibility = _settings.ExperimentalArchive ? Visibility.Visible : Visibility.Collapsed;
             SaveUserSettings();
         }
 
@@ -1561,30 +1579,113 @@ namespace LersMonitor
             OverlayTnvCorrection.Visibility = Visibility.Collapsed;
         }
 
-        // --- Архив показаний ---
+        // --- Архив показаний (вкладка) ---
 
-        private void BtnArchive_Click(object sender, RoutedEventArgs e)
+        /// <summary>Заполняет список точек для вкладки Архив при первом открытии.</summary>
+        private void EnsureArchivePointsLoaded()
         {
-            if (_allPoints == null || !_allPoints.Any())
+            if (_allPoints == null || !_allPoints.Any()) return;
+            if (ListArchivePoints.ItemsSource == null)
             {
-                MessageBox.Show("Сначала подключитесь к ЛЭРС.", "Архив", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
+                ListArchivePoints.ItemsSource = _allPoints;
+                CmbArchiveKind.SelectedIndex = 1; // Часовые по умолчанию
+                DpArchiveFrom.SelectedDate = DateTime.Now.AddDays(-7);
+                DpArchiveTo.SelectedDate = DateTime.Now;
+                CmbArchiveDays.SelectedIndex = 1;
+                RbArchivePreset.IsChecked = true;
             }
-            CmbArchivePoint.ItemsSource = _allPoints;
-            if (CmbArchivePoint.SelectedIndex < 0 && _allPoints.Any()) CmbArchivePoint.SelectedIndex = 0;
-            CmbArchiveKind.SelectedIndex = 1; // Часовые по умолчанию
-            DpArchiveFrom.SelectedDate = DateTime.Now.AddDays(-7);
-            DpArchiveTo.SelectedDate = DateTime.Now;
-            CmbArchiveDays.SelectedIndex = 1;
-            RbArchivePreset.IsChecked = true;
-            GridArchive.ItemsSource = null;
-            TxtArchiveStatus.Text = "";
-            OverlayArchive.Visibility = Visibility.Visible;
+            UpdateArchiveInfoLabel();
         }
 
-        private void BtnCloseArchive_Click(object sender, RoutedEventArgs e)
+        /// <summary>Выбор точки в списке архива — обновляем строку с параметрами выбора.</summary>
+        private void ListArchivePoints_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            OverlayArchive.Visibility = Visibility.Collapsed;
+            UpdateArchiveInfoLabel();
+        }
+
+        /// <summary>Фильтрация списка точек в архиве по поисковой строке.</summary>
+        private void TxtArchiveSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (ListArchivePoints == null || _allPoints == null) return;
+            var query = TxtArchiveSearch.Text?.Trim().ToLowerInvariant() ?? "";
+            var filtered = string.IsNullOrEmpty(query)
+                ? _allPoints
+                : _allPoints.Where(p => (p.DisplayName ?? "").ToLowerInvariant().Contains(query)).ToList();
+
+            // Сохраняем выделение, если выбранная точка осталась в отфильтрованном списке
+            var selectedId = (ListArchivePoints.SelectedItem as MeasurePointItem)?.Id;
+            ListArchivePoints.ItemsSource = filtered;
+            if (selectedId.HasValue)
+            {
+                var restored = filtered.FirstOrDefault(p => p.Id == selectedId.Value);
+                if (restored != null) ListArchivePoints.SelectedItem = restored;
+            }
+        }
+
+        /// <summary>Сворачивание/разворачивание левой панели архива (как в общем мониторинге).</summary>
+        private void BtnToggleArchivePanel_Click(object sender, RoutedEventArgs e)
+        {
+            bool isVis = PanelArchiveLeft.Visibility == Visibility.Visible;
+            PanelArchiveLeft.Visibility = isVis ? Visibility.Collapsed : Visibility.Visible;
+            if (BtnToggleArchivePanel != null) BtnToggleArchivePanel.Content = isVis ? "▶" : "◀";
+        }
+
+        /// <summary>Повторная загрузка архива для выбранной точки.</summary>
+        private void BtnArchiveRefresh_Click(object sender, RoutedEventArgs e) => BtnArchiveLoad_Click(sender, e);
+
+        /// <summary>Смена типа данных архива — сбрасываем таблицу и обновляем подпись.</summary>
+        private void CmbArchiveKind_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (TxtArchiveInfo == null) return;
+            UpdateArchiveInfoLabel();
+        }
+
+        /// <summary>Актуализирует строку с описанием текущего выбора (точка/тип/период).</summary>
+        private void UpdateArchiveInfoLabel()
+        {
+            if (TxtArchiveInfo == null) return;
+
+            var pt = ListArchivePoints?.SelectedItem as MeasurePointItem;
+            if (pt == null)
+            {
+                TxtArchiveInfo.Text = "Выберите точку слева и нажмите «Загрузить архив»";
+                return;
+            }
+
+            string kindRu = GetArchiveKindRu();
+            var (from, to) = GetArchivePeriod();
+
+            TxtArchiveInfo.Text = $"Точка: {pt.DisplayName}   •   Данные: {kindRu}   •   Период: {from:yyyy-MM-dd} — {to:yyyy-MM-dd}";
+        }
+
+        /// <summary>Человекочитаемое название выбранного типа данных.</summary>
+        private string GetArchiveKindRu() => Math.Max(0, CmbArchiveKind?.SelectedIndex ?? 1) switch
+        {
+            0 => "Текущие",
+            1 => "Часовые",
+            2 => "Суточные",
+            3 => "Месячные",
+            _ => "Часовые",
+        };
+
+        /// <summary>Возвращает выбранный период. Для пресета — последние N дней, для произвольного — по датам.</summary>
+        private (DateTime from, DateTime to) GetArchivePeriod()
+        {
+            var now = DateTime.Now;
+
+            if (RbArchivePreset?.IsChecked == true)
+            {
+                int days = Math.Max(0, CmbArchiveDays?.SelectedIndex ?? 1) switch
+                {
+                    0 => 1, 1 => 7, 2 => 14, 3 => 30, 4 => 90, 5 => 365, _ => 7
+                };
+                return (now.AddDays(-days), now);
+            }
+
+            var from = DpArchiveFrom?.SelectedDate ?? now.AddDays(-7);
+            var to = DpArchiveTo?.SelectedDate ?? now;
+            if (to < from) (from, to) = (to, from);
+            return (from, to.Date.AddDays(1));
         }
 
         private void RbArchiveMode_Changed(object sender, RoutedEventArgs e)
@@ -1594,50 +1695,33 @@ namespace LersMonitor
             CmbArchiveDays.IsEnabled = isPreset;
             DpArchiveFrom.IsEnabled = !isPreset;
             DpArchiveTo.IsEnabled = !isPreset;
+            UpdateArchiveInfoLabel();
         }
 
         private async void BtnArchiveLoad_Click(object sender, RoutedEventArgs e)
         {
-            if (CmbArchivePoint.SelectedItem is not MeasurePointItem pt)
+            if (ListArchivePoints.SelectedItem is not MeasurePointItem pt)
             {
-                TxtArchiveStatus.Text = "Выберите точку учёта.";
+                TxtArchiveStatus.Text = "Выберите точку учёта в списке слева.";
+                UpdateArchiveInfoLabel();
                 return;
             }
+
             int kindIndex = Math.Max(0, CmbArchiveKind.SelectedIndex);
             TxtArchiveStatus.Text = "Загрузка данных из ЛЭРС...";
+            TxtArchiveTitle.Text = "Архив показаний";
             GridArchive.ItemsSource = null;
 
             try
             {
-                DateTime now = DateTime.Now;
-                DateTime from, to;
-
-                if (RbArchivePreset.IsChecked == true)
-                {
-                    int days = CmbArchiveDays.SelectedIndex switch
-                    {
-                        0 => 1, 1 => 7, 2 => 14, 3 => 30, _ => 7
-                    };
-                    from = now.AddDays(-days);
-                    to = now;
-                }
-                else
-                {
-                    from = DpArchiveFrom.SelectedDate ?? now.AddDays(-7);
-                    to = DpArchiveTo.SelectedDate ?? now;
-                    if (to < from) (from, to) = (to, from);
-                    to = to.Date.AddDays(1); // include the selected "to" day
-                }
+                var (from, to) = GetArchivePeriod();
 
                 // Тип данных ЛЭРС и соответствующий массив в ответе
                 string kindParam = kindIndex switch
                 {
                     0 => "Current", 1 => "Hour", 2 => "Day", 3 => "Month", _ => "Day"
                 };
-                string kindRu = kindIndex switch
-                {
-                    0 => "текущие", 1 => "часовые", 2 => "суточные", 3 => "месячные", _ => "суточные"
-                };
+                string kindRu = GetArchiveKindRu().ToLowerInvariant();
 
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
@@ -1651,8 +1735,8 @@ namespace LersMonitor
 
                 if (!res.IsSuccessStatusCode)
                 {
-                    var statusCode = res.StatusCode.ToString();
-                    TxtArchiveStatus.Text = $"Нет данных. Код: {statusCode}. Возможно, для этой точки нет архива за период {fromDate} – {toDate}.";
+                    TxtArchiveStatus.Text = $"Ошибка сервера: {(int)res.StatusCode} {res.StatusCode}. " +
+                                          $"Возможно, для точки «{pt.Title}» нет архива за период {fromDate} – {toDate}.";
                     return;
                 }
 
@@ -1668,7 +1752,6 @@ namespace LersMonitor
 
                 if (rows.Count == 0)
                 {
-                    // Ничего не нашлось — сообщаем, какие именно архивы есть в ответе
                     var avail = parsed.AvailableKinds.Count > 0
                         ? "В ответе ЛЭРС есть: " + string.Join(", ", parsed.AvailableKinds.Select(k => k.ToLowerInvariant()))
                         : "Ответ ЛЭРС не содержит архивов";
@@ -1677,7 +1760,10 @@ namespace LersMonitor
                     return;
                 }
 
-                GridArchive.AutoGenerateColumns = true;
+                // DataGrid с AutoGenerateColumns=True для Dictionary<string,string> НЕ работает:
+                // WPF генерирует колонки из СВОЙСТВ Dictionary (Comparer/Count/Keys/Values),
+                // а не из ключей словаря. Поэтому строим колонки вручную.
+                BuildArchiveColumns(rows);
                 GridArchive.ItemsSource = rows;
                 TxtArchiveStatus.Text =
                     $"Загружено записей: {rows.Count} ({kindRu}, период {fromDate} – {toDate})";
@@ -1686,6 +1772,67 @@ namespace LersMonitor
             {
                 TxtArchiveStatus.Text = "Ошибка: " + ex.Message;
             }
+        }
+
+        /// <summary>
+        /// Строит колонки таблицы архива по набору параметров первой строки.
+        /// DataGrid не умеет автогенерировать колонки из Dictionary&lt;string,string&gt;,
+        /// поэтому каждую колонку создаём вручную с биндингом через индексер.
+        /// </summary>
+        private void BuildArchiveColumns(List<Dictionary<string, string>> rows)
+        {
+            GridArchive.AutoGenerateColumns = false;
+            GridArchive.Columns.Clear();
+
+            if (rows.Count == 0) return;
+
+            // Порядок колонок: сначала дата (если есть), затем параметры в порядке появления
+            var allKeys = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in rows)
+            {
+                foreach (var key in row.Keys)
+                {
+                    if (seen.Add(key)) allKeys.Add(key);
+                }
+            }
+
+            // Дату/время ставим первыми — это главный столбец архива
+            var dateKeys = allKeys.Where(IsArchiveDateKey).ToList();
+            var otherKeys = allKeys.Where(k => !IsArchiveDateKey(k)).ToList();
+
+            foreach (var key in dateKeys.Concat(otherKeys))
+            {
+                var col = new DataGridTextColumn
+                {
+                    Header = GetArchiveColumnTitle(key),
+                    Binding = new System.Windows.Data.Binding($"[{key}]"),
+                    IsReadOnly = true,
+                    Width = IsArchiveDateKey(key) ? new DataGridLength(150) : DataGridLength.Auto,
+                    ElementStyle = new Style(typeof(TextBlock))
+                };
+                GridArchive.Columns.Add(col);
+            }
+        }
+
+        /// <summary>Ключ параметра, содержащий дату/время записи архива.</summary>
+        private static bool IsArchiveDateKey(string key)
+        {
+            var k = key.ToLowerInvariant();
+            return k.Contains("datetime") || k == "date" || k.Contains("rawdatetime") || k.Contains("time");
+        }
+
+        /// <summary>Человекочитаемый заголовок колонки архива.</summary>
+        private static string GetArchiveColumnTitle(string key)
+        {
+            var k = key.ToLowerInvariant();
+            if (k.Contains("datetime") && !k.Contains("raw")) return "Дата";
+            if (k.Contains("rawdatetime")) return "Дата (raw)";
+            if (k == "date") return "Дата";
+            if (k == "resourcekind") return "Ресурс";
+            if (k == "isempty") return "Пусто";
+            if (k == "intervalseconds") return "Интервал, с";
+            return key;
         }
 
         /// <summary>Результат разбора ответа ЛЭРС: строки + список реально доступных типов архивов.</summary>
@@ -1720,25 +1867,66 @@ namespace LersMonitor
                 return result;
 
             // --- Legacy-формат .NET Hashtable: {"Comparer":..,"Count":N,"Keys":[..],"Values":[..]} ---
+            //
+            // Hashtable — это ОДНА структура "поле → значение", а не набор строк.
+            // Например: Keys=["dateTime","values"], Values=["2026-11-01T00:00:00", [{...},{...}]]
+            // Разворачиваем в одну запись: dateTime=2026-11-01, T_in=72.83, T_out=52.84, ...
+            //
+            // Если Hashtable вложен в Hashtable (значение само является Hashtable) —
+            // разбор рекурсивный.
             if (root.ValueKind == JsonValueKind.Object &&
-                root.TryGetProperty("Keys", out var htKeys) && htKeys.ValueKind == JsonValueKind.Array &&
-                root.TryGetProperty("Values", out var htValues) && htValues.ValueKind == JsonValueKind.Array)
+                root.TryGetProperty("Keys", out var htKeysRaw) && root.TryGetProperty("Values", out var htValuesRaw))
             {
-                var keyArr = htKeys.EnumerateArray().ToList();
-                var valArr = htValues.EnumerateArray().ToList();
-                for (int i = 0; i < valArr.Count; i++)
+                // Hashtable может быть:
+                //   A) ОДНОЙ записью: Keys=[dateTime, values], Values=[дата, [параметры]]
+                //   B) КОЛЛЕКЦИЕЙ записей: Keys=["hourConsumption"], Values=[[rec1, rec2, ...]]
+                //   C) КОЛЛЕКЦИЕЙ записей: Keys=[date1, date2], Values=[rec1, rec2]
+                //
+                // Эвристика: если хотя бы один элемент Values является объектом с полем dateTime,
+                // или вложенным Hashtable с dateTime в Keys, или массивом объектов с dateTime —
+                // это коллекция записей, каждый элемент Values → отдельная строка.
+                // Иначе — одна запись, разворачиваем FlattenHashtable.
+
+                var valArr = EnumerateCollection(htValuesRaw);
+                bool isCollection = ValuesLookLikeRecordCollection(valArr);
+
+                if (isCollection)
                 {
-                    var val = valArr[i];
-                    if (val.ValueKind == JsonValueKind.Object)
+                    // Каждый элемент Values — отдельная запись архива
+                    foreach (var val in valArr)
                     {
-                        var row = FlattenRecord(val);
-                        if (row.Count > 0) result.Rows.Add(row);
-                    }
-                    else if (i < keyArr.Count && keyArr[i].ValueKind == JsonValueKind.String)
-                    {
-                        result.Rows.Add(new Dictionary<string, string> { [keyArr[i].GetString() ?? "value"] = ScalarToString(val) });
+                        Dictionary<string, string>? row = null;
+                        if (IsHashtableShape(val))
+                            row = FlattenHashtable(val);
+                        else if (val.ValueKind == JsonValueKind.Object)
+                            row = FlattenRecord(val);
+                        else if (val.ValueKind == JsonValueKind.Array)
+                        {
+                            // Массив записей: каждый элемент — отдельная строка
+                            foreach (var subRec in val.EnumerateArray())
+                            {
+                                Dictionary<string, string>? subRow = null;
+                                if (IsHashtableShape(subRec))
+                                    subRow = FlattenHashtable(subRec);
+                                else if (subRec.ValueKind == JsonValueKind.Object)
+                                    subRow = FlattenRecord(subRec);
+                                if (subRow != null && subRow.Count > 0)
+                                    result.Rows.Add(subRow);
+                            }
+                            continue;
+                        }
+                        if (row != null && row.Count > 0)
+                            result.Rows.Add(row);
                     }
                 }
+                else
+                {
+                    // Одна запись — разворачиваем рекурсивно
+                    var flat = FlattenHashtable(root);
+                    if (flat.Count > 0)
+                        result.Rows.Add(flat);
+                }
+
                 if (result.Rows.Count > 0) result.AvailableKinds.Add(kind);
                 return result;
             }
@@ -1802,6 +1990,161 @@ namespace LersMonitor
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Проверяет, выглядит ли список элементов Values как коллекция независимых записей архива.
+        /// true если хотя бы один элемент:
+        ///   - объект с полем dateTime (стандартная запись)
+        ///   - вложенный Hashtable с dateTime в Keys
+        ///   - массив объектов, где хотя бы один имеет dateTime
+        /// </summary>
+        private static bool ValuesLookLikeRecordCollection(List<JsonElement> values)
+        {
+            foreach (var val in values)
+            {
+                if (val.ValueKind == JsonValueKind.Object)
+                {
+                    if (IsHashtableShape(val))
+                    {
+                        // Вложенный Hashtable — проверяем, есть ли dateTime в Keys
+                        var nestedKeys = EnumerateCollection(val.GetProperty("Keys"));
+                        foreach (var k in nestedKeys)
+                        {
+                            if (k.ValueKind == JsonValueKind.String &&
+                                (k.GetString() ?? "").Equals("dateTime", StringComparison.OrdinalIgnoreCase))
+                                return true;
+                        }
+                    }
+                    else if (val.TryGetProperty("dateTime", out _) || val.TryGetProperty("DateTime", out _))
+                        return true;
+                }
+                else if (val.ValueKind == JsonValueKind.Array)
+                {
+                    // Массив записей: проверяем первый элемент на наличие dateTime
+                    foreach (var item in val.EnumerateArray())
+                    {
+                        if (item.ValueKind != JsonValueKind.Object) continue;
+                        if (IsHashtableShape(item))
+                        {
+                            var nestedKeys = EnumerateCollection(item.GetProperty("Keys"));
+                            foreach (var k in nestedKeys)
+                            {
+                                if (k.ValueKind == JsonValueKind.String &&
+                                    (k.GetString() ?? "").Equals("dateTime", StringComparison.OrdinalIgnoreCase))
+                                    return true;
+                            }
+                        }
+                        else if (item.TryGetProperty("dateTime", out _) || item.TryGetProperty("DateTime", out _))
+                            return true;
+                        break; // достаточно проверить первый элемент
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Признак того, что объект — сериализованный .NET Hashtable.</summary>
+        private static bool IsHashtableShape(JsonElement obj)
+            => obj.ValueKind == JsonValueKind.Object
+               && obj.TryGetProperty("Keys", out var k) && k.ValueKind == JsonValueKind.Array
+               && obj.TryGetProperty("Values", out var v) && v.ValueKind == JsonValueKind.Array;
+
+        /// <summary>
+        /// Рекурсивно разворачивает сериализованный Hashtable в плоскую строку.
+        /// Обрабатывает вложенные Hashtable любой глубины и массивы записей.
+        /// </summary>
+        private static Dictionary<string, string> FlattenHashtable(JsonElement ht)
+        {
+            var row = new Dictionary<string, string>();
+            if (!IsHashtableShape(ht)) return row;
+
+            var keyArr = EnumerateCollection(ht.GetProperty("Keys"));
+            var valArr = EnumerateCollection(ht.GetProperty("Values"));
+
+            for (int i = 0; i < valArr.Count; i++)
+            {
+                var val = valArr[i];
+                var key = (i < keyArr.Count && keyArr[i].ValueKind == JsonValueKind.String)
+                    ? keyArr[i].GetString() ?? ""
+                    : "";
+                if (string.IsNullOrEmpty(key)) continue;
+                if (key.Equals("Comparer", StringComparison.OrdinalIgnoreCase)) continue;
+
+                if (val.ValueKind == JsonValueKind.Object)
+                {
+                    if (IsHashtableShape(val))
+                    {
+                        var nested = FlattenHashtable(val);
+                        foreach (var kv in nested) row[kv.Key] = kv.Value;
+                    }
+                    else
+                    {
+                        var flat = FlattenRecord(val);
+                        foreach (var kv in flat) row[kv.Key] = kv.Value;
+                    }
+                    continue;
+                }
+
+                if (val.ValueKind == JsonValueKind.Array)
+                {
+                    // Массив параметров [{dataParameter, value}] — разворачиваем в плоские пары
+                    foreach (var item in val.EnumerateArray())
+                    {
+                        if (item.ValueKind != JsonValueKind.Object) continue;
+                        string? paramName = null;
+                        if (item.TryGetProperty("dataParameter", out var dp)) paramName = dp.GetString();
+                        else if (item.TryGetProperty("parameter", out var p2)) paramName = p2.GetString();
+                        else if (item.TryGetProperty("name", out var n2)) paramName = n2.GetString();
+
+                        string? valStr = null;
+                        if (item.TryGetProperty("value", out var v2)) valStr = ScalarToString(v2);
+                        else if (item.TryGetProperty("val", out v2)) valStr = ScalarToString(v2);
+
+                        if (!string.IsNullOrEmpty(paramName) && valStr != null)
+                            row[paramName] = valStr;
+                    }
+                    continue;
+                }
+
+                row[key] = ScalarToString(val);
+            }
+
+            return row;
+        }
+
+        /// <summary>
+        /// Приводит элемент коллекции к списку элементов.
+        /// Поддерживает: обычный JSON-массив, обёртку вида {"$values":[...]} / {"Values":[...]},
+        /// и одиночный объект (возвращается как список из одного элемента).
+        /// </summary>
+        private static List<JsonElement> EnumerateCollection(JsonElement elem)
+        {
+            var list = new List<JsonElement>();
+            if (elem.ValueKind == JsonValueKind.Array)
+            {
+                list.AddRange(elem.EnumerateArray());
+                return list;
+            }
+
+            if (elem.ValueKind == JsonValueKind.Object)
+            {
+                // Обёртка коллекции: {"$values": [...]} либо {"Values": [...]} / {"items": [...]}
+                foreach (var wrapper in new[] { "$values", "Values", "values", "items", "Items" })
+                {
+                    if (elem.TryGetProperty(wrapper, out var inner) && inner.ValueKind == JsonValueKind.Array)
+                    {
+                        list.AddRange(inner.EnumerateArray());
+                        return list;
+                    }
+                }
+
+                // Объект-одиночка
+                list.Add(elem);
+                return list;
+            }
+
+            return list;
         }
 
         /// <summary>Разворачивает одну запись архива в плоскую строку:
@@ -2077,6 +2420,7 @@ namespace LersMonitor
 
         private static double? ExtractParameterValue(JsonElement root, params string[] targetNames)
         {
+            // 1. Поиск прямых свойств (если JSON простой)
             foreach (var name in targetNames)
             {
                 if (root.TryGetProperty(name, out var prop))
@@ -2085,33 +2429,58 @@ namespace LersMonitor
                     if (prop.ValueKind == JsonValueKind.String && double.TryParse(prop.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out double sVal)) return sVal;
                 }
             }
-            if (root.ValueKind == JsonValueKind.Object)
+
+            // 2. Поиск во вложенных массивах ЛЭРС
+            var availableParams = CollectLersParameters(root);
+            if (availableParams.Count == 0) return null;
+
+            // Теперь ищем нужный параметр СТРОГО в порядке приоритета из targetNames
+            foreach (var name in targetNames)
             {
-                foreach (var prop in root.EnumerateObject())
+                if (availableParams.TryGetValue(name, out double foundVal))
                 {
-                    if (prop.Value.ValueKind == JsonValueKind.Array)
+                    return foundVal;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Собирает ВСЕ параметры ЛЭРС из ответа в словарь "имя параметра" → значение.
+        /// Работает с массивами вида [{dataParameter:"T_in", value:72.8}, ...] на любом уровне.
+        /// </summary>
+        private static Dictionary<string, double> CollectLersParameters(JsonElement root)
+        {
+            var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            if (root.ValueKind != JsonValueKind.Object) return result;
+
+            foreach (var prop in root.EnumerateObject())
+            {
+                if (prop.Value.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in prop.Value.EnumerateArray())
                     {
-                        foreach (var item in prop.Value.EnumerateArray())
+                        if (item.ValueKind != JsonValueKind.Object) continue;
+
+                        string typeName = "";
+                        if (item.TryGetProperty("dataParameter", out var dpProp)) typeName = dpProp.ToString();
+                        else if (item.TryGetProperty("parameter", out var pProp)) typeName = pProp.ToString();
+                        else if (item.TryGetProperty("name", out var nProp)) typeName = nProp.ToString();
+
+                        if (string.IsNullOrEmpty(typeName)) continue;
+
+                        if (item.TryGetProperty("value", out var valProp) || item.TryGetProperty("val", out valProp))
                         {
-                            if (item.ValueKind == JsonValueKind.Object)
-                            {
-                                string typeName = "";
-                                if (item.TryGetProperty("dataParameter", out var dpProp)) typeName = dpProp.ToString();
-                                if (string.IsNullOrEmpty(typeName) && item.TryGetProperty("parameter", out var pProp)) typeName = pProp.ToString();
-                                if (string.IsNullOrEmpty(typeName) && item.TryGetProperty("name", out var nProp)) typeName = nProp.ToString();
-                                
-                                bool matchesName = targetNames.Any(tn => typeName.Equals(tn, StringComparison.OrdinalIgnoreCase));
-                                if (matchesName && (item.TryGetProperty("value", out var valProp) || item.TryGetProperty("val", out valProp)))
-                                {
-                                    if (valProp.ValueKind == JsonValueKind.Number && valProp.TryGetDouble(out double v)) return v;
-                                    if (valProp.ValueKind == JsonValueKind.String && double.TryParse(valProp.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out double sv)) return sv;
-                                }
-                            }
+                            if (valProp.ValueKind == JsonValueKind.Number && valProp.TryGetDouble(out double v))
+                                result[typeName] = v;
+                            else if (valProp.ValueKind == JsonValueKind.String && double.TryParse(valProp.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out double sv))
+                                result[typeName] = sv;
                         }
                     }
                 }
             }
-            return null;
+            return result;
         }
 
         private static DateTime? TryGetDate(JsonElement elem, params string[] names)
@@ -2388,7 +2757,7 @@ namespace LersMonitor
         private (double? expT1, double? expT2) GetExpectedTemps(List<TempSchedulePoint>? schedule)
             => TempScheduleMath.Expected(MainWindow.CurrentGlobalTnv, schedule);
 
-        /// <summary>Настроенный пользовательский допуск; для старых настроек — 3.0 °C.</summary>
+        /// <summary>Настроенный用户对 точки допуск; для старых настроек — 3.0 °C.</summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public double ScheduleTolerance =>
             Math.Max(0, Limits?.ScheduleTolerance ?? TempScheduleMath.DefaultTolerance);
@@ -2937,8 +3306,8 @@ namespace LersMonitor
             catch (OperationCanceledException) { }
         }
 
-        /// <summary>Кнопка «Принудительный опрос». Кэш &lt; 3 мин уважается — такие точки не дёргаются.</summary>
-        public Task ForceNowAsync(CancellationToken ct) => _coord.PollManyAsync(_targets(), false, ct);
+        /// <summary>Кнопка «Принудительный опрос». Игнорирует кэш и опрашивает принудительно.</summary>
+        public Task ForceNowAsync(CancellationToken ct) => _coord.PollManyAsync(_targets(), true, ct);
     }
 
     // ==================== MasonryPanel ====================
