@@ -1486,39 +1486,44 @@
                         <!-- Фильтры: тип данных + период -->
                         <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="0,1,0,0">
                             <StackPanel>
-                                <Grid Margin="0,0,0,10">
+
+                                <TextBlock Text="Данные архива:" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,6"/>
+                                <Border Background="{DynamicResource SegmentedBg}" CornerRadius="8" Padding="3" Margin="0,0,0,14" HorizontalAlignment="Stretch">
+                                    <UniformGrid Columns="3">
+                                        <RadioButton x:Name="RbArchiveKindHour" Content="Часовые" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="ArchiveKind_Changed"/>
+                                        <RadioButton x:Name="RbArchiveKindDay" Content="Суточные" Style="{StaticResource TabNavButton}" Checked="ArchiveKind_Changed"/>
+                                        <RadioButton x:Name="RbArchiveKindMonth" Content="Месячные" Style="{StaticResource TabNavButton}" Checked="ArchiveKind_Changed"/>
+                                    </UniformGrid>
+                                </Border>
+
+                                <TextBlock Text="Период:" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,6"/>
+                                <Border Background="{DynamicResource SegmentedBg}" CornerRadius="8" Padding="3" Margin="0,0,0,10" HorizontalAlignment="Stretch">
+                                    <UniformGrid Columns="2">
+                                        <RadioButton x:Name="RbArchivePreset" Content="Последние дни" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="RbArchiveMode_Changed"/>
+                                        <RadioButton x:Name="RbArchiveCustom" Content="Указать даты" Style="{StaticResource TabNavButton}" Checked="RbArchiveMode_Changed"/>
+                                    </UniformGrid>
+                                </Border>
+
+                                <StackPanel x:Name="PanelArchivePreset" Margin="0,0,0,14">
+                                    <!-- Пункты заполняются в коде в зависимости от выбранного типа данных -->
+                                    <ComboBox x:Name="CmbArchiveDays" Height="34" SelectionChanged="ArchiveKind_Changed"/>
+                                </StackPanel>
+
+                                <Grid x:Name="PanelArchiveCustom" Margin="0,0,0,14" Visibility="Collapsed">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Данные:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <ComboBox x:Name="CmbArchiveKind" Grid.Column="1" SelectionChanged="CmbArchiveKind_SelectionChanged">
-                                        <ComboBoxItem Content="Текущие"/>
-                                        <ComboBoxItem Content="Часовые"/>
-                                        <ComboBoxItem Content="Суточные"/>
-                                        <ComboBoxItem Content="Месячные"/>
-                                    </ComboBox>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Начало" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
+                                        <DatePicker x:Name="DpArchiveFrom" SelectedDateChanged="ArchiveKind_Changed"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Конец" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4"/>
+                                        <DatePicker x:Name="DpArchiveTo" SelectedDateChanged="ArchiveKind_Changed"/>
+                                    </StackPanel>
                                 </Grid>
-
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <RadioButton x:Name="RbArchivePreset" Content="За последние" IsChecked="True" VerticalAlignment="Center" Margin="0,0,8,0" Checked="RbArchiveMode_Changed"/>
-                                    <ComboBox x:Name="CmbArchiveDays" Width="58" SelectedIndex="1" Margin="0,0,6,0">
-                                        <ComboBoxItem Content="1"/>
-                                        <ComboBoxItem Content="7"/>
-                                        <ComboBoxItem Content="14"/>
-                                        <ComboBoxItem Content="30"/>
-                                        <ComboBoxItem Content="90"/>
-                                        <ComboBoxItem Content="365"/>
-                                    </ComboBox>
-                                    <TextBlock Text="дн." FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <RadioButton x:Name="RbArchiveCustom" Content="С" VerticalAlignment="Center" Margin="0,0,8,0" Checked="RbArchiveMode_Changed"/>
-                                    <DatePicker x:Name="DpArchiveFrom" Width="104" Margin="0,0,8,0"/>
-                                    <TextBlock Text="по" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <DatePicker x:Name="DpArchiveTo" Width="104"/>
-                                </StackPanel>
 
                                 <Button x:Name="BtnArchiveLoad" Content="Загрузить архив" Style="{StaticResource ApplePrimaryButton}"
                                         HorizontalAlignment="Stretch" Click="BtnArchiveLoad_Click"/>
@@ -1548,6 +1553,7 @@
                             <TextBlock x:Name="TxtArchiveTitle" Text="Архив показаний" FontWeight="Bold" FontSize="15"
                                        Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center" Margin="0,0,20,10"/>
                             <Button x:Name="BtnArchiveRefresh" Content="⟳ Обновить" Style="{StaticResource AppleGhostButton}" Margin="0,0,10,10" Click="BtnArchiveRefresh_Click"/>
+                            <Button x:Name="BtnArchiveColumns" Content="⚙ Колонки" Style="{StaticResource AppleGhostButton}" Margin="0,0,10,10" Click="BtnArchiveColumns_Click" ToolTip="Настройка видимости колонок архива"/>
                         </WrapPanel>
 
                         <!-- Информация о текущем выборе -->
@@ -1859,7 +1865,8 @@
                             <CheckBox x:Name="ChkSectionGeneral" Content="Общий мониторинг" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
                             <CheckBox x:Name="ChkSectionTrend" Content="Текущие (тренд)" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
                             <CheckBox x:Name="ChkSectionDashboard" Content="Дашборд" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
-                            <CheckBox x:Name="ChkSectionPodpitka" Content="Подпитка" IsChecked="True" Margin="0,0,0,0" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionPodpitka" Content="Подпитка" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionArchive" Content="Архив (часовые / суточные / месячные)" IsChecked="True" Margin="0,0,0,0" Click="SectionToggle_Click"/>
                         </StackPanel>
                     </Border>
 
@@ -1869,8 +1876,7 @@
                             <TextBlock Text="Экспериментальные функции" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,4"/>
                             <TextBlock Text="Функции, которые не до конца отлажены либо нужны только для тестирования. Включайте на своё усмотрение."
                                        FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,10"/>
-                            <CheckBox x:Name="ChkExperimentalArchive" Content="Архив показаний (текущие/часовые/суточные/месячные)" IsChecked="False" Margin="0,0,0,6" Click="ExperimentalToggle_Click"/>
-                            <CheckBox x:Name="ChkExperimentalReportPeriod" Content="Настраиваемый отчётный период" IsChecked="False" Margin="0,0,0,0" Click="ExperimentalToggle_Click"/>
+                            <CheckBox x:Name="ChkExperimentalReportPeriod" Content="Настраиваемый отчётный период подпитки" IsChecked="False" Margin="0,0,0,0" Click="ExperimentalToggle_Click"/>
                         </StackPanel>
                     </Border>
 
@@ -1910,6 +1916,38 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Content="Закрыть" Click="BtnCloseAppSettings_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Модальное окно настройки колонок архива -->
+        <Grid x:Name="OverlayArchiveColumns" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="160">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="430">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.15"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="⚙ Колонки архива" FontWeight="Bold" FontSize="18" Margin="0,0,0,6" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock Text="По умолчанию показываются только базовые значения. Остальные колонки включаются здесь."
+                               FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="Базовые (всегда видны)" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,6"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="12,8" Margin="0,0,0,14">
+                        <TextBlock Text="Дата, Час, T1, T2, ΔT, P1, P2, ΔP, Тнв, M1, M2, ΔM, V1, V2, ΔV, Q, Время наработки"
+                                   FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}"/>
+                    </Border>
+
+                    <TextBlock Text="Дополнительные колонки" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,6"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                        <StackPanel>
+                            <CheckBox x:Name="ChkArchiveService" Content="Служебные: Tхв, Ошибки, Ресурс, Пусто, Интервал, Дата (raw)" Margin="0,0,0,8" Click="ArchiveColumnToggle_Click"/>
+                            <CheckBox x:Name="ChkArchiveOther" Content="Прочие параметры ЛЭРС" Margin="0,0,0,0" Click="ArchiveColumnToggle_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Закрыть" Click="BtnCloseArchiveColumns_Click" Style="{StaticResource ApplePrimaryButton}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

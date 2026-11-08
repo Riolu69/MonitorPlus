@@ -1457,12 +1457,12 @@ namespace LersMonitor
         private void BtnSettingsGear_Click(object sender, RoutedEventArgs e)
         {
             _settingsGearInitialLoad = true;
-            ChkExperimentalArchive.IsChecked = _settings.ExperimentalArchive;
             ChkExperimentalReportPeriod.IsChecked = _settings.ExperimentalReportPeriod;
             ChkSectionGeneral.IsChecked = !_settings.HideGeneral;
             ChkSectionTrend.IsChecked = !_settings.HideTrend;
             ChkSectionDashboard.IsChecked = !_settings.HideDashboard;
             ChkSectionPodpitka.IsChecked = !_settings.HidePodpitka;
+            ChkSectionArchive.IsChecked = !_settings.HideArchive;
             PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
 
             // Populate day ComboBoxes 1-31
@@ -1488,6 +1488,7 @@ namespace LersMonitor
             _settings.HideTrend = ChkSectionTrend.IsChecked != true;
             _settings.HideDashboard = ChkSectionDashboard.IsChecked != true;
             _settings.HidePodpitka = ChkSectionPodpitka.IsChecked != true;
+            _settings.HideArchive = ChkSectionArchive.IsChecked != true;
             ApplySectionVisibility();
             SaveUserSettings();
         }
@@ -1498,10 +1499,12 @@ namespace LersMonitor
             TabSingle.Visibility = _settings.HideTrend ? Visibility.Collapsed : Visibility.Visible;
             TabDashboard.Visibility = _settings.HideDashboard ? Visibility.Collapsed : Visibility.Visible;
             TabPodpitka.Visibility = _settings.HidePodpitka ? Visibility.Collapsed : Visibility.Visible;
+            TabArchive.Visibility = _settings.HideArchive ? Visibility.Collapsed : Visibility.Visible;
             if (TabAll.IsChecked == true && _settings.HideGeneral) SwitchToFirstVisibleTab();
             else if (TabSingle.IsChecked == true && _settings.HideTrend) SwitchToFirstVisibleTab();
             else if (TabDashboard.IsChecked == true && _settings.HideDashboard) SwitchToFirstVisibleTab();
             else if (TabPodpitka.IsChecked == true && _settings.HidePodpitka) SwitchToFirstVisibleTab();
+            else if (TabArchive.IsChecked == true && _settings.HideArchive) SwitchToFirstVisibleTab();
         }
 
         private void SwitchToFirstVisibleTab()
@@ -1510,12 +1513,14 @@ namespace LersMonitor
             else if (!_settings.HideTrend) TabSingle.IsChecked = true;
             else if (!_settings.HideDashboard) TabDashboard.IsChecked = true;
             else if (!_settings.HidePodpitka) TabPodpitka.IsChecked = true;
+            else if (!_settings.HideArchive) TabArchive.IsChecked = true;
         }
 
         private void ExperimentalToggle_Click(object sender, RoutedEventArgs e)
         {
             if (_settingsGearInitialLoad) return;
-            _settings.ExperimentalArchive = ChkExperimentalArchive.IsChecked == true;
+            // Видимость вкладки «Архив» теперь управляется в разделе «Видимость разделов»
+            // (ChkSectionArchive / SectionToggle_Click). Здесь остаётся только отчётный период подпитки.
             _settings.ExperimentalReportPeriod = ChkExperimentalReportPeriod.IsChecked == true;
             PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
             SaveUserSettings();
@@ -1581,20 +1586,108 @@ namespace LersMonitor
 
         // --- Архив показаний (вкладка) ---
 
+        /// <summary>Защита от рекурсии при программном заполнении пресетов периода.</summary>
+        private bool _archiveUiUpdating;
+
+        /// <summary>Тип данных, под который сейчас заполнен список пресетов.</summary>
+        private string _archivePresetKind = "";
+
+        /// <summary>Числовые значения, соответствующие пунктам CmbArchiveDays.</summary>
+        private readonly List<int> _archivePresetValues = new();
+
+        /// <summary>Последние загруженные (нормализованные) строки — для перестроения колонок из настроек.</summary>
+        private List<Dictionary<string, string>>? _archiveRows;
+
         /// <summary>Заполняет список точек для вкладки Архив при первом открытии.</summary>
         private void EnsureArchivePointsLoaded()
         {
             if (_allPoints == null || !_allPoints.Any()) return;
             if (ListArchivePoints.ItemsSource == null)
             {
-                ListArchivePoints.ItemsSource = _allPoints;
-                CmbArchiveKind.SelectedIndex = 1; // Часовые по умолчанию
-                DpArchiveFrom.SelectedDate = DateTime.Now.AddDays(-7);
-                DpArchiveTo.SelectedDate = DateTime.Now;
-                CmbArchiveDays.SelectedIndex = 1;
-                RbArchivePreset.IsChecked = true;
+                _archiveUiUpdating = true;
+                try
+                {
+                    ListArchivePoints.ItemsSource = _allPoints;
+                    RbArchiveKindHour.IsChecked = true;
+                    DpArchiveFrom.SelectedDate = DateTime.Now.AddDays(-7);
+                    DpArchiveTo.SelectedDate = DateTime.Now;
+                    RbArchivePreset.IsChecked = true;
+                }
+                finally { _archiveUiUpdating = false; }
+
+                ApplyArchivePresetItems("Hour");
+                if (CmbArchiveDays != null) CmbArchiveDays.SelectedIndex = 0;
             }
             UpdateArchiveInfoLabel();
+        }
+
+        /// <summary>
+        /// Пункты пресета зависят от типа данных: для часовых/суточных — дни,
+        /// для месячных — месяцы (дни в этом режиме не показываются).
+        /// </summary>
+        private void ApplyArchivePresetItems(string kind)
+        {
+            if (CmbArchiveDays == null || _archiveUiUpdating) return;
+            if (kind == _archivePresetKind && _archivePresetValues.Count > 0) return;
+
+            _archiveUiUpdating = true;
+            try
+            {
+                _archivePresetKind = kind;
+                _archivePresetValues.Clear();
+
+                List<string> labels;
+                if (kind == "Month")
+                {
+                    _archivePresetValues.AddRange(new[] { 3, 6, 12, 24 });
+                    labels = new List<string>
+                    {
+                        "За последние 3 месяца", "За последние 6 месяцев",
+                        "За последние 12 месяцев", "За последние 24 месяца"
+                    };
+                }
+                else if (kind == "Hour")
+                {
+                    _archivePresetValues.AddRange(new[] { 1, 3, 7, 14 });
+                    labels = new List<string>
+                    {
+                        "За последние сутки", "За последние 3 дня",
+                        "За последние 7 дней", "За последние 14 дней"
+                    };
+                }
+                else // Day
+                {
+                    _archivePresetValues.AddRange(new[] { 7, 14, 30, 90 });
+                    labels = new List<string>
+                    {
+                        "За последние 7 дней", "За последние 14 дней",
+                        "За последние 30 дней", "За последние 90 дней"
+                    };
+                }
+
+                CmbArchiveDays.ItemsSource = labels;
+                CmbArchiveDays.SelectedIndex = 0;
+            }
+            finally { _archiveUiUpdating = false; }
+        }
+
+        /// <summary>Настройка видимости колонок архива.</summary>
+        private void BtnArchiveColumns_Click(object sender, RoutedEventArgs e)
+        {
+            ChkArchiveService.IsChecked = _settings.ArchiveShowService;
+            ChkArchiveOther.IsChecked = _settings.ArchiveShowOther;
+            OverlayArchiveColumns.Visibility = Visibility.Visible;
+        }
+
+        private void BtnCloseArchiveColumns_Click(object sender, RoutedEventArgs e)
+            => OverlayArchiveColumns.Visibility = Visibility.Collapsed;
+
+        private void ArchiveColumnToggle_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.ArchiveShowService = ChkArchiveService.IsChecked == true;
+            _settings.ArchiveShowOther = ChkArchiveOther.IsChecked == true;
+            SaveUserSettings();
+            if (_archiveRows != null) BuildArchiveColumns(_archiveRows);
         }
 
         /// <summary>Выбор точки в списке архива — обновляем строку с параметрами выбора.</summary>
@@ -1633,10 +1726,11 @@ namespace LersMonitor
         /// <summary>Повторная загрузка архива для выбранной точки.</summary>
         private void BtnArchiveRefresh_Click(object sender, RoutedEventArgs e) => BtnArchiveLoad_Click(sender, e);
 
-        /// <summary>Смена типа данных архива — сбрасываем таблицу и обновляем подпись.</summary>
-        private void CmbArchiveKind_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ArchiveKind_Changed(object sender, RoutedEventArgs e)
         {
-            if (TxtArchiveInfo == null) return;
+            if (TxtArchiveInfo == null || _archiveUiUpdating) return;
+            // При смене типа данных перестраиваем список пресетов (дни → месяцы)
+            if (sender is RadioButton) ApplyArchivePresetItems(GetArchiveKindParam());
             UpdateArchiveInfoLabel();
         }
 
@@ -1659,27 +1753,40 @@ namespace LersMonitor
         }
 
         /// <summary>Человекочитаемое название выбранного типа данных.</summary>
-        private string GetArchiveKindRu() => Math.Max(0, CmbArchiveKind?.SelectedIndex ?? 1) switch
+        private string GetArchiveKindRu()
         {
-            0 => "Текущие",
-            1 => "Часовые",
-            2 => "Суточные",
-            3 => "Месячные",
-            _ => "Часовые",
-        };
+            if (RbArchiveKindDay?.IsChecked == true) return "Суточные";
+            if (RbArchiveKindMonth?.IsChecked == true) return "Месячные";
+            return "Часовые";
+        }
 
-        /// <summary>Возвращает выбранный период. Для пресета — последние N дней, для произвольного — по датам.</summary>
+        private string GetArchiveKindParam()
+        {
+            if (RbArchiveKindDay?.IsChecked == true) return "Day";
+            if (RbArchiveKindMonth?.IsChecked == true) return "Month";
+            return "Hour";
+        }
+
+        /// <summary>Возвращает выбранный период. Для месячных пресетов считаем месяцы, а не дни.</summary>
         private (DateTime from, DateTime to) GetArchivePeriod()
         {
             var now = DateTime.Now;
 
             if (RbArchivePreset?.IsChecked == true)
             {
-                int days = Math.Max(0, CmbArchiveDays?.SelectedIndex ?? 1) switch
+                int maxIdx = Math.Max(0, _archivePresetValues.Count - 1);
+                int idx = Math.Clamp(CmbArchiveDays?.SelectedIndex ?? 0, 0, maxIdx);
+                int count = _archivePresetValues.Count > 0 ? _archivePresetValues[idx] : 7;
+
+                if (GetArchiveKindParam() == "Month")
                 {
-                    0 => 1, 1 => 7, 2 => 14, 3 => 30, 4 => 90, 5 => 365, _ => 7
-                };
-                return (now.AddDays(-days), now);
+                    // Месячный архив содержит только полностью завершившиеся месяцы.
+                    // Берём ровно count последних завершённых месяцев: граница «до» —
+                    // 1-е число текущего (ещё неполного) месяца.
+                    var monthStart = new DateTime(now.Year, now.Month, 1);
+                    return (monthStart.AddMonths(-count), monthStart);
+                }
+                return (now.AddDays(-count), now);
             }
 
             var from = DpArchiveFrom?.SelectedDate ?? now.AddDays(-7);
@@ -1690,11 +1797,10 @@ namespace LersMonitor
 
         private void RbArchiveMode_Changed(object sender, RoutedEventArgs e)
         {
-            if (CmbArchiveDays == null) return;
+            if (PanelArchivePreset == null || PanelArchiveCustom == null) return;
             bool isPreset = RbArchivePreset.IsChecked == true;
-            CmbArchiveDays.IsEnabled = isPreset;
-            DpArchiveFrom.IsEnabled = !isPreset;
-            DpArchiveTo.IsEnabled = !isPreset;
+            PanelArchivePreset.Visibility = isPreset ? Visibility.Visible : Visibility.Collapsed;
+            PanelArchiveCustom.Visibility = isPreset ? Visibility.Collapsed : Visibility.Visible;
             UpdateArchiveInfoLabel();
         }
 
@@ -1707,7 +1813,6 @@ namespace LersMonitor
                 return;
             }
 
-            int kindIndex = Math.Max(0, CmbArchiveKind.SelectedIndex);
             TxtArchiveStatus.Text = "Загрузка данных из ЛЭРС...";
             TxtArchiveTitle.Text = "Архив показаний";
             GridArchive.ItemsSource = null;
@@ -1716,27 +1821,33 @@ namespace LersMonitor
             {
                 var (from, to) = GetArchivePeriod();
 
-                // Тип данных ЛЭРС и соответствующий массив в ответе
-                string kindParam = kindIndex switch
-                {
-                    0 => "Current", 1 => "Hour", 2 => "Day", 3 => "Month", _ => "Day"
-                };
+                string kindParam = GetArchiveKindParam();
                 string kindRu = GetArchiveKindRu().ToLowerInvariant();
 
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
+                // Для часового архива сохраняем время границ, чтобы не подтягивать
+                // лишние сутки. Сервер одинаково принимает yyyy-MM-dd и полный ISO.
+                string fromStamp = kindParam == "Hour"
+                    ? from.ToString("yyyy-MM-ddTHH:mm:ss") : fromDate;
+                string toStamp = kindParam == "Hour"
+                    ? to.ToString("yyyy-MM-ddTHH:mm:ss") : toDate;
 
-                // Основной документированный формат ЛЭРС: путь с датами.
-                // Сервер сам выбирает набор доступных архивов и возвращает их в отдельных массивах.
-                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}";
+                // Точное имя параметра найдено в сгенерированном клиенте веб-интерфейса
+                // ЛЭРС: /api/v0.1/Data/MeasurePoints/{id}/Consumption/{start}/{end}?dataTypes=...
+                // Без dataTypes сервер по умолчанию отдаёт ТОЛЬКО dayConsumption, из-за
+                // чего часовые и месячные данные казались отсутствующими. Варианты
+                // dataKind / archiveKind / kind / type сервер просто игнорирует.
+                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromStamp}/{toStamp}?dataTypes={kindParam}";
 
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 using var res = await _http.SendAsync(req);
 
                 if (!res.IsSuccessStatusCode)
                 {
-                    TxtArchiveStatus.Text = $"Ошибка сервера: {(int)res.StatusCode} {res.StatusCode}. " +
-                                          $"Возможно, для точки «{pt.Title}» нет архива за период {fromDate} – {toDate}.";
+                    TxtArchiveStatus.Text =
+                        $"Сервер вернул ошибку {(int)res.StatusCode} на запрос {kindRu} данных за период {fromDate} – {toDate}.";
+                    GridArchive.Columns.Clear();
                     return;
                 }
 
@@ -1744,19 +1855,34 @@ namespace LersMonitor
                 if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
                 {
                     TxtArchiveStatus.Text = $"Сервер вернул пустой ответ за период {fromDate} – {toDate}.";
+                    GridArchive.Columns.Clear();
                     return;
                 }
 
-                var parsed = ParseArchiveResponse(json, kindParam);
-                var rows = parsed.Rows;
+                ArchiveParseResult parsed;
+                try { parsed = ParseArchiveResponse(json, kindParam); }
+                catch (JsonException ex)
+                {
+                    TxtArchiveStatus.Text = "Не удалось разобрать ответ ЛЭРС: " + ex.Message;
+                    GridArchive.Columns.Clear();
+                    return;
+                }
+
+                var rows = NormalizeArchiveRows(parsed.Rows, kindParam);
+                _archiveRows = rows;
 
                 if (rows.Count == 0)
                 {
+                    string hint = kindParam == "Month"
+                        ? " Месячный архив содержит только полностью завершившиеся месяцы — расширьте период."
+                        : " Проверьте, что нужный тип архива включён для точки в ЛЭРС УЧЁТ.";
                     var avail = parsed.AvailableKinds.Count > 0
-                        ? "В ответе ЛЭРС есть: " + string.Join(", ", parsed.AvailableKinds.Select(k => k.ToLowerInvariant()))
-                        : "Ответ ЛЭРС не содержит архивов";
+                        ? "В ответе ЛЭРС есть: " + string.Join(", ", parsed.AvailableKinds)
+                        : "Ответ ЛЭРС не содержит записей этого типа";
                     TxtArchiveStatus.Text =
-                        $"{kindRu.capitalize()} показаний за период {fromDate} – {toDate} на сервере нет. {avail}.";
+                        $"{kindRu.capitalize()} показаний за период {fromDate} – {toDate} на сервере нет. {avail}.{hint}";
+                    GridArchive.Columns.Clear();
+                    GridArchive.ItemsSource = null;
                     return;
                 }
 
@@ -1779,47 +1905,196 @@ namespace LersMonitor
         /// DataGrid не умеет автогенерировать колонки из Dictionary&lt;string,string&gt;,
         /// поэтому каждую колонку создаём вручную с биндингом через индексер.
         /// </summary>
+        /// <summary>Фиксированный порядок колонок архива. Базовые идут первыми.</summary>
+        private static readonly string[] ArchiveColumnOrder =
+        {
+            "date", "hour", "t1", "t2", "dt", "p1", "p2", "dp", "tnv",
+            "m1", "m2", "dm", "v1", "v2", "dv", "q", "worktime",
+            "tcw", "errors", "resource", "empty", "interval", "rawdate"
+        };
+
+        private static readonly Dictionary<string, string> ArchiveColumnTitles =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["date"] = "Дата", ["hour"] = "Час",
+                ["t1"] = "T1 (°C)", ["t2"] = "T2 (°C)", ["dt"] = "ΔT (°C)",
+                ["p1"] = "P1 (атм)", ["p2"] = "P2 (атм)", ["dp"] = "ΔP (атм)",
+                ["tnv"] = "Тнв (°C)",
+                ["m1"] = "M1 (т)", ["m2"] = "M2 (т)", ["dm"] = "ΔM (т)",
+                ["q"] = "Q (Гкал)", ["worktime"] = "Наработка (ч)",
+                ["v1"] = "V1 (м³)", ["v2"] = "V2 (м³)", ["dv"] = "ΔV (м³)",
+                ["tcw"] = "Tхв (°C)", ["errors"] = "Ошибки", ["resource"] = "Ресурс",
+                ["empty"] = "Пусто", ["interval"] = "Интервал, с", ["rawdate"] = "Дата (raw)"
+            };
+
         private void BuildArchiveColumns(List<Dictionary<string, string>> rows)
         {
             GridArchive.AutoGenerateColumns = false;
             GridArchive.Columns.Clear();
-
             if (rows.Count == 0) return;
 
-            // Порядок колонок: сначала дата (если есть), затем параметры в порядке появления
-            var allKeys = new List<string>();
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var otherIds = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var row in rows)
-            {
                 foreach (var key in row.Keys)
                 {
-                    if (seen.Add(key)) allKeys.Add(key);
+                    present.Add(key);
+                    if (key.StartsWith("other:", StringComparison.Ordinal)) otherIds.Add(key);
                 }
-            }
 
-            // Дату/время ставим первыми — это главный столбец архива
-            var dateKeys = allKeys.Where(IsArchiveDateKey).ToList();
-            var otherKeys = allKeys.Where(k => !IsArchiveDateKey(k)).ToList();
+            var order = new List<string>(ArchiveColumnOrder);
+            if (_settings.ArchiveShowOther) order.AddRange(otherIds);
 
-            foreach (var key in dateKeys.Concat(otherKeys))
+            foreach (var id in order)
             {
-                var col = new DataGridTextColumn
+                if (!present.Contains(id)) continue;
+                if (!IsArchiveColumnVisible(id)) continue;
+
+                string header = id.StartsWith("other:", StringComparison.Ordinal)
+                    ? GetArchiveColumnTitle(id.Substring("other:".Length))
+                    : ArchiveColumnTitles[id];
+
+                GridArchive.Columns.Add(new DataGridTextColumn
                 {
-                    Header = GetArchiveColumnTitle(key),
-                    Binding = new System.Windows.Data.Binding($"[{key}]"),
+                    Header = header,
+                    Binding = new System.Windows.Data.Binding($"[{id}]"),
                     IsReadOnly = true,
-                    Width = IsArchiveDateKey(key) ? new DataGridLength(150) : DataGridLength.Auto,
-                    ElementStyle = new Style(typeof(TextBlock))
-                };
-                GridArchive.Columns.Add(col);
+                    Width = id == "date" ? new DataGridLength(110) : DataGridLength.Auto
+                });
             }
         }
 
-        /// <summary>Ключ параметра, содержащий дату/время записи архива.</summary>
-        private static bool IsArchiveDateKey(string key)
+        /// <summary>Базовые колонки (включая V1/V2/ΔV) видны всегда, остальные — только по настройкам архива.</summary>
+        private bool IsArchiveColumnVisible(string id)
         {
-            var k = key.ToLowerInvariant();
-            return k.Contains("datetime") || k == "date" || k.Contains("rawdatetime") || k.Contains("time");
+            if (id.StartsWith("other:", StringComparison.Ordinal)) return _settings.ArchiveShowOther;
+            return id switch
+            {
+                "tcw" or "errors" or "resource" or "empty" or "interval" or "rawdate" => _settings.ArchiveShowService,
+                _ => true
+            };
+        }
+
+        /// <summary>Приводит системные имена ЛЭРС к стабильным идентификаторам колонок.</summary>
+        private static string NormalizeArchiveKey(string key)
+        {
+            var k = key.ToLowerInvariant().Replace("_", "").Replace("-", "").Replace(" ", "");
+            if (k.Contains("rawdatetime")) return "rawdate";
+
+            return k switch
+            {
+                "datetime" or "date" or "targetdate" or "timestamp" or "d" or "time" or "datatime" or "consumptiondate" => "date",
+                "hour" or "hournum" or "hourofday" or "hournumber" => "hour",
+                "tin" or "t1" or "tempin" or "temperaturein" => "t1",
+                "tout" or "t2" or "tempout" or "temperatureout" => "t2",
+                "deltat" or "dt" or "tdelta" or "temperaturedelta" => "dt",
+                "pin" or "p1" or "pressurein" => "p1",
+                "pout" or "p2" or "pressureout" => "p2",
+                "deltap" or "dp" or "pdelta" or "pressuredelta" => "dp",
+                "tnv" or "toutdoor" or "toutdoortemperature" or "outdoor" => "tnv",
+                "min" or "m1" or "massin" => "m1",
+                "mout" or "m2" or "massout" => "m2",
+                "deltam" or "dm" or "mdelta" or "massdelta" => "dm",
+                "vin" or "v1" or "volumein" => "v1",
+                "vout" or "v2" or "volumeout" => "v2",
+                "deltav" or "dv" or "vdelta" or "volumedelta" => "dv",
+                "q" or "qin" or "qdelta" or "heat" or "heatquantity" => "q",
+                "worktime" or "normalworktime" or "normaltime" or "operatingtime" or "runtime"
+                    or "normaloperationduration" or "normaloperationtime" => "worktime",
+                "tcw" or "tcoldwater" or "tcold" => "tcw",
+                "errors" or "deviceerrors" or "error" => "errors",
+                "resourcekind" or "resource" => "resource",
+                "isempty" or "empty" => "empty",
+                "intervalseconds" or "interval" => "interval",
+                _ => "other:" + key
+            };
+        }
+
+        /// <summary>
+        /// Разворачивает сырые строки в канонические колонки, разделяет дату и час,
+        /// вычисляет ΔT / ΔP / ΔM / ΔV, если сервер их не прислал,
+        /// и сортирует по убыванию даты: первая строка — самая свежая.
+        /// </summary>
+        private static List<Dictionary<string, string>> NormalizeArchiveRows(
+            List<Dictionary<string, string>> rawRows, string kind)
+        {
+            var result = new List<Dictionary<string, string>>();
+            // ЛЭРС отдаёт записи по возрастанию даты. В таблице нужен обратный
+            // порядок: сверху свежая запись, внизу — самая старая.
+            foreach (var raw in rawRows.OrderByDescending(GetArchiveRowDate))
+            {
+                var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var kv in raw)
+                {
+                    var id = NormalizeArchiveKey(kv.Key);
+                    if (id == "date")
+                    {
+                        if (row.ContainsKey("date")) continue;
+                        if (DateTime.TryParse(kv.Value, CultureInfo.InvariantCulture,
+                                DateTimeStyles.None, out var dt) ||
+                            DateTime.TryParse(kv.Value, CultureInfo.CurrentCulture,
+                                DateTimeStyles.None, out dt))
+                        {
+                            row["date"] = dt.ToString("dd.MM.yyyy");
+                            // Час показываем для часового архива или если время не полночь
+                            if (kind == "Hour" || dt.TimeOfDay != TimeSpan.Zero)
+                                row["hour"] = dt.ToString("HH:mm");
+                        }
+                        else row["date"] = kv.Value;
+                    }
+                    else if (!row.ContainsKey(id)) row[id] = kv.Value;
+                }
+
+                TrySetArchiveDelta(row, "dt", "t1", "t2");
+                TrySetArchiveDelta(row, "dp", "p1", "p2");
+                TrySetArchiveDelta(row, "dm", "m1", "m2");
+                TrySetArchiveDelta(row, "dv", "v1", "v2");
+
+                if (row.Count > 0) result.Add(row);
+            }
+            return result;
+        }
+
+        /// <summary>Поля, в которых ЛЭРС передаёт полную дату/время записи.</summary>
+        private static readonly HashSet<string> ArchiveFullDateKeys =
+            new(StringComparer.OrdinalIgnoreCase)
+            { "dateTime", "date", "targetDate", "timestamp", "consumptionDate", "d" };
+
+        /// <summary>Достаёт дату записи из сырой строки для сортировки.</summary>
+        private static DateTime GetArchiveRowDate(Dictionary<string, string> raw)
+        {
+            // Сначала приоритетные поля с полной датой (поле «time» может содержать
+            // только время и само по себе не годится для упорядочивания).
+            foreach (var kv in raw.Where(kv => ArchiveFullDateKeys.Contains(kv.Key)))
+                if (TryParseArchiveDate(kv.Value, out var dt)) return dt;
+
+            foreach (var kv in raw)
+                if (NormalizeArchiveKey(kv.Key) == "date" && TryParseArchiveDate(kv.Value, out var dt))
+                    return dt;
+
+            return DateTime.MinValue;
+        }
+
+        private static bool TryParseArchiveDate(string s, out DateTime dt)
+        {
+            if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) return true;
+            return DateTime.TryParse(s, CultureInfo.CurrentCulture, DateTimeStyles.None, out dt);
+        }
+
+        private static void TrySetArchiveDelta(Dictionary<string, string> row,
+            string id, string a, string b)
+        {
+            if (row.ContainsKey(id)) return;
+            if (!row.TryGetValue(a, out var sa) || !row.TryGetValue(b, out var sb)) return;
+            if (!TryParseArchiveNumber(sa, out double da) || !TryParseArchiveNumber(sb, out double db)) return;
+            row[id] = (da - db).ToString("0.00", CultureInfo.CurrentCulture);
+        }
+
+        private static bool TryParseArchiveNumber(string s, out double value)
+        {
+            if (double.TryParse(s, NumberStyles.Any, CultureInfo.CurrentCulture, out value)) return true;
+            if (double.TryParse(s.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out value)) return true;
+            return false;
         }
 
         /// <summary>Человекочитаемый заголовок колонки архива.</summary>
@@ -1832,7 +2107,23 @@ namespace LersMonitor
             if (k == "resourcekind") return "Ресурс";
             if (k == "isempty") return "Пусто";
             if (k == "intervalseconds") return "Интервал, с";
-            return key;
+
+            // Маппинг системных параметров ЛЭРС в понятные названия
+            if (k == "tin" || k == "t1" || k == "t_in") return "T1 (°C)";
+            if (k == "tout" || k == "t2" || k == "t_out") return "T2 (°C)";
+            if (k == "pin" || k == "p1" || k == "p_in") return "P1 (атм)";
+            if (k == "pout" || k == "p2" || k == "p_out") return "P2 (атм)";
+            if (k == "min" || k == "m1" || k == "m_in") return "M1 (т)";
+            if (k == "mout" || k == "m2" || k == "m_out") return "M2 (т)";
+            if (k == "vin" || k == "v1" || k == "v_in") return "V1 (м³)";
+            if (k == "vout" || k == "v2" || k == "v_out") return "V2 (м³)";
+            if (k == "q" || k == "qin" || k == "q_delta") return "Q (Гкал)";
+            if (k == "tcw" || k == "t_cw") return "Tхв (°C)";
+            if (k == "toutdoor" || k == "t_outdoor") return "Тнв (°C)";
+            if (k == "errors" || k == "deviceerrors") return "Ошибки";
+            if (k == "worktime" || k == "normalworktime") return "Наработка (ч)";
+
+            return key.capitalize();
         }
 
         /// <summary>Результат разбора ответа ЛЭРС: строки + список реально доступных типов архивов.</summary>
@@ -1840,6 +2131,8 @@ namespace LersMonitor
         {
             public List<Dictionary<string, string>> Rows { get; } = new();
             public List<string> AvailableKinds { get; } = new();
+            /// <summary>В ответе действительно найдены записи запрошенного типа архива.</summary>
+            public bool RequestedKindFound { get; set; }
         }
 
         /// <summary>Парсит ответ ЛЭРС для архива показаний.
@@ -1927,7 +2220,12 @@ namespace LersMonitor
                         result.Rows.Add(flat);
                 }
 
-                if (result.Rows.Count > 0) result.AvailableKinds.Add(kind);
+                if (result.Rows.Count > 0)
+                {
+                    result.AvailableKinds.Add(kind);
+                    // Legacy-ответ не содержит признака типа — считаем его запрошенным
+                    result.RequestedKindFound = true;
+                }
                 return result;
             }
 
@@ -1941,44 +2239,61 @@ namespace LersMonitor
             };
 
             // Список всех массивов-архивов, которые реально присутствуют в ответе (для диагностики)
-            foreach (var prop in root.EnumerateObject())
-            {
-                if (prop.Value.ValueKind == JsonValueKind.Array &&
-                    prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase) &&
-                    prop.Value.GetArrayLength() > 0)
-                    result.AvailableKinds.Add(prop.Name);
-            }
-
-            JsonElement? selected = null;
-
-            // 1) Прямое совпадение по имени массива нужного типа
-            foreach (var name in kindArrayNames)
-            {
-                if (root.TryGetProperty(name, out var direct) && direct.ValueKind == JsonValueKind.Array)
-                {
-                    selected = direct;
-                    break;
-                }
-            }
-
-            // 2) Фолбэк: если нужный массив пуст — берём любой непустой массив-архив,
-            //    исключая dataParametersUnit (это метаданные единиц, а не показания)
-            if (selected is null || selected.Value.GetArrayLength() == 0)
+            if (root.ValueKind == JsonValueKind.Object)
             {
                 foreach (var prop in root.EnumerateObject())
                 {
-                    if (prop.Value.ValueKind != JsonValueKind.Array) continue;
-                    if (prop.Value.GetArrayLength() == 0) continue;
-                    if (prop.Name.Equals("dataParametersUnit", StringComparison.OrdinalIgnoreCase)) continue;
-                    if (!prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (prop.Value.ValueKind == JsonValueKind.Array &&
+                        prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase) &&
+                        prop.Value.GetArrayLength() > 0)
+                        result.AvailableKinds.Add(prop.Name);
+                }
+            }
+
+            JsonElement? selected = null;
+            bool exactKind = false;
+
+            // 1) Строго массив нужного типа. НИКОГДА не подменяем его архивом другого
+            //    типа: иначе при выборе «часовые» в таблицу попадали бы суточные
+            //    записи с 00:00:00, и создавалось бы впечатление, что часовых нет.
+            if (root.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var name in kindArrayNames)
+                {
+                    if (root.TryGetProperty(name, out var direct) && direct.ValueKind == JsonValueKind.Array)
+                    {
+                        selected = direct;
+                        exactKind = true;
+                        break;
+                    }
+                }
+            }
+
+            // 2) Ответ может называть массив иначе, но содержать тип в имени
+            //    (hourData, hourlyConsumption, monthlyConsumption и т.п.).
+            if (selected is null && root.ValueKind == JsonValueKind.Object)
+            {
+                string need = kind switch
+                {
+                    "Hour" => "hour", "Day" => "day", "Month" => "month", _ => "current"
+                };
+                foreach (var prop in root.EnumerateObject())
+                {
+                    if (prop.Value.ValueKind != JsonValueKind.Array || prop.Value.GetArrayLength() == 0) continue;
+                    if (!prop.Name.Contains(need, StringComparison.OrdinalIgnoreCase)) continue;
                     selected = prop.Value;
+                    exactKind = true;
                     break;
                 }
             }
 
-            // 3) Фолбэк: корневой массив
+            // 3) Ответ в виде «голого» массива — query-эндпоинты ЛЭРС сразу отдают
+            //    записи запрошенного типа без обёртки с именами архивов.
             if (selected is null && root.ValueKind == JsonValueKind.Array)
+            {
                 selected = root;
+                exactKind = true;
+            }
 
             if (selected is null) return result;
 
@@ -1989,6 +2304,7 @@ namespace LersMonitor
                 if (row.Count > 0) result.Rows.Add(row);
             }
 
+            result.RequestedKindFound = exactKind && result.Rows.Count > 0;
             return result;
         }
 
@@ -2184,16 +2500,36 @@ namespace LersMonitor
             return row;
         }
 
-        private static string ScalarToString(JsonElement e) => e.ValueKind switch
+        private static string ScalarToString(JsonElement e)
         {
-            JsonValueKind.Number => e.GetRawText(),
-            JsonValueKind.String => e.GetString() ?? "",
-            JsonValueKind.True => "true",
-            JsonValueKind.False => "false",
-            JsonValueKind.Null => "",
-            JsonValueKind.Undefined => "",
-            _ => e.GetRawText()
-        };
+            if (e.ValueKind == JsonValueKind.Number)
+            {
+                if (e.TryGetDouble(out double d))
+                    return d.ToString("0.00", CultureInfo.CurrentCulture);
+            }
+            else if (e.ValueKind == JsonValueKind.String)
+            {
+                string s = e.GetString() ?? "";
+                if (string.IsNullOrEmpty(s)) return "";
+
+                // Если ЛЭРС вернул число строкой, форматируем до 2 знаков
+                if (double.TryParse(s.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out double dStr))
+                {
+                    if (!s.Contains("-") && !s.Contains("T")) // Отсекаем даты
+                        return dStr.ToString("0.00", CultureInfo.CurrentCulture);
+                }
+                return s;
+            }
+
+            return e.ValueKind switch
+            {
+                JsonValueKind.True => "Да",
+                JsonValueKind.False => "Нет",
+                JsonValueKind.Null => "",
+                JsonValueKind.Undefined => "",
+                _ => e.GetRawText()
+            };
+        }
 
         // --- Отчётный период (экспериментальный) ---
 
@@ -2256,7 +2592,10 @@ namespace LersMonitor
                     ExperimentalArchive = _settings.ExperimentalArchive,
                     ExperimentalReportPeriod = _settings.ExperimentalReportPeriod,
                     ReportPeriodStartDay = _settings.ReportPeriodStartDay,
-                    ReportPeriodEndDay = _settings.ReportPeriodEndDay
+                    ReportPeriodEndDay = _settings.ReportPeriodEndDay,
+                    HideArchive = _settings.HideArchive,
+                    ArchiveShowService = _settings.ArchiveShowService,
+                    ArchiveShowOther = _settings.ArchiveShowOther
                 };
 
                 var opts = new JsonSerializerOptions { WriteIndented = true };
@@ -2315,6 +2654,9 @@ namespace LersMonitor
                 _settings.HideTrend = imported.HideTrend;
                 _settings.HideDashboard = imported.HideDashboard;
                 _settings.HidePodpitka = imported.HidePodpitka;
+                _settings.HideArchive = imported.HideArchive;
+                _settings.ArchiveShowService = imported.ArchiveShowService;
+                _settings.ArchiveShowOther = imported.ArchiveShowOther;
                 _settings.ExperimentalArchive = imported.ExperimentalArchive;
                 _settings.ExperimentalReportPeriod = imported.ExperimentalReportPeriod;
                 _settings.ReportPeriodStartDay = imported.ReportPeriodStartDay;
@@ -2635,10 +2977,15 @@ namespace LersMonitor
         public bool HideTrend { get; set; } = false;
         public bool HideDashboard { get; set; } = false;
         public bool HidePodpitka { get; set; } = false;
+        public bool HideArchive { get; set; } = false;
         public bool ExperimentalArchive { get; set; } = false;
         public bool ExperimentalReportPeriod { get; set; } = false;
         public int ReportPeriodStartDay { get; set; } = 25;
         public int ReportPeriodEndDay { get; set; } = 24;
+
+        // --- Настройки колонок архива (базовые, включая V1/V2/ΔV, видны всегда) ---
+        public bool ArchiveShowService { get; set; } = false;
+        public bool ArchiveShowOther { get; set; } = false;
     }
 
     public class DashboardNodeViewModel : INotifyPropertyChanged
@@ -3659,7 +4006,8 @@ namespace LersMonitor
         /// <summary>
         /// Чтение суммарного объёма V1 за период через LERS REST API.
         /// Эндпоинт: /Data/MeasurePoints/{id}/Consumption/{start}/{end}
-        /// Дата в формате yyyy-MM-dd (или yyyy-MM-ddTHH:mm:ss для часового).
+        /// Дата в формате yyyy-MM-dd. Тип архива задаётся параметром dataTypes=Hour|Day
+        /// (найден в сгенерированном API-клиенте ЛЭРС); без него сервер отдаёт только суточные записи.
         /// </summary>
         /// <param name="hourFilterFrom">Если задано — фильтровать почасовые записи по времени (от).</param>
         /// <param name="hourFilterTo">Если задано — фильтровать почасовые записи по времени (до, эксклюзивно).</param>
@@ -3672,34 +4020,30 @@ namespace LersMonitor
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
                 string kind = hourly ? "Hour" : "Day";
+                string arrayName = hourly ? "hourConsumption" : "dayConsumption";
 
-                // Основной формат: path-based (документированный в LERS REST API)
-                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}";
+                // Без dataTypes сервер отдаёт только суточный архив, поэтому
+                // почасовые суммы (подпитка, отчёты) считались неверно.
+                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}?dataTypes={kind}";
 
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 using var res = await _http.SendAsync(req, ct);
 
                 if (res.IsSuccessStatusCode)
                 {
-                    return await ParseLersConsumptionArray(res, hourFilterFrom, hourFilterTo);
+                    return await ParseLersConsumptionArray(res, hourFilterFrom, hourFilterTo, arrayName);
                 }
 
-                // Фолбэк 1: query-based с dataKind
-                string altUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?start={fromDate}&end={toDate}&dataKind={kind}";
-                using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
-                using var altRes = await _http.SendAsync(altReq, ct);
-                if (altRes.IsSuccessStatusCode)
+                // Фолбэк для старых серверов без поддержки dataTypes.
+                // Для часового архива он НЕ применяется: нетипизированный ответ
+                // содержит суточные записи и дал бы заведомо ложную сумму.
+                if (!hourly)
                 {
-                    return await ParseLersConsumptionArray(altRes, hourFilterFrom, hourFilterTo);
-                }
-
-                // Фолбэк 2: startDate/endDate (старый формат)
-                string altUrl2 = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?startDate={fromDate}&endDate={toDate}&dataKind={kind}";
-                using var altReq2 = new HttpRequestMessage(HttpMethod.Get, altUrl2);
-                using var altRes2 = await _http.SendAsync(altReq2, ct);
-                if (altRes2.IsSuccessStatusCode)
-                {
-                    return await ParseLersConsumptionArray(altRes2, hourFilterFrom, hourFilterTo);
+                    string altUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}";
+                    using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
+                    using var altRes = await _http.SendAsync(altReq, ct);
+                    if (altRes.IsSuccessStatusCode)
+                        return await ParseLersConsumptionArray(altRes, hourFilterFrom, hourFilterTo, arrayName);
                 }
 
                 return null;
@@ -3720,7 +4064,8 @@ namespace LersMonitor
         /// оставляя только те, что попадают в указанный часовой интервал.
         /// </summary>
         private static async Task<double?> ParseLersConsumptionArray(HttpResponseMessage response,
-            DateTime? hourFilterFrom = null, DateTime? hourFilterTo = null)
+            DateTime? hourFilterFrom = null, DateTime? hourFilterTo = null,
+            string? preferredArray = null)
         {
             var json = await response.Content.ReadAsStringAsync();
             if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null" || json.Trim() == "[]") return null;
@@ -3739,13 +4084,28 @@ namespace LersMonitor
             if (root.ValueKind != JsonValueKind.Array)
             {
                 bool found = false;
-                foreach (var prop in root.EnumerateObject())
+
+                // Берём именно запрошенный архив, а не «первый попавшийся» массив.
+                if (!string.IsNullOrEmpty(preferredArray) &&
+                    root.TryGetProperty(preferredArray, out var wanted) &&
+                    wanted.ValueKind == JsonValueKind.Array && wanted.GetArrayLength() > 0)
                 {
-                    if (prop.Value.ValueKind == JsonValueKind.Array && prop.Value.GetArrayLength() > 0)
+                    array = wanted;
+                    found = true;
+                }
+
+                if (!found)
+                {
+                    foreach (var prop in root.EnumerateObject())
                     {
-                        array = prop.Value;
-                        found = true;
-                        break;
+                        // Метаданные единиц измерения — не данные архива.
+                        if (string.Equals(prop.Name, "dataParametersUnit", StringComparison.OrdinalIgnoreCase)) continue;
+                        if (prop.Value.ValueKind == JsonValueKind.Array && prop.Value.GetArrayLength() > 0)
+                        {
+                            array = prop.Value;
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found) return null;
