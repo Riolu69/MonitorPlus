@@ -1049,58 +1049,24 @@ namespace LersMonitor
             return null;
         }
 
-// Словарь для хранения предыдущих показаний интеграторов (нужен для вычисления расхода)
-        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, (double? V1, double? V2, double? M1, double? M2, DateTime Time)> _prevTotals = new();
-
-        private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointSnapshot? snapshot = null)
+private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointSnapshot? snapshot = null)
         {
             vm.T1 = ExtractParameterValue(root, "t_in", "t1", "temperatureIn", "T1", "t1Value", "T_in", "t_supply") ?? vm.T1;
             vm.T2 = ExtractParameterValue(root, "t_out", "t2", "temperatureOut", "T2", "t2Value", "T_out", "t_return") ?? vm.T2;
             vm.P1 = ExtractParameterValue(root, "p_in", "p1", "pressureIn", "P1", "p1Value", "P_in", "p_supply") ?? vm.P1;
             vm.P2 = ExtractParameterValue(root, "p_out", "p2", "pressureOut", "P2", "p2Value", "P_out", "p_return") ?? vm.P2;
 
-            // 1. Пытаемся получить готовый мгновенный расход (если он есть в полном пакете)
-            double? flowV1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in");
-            double? flowV2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out");
-            double? flowM1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in");
-            double? flowM2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out");
+            // Строго мгновенный расход. Никаких интеграторов (v_in).
+            double? fV1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in");
+            double? fV2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out");
+            double? fM1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in");
+            double? fM2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out");
 
-            // 2. Читаем интеграторы (накопительные итоги)
-            double? totV1 = ExtractParameterValue(root, "v_in", "V_in", "volume_supply", "volume1");
-            double? totV2 = ExtractParameterValue(root, "v_out", "V_out", "volume_return", "volume2");
-            double? totM1 = ExtractParameterValue(root, "m_in", "M_in", "mass_supply", "mass1");
-            double? totM2 = ExtractParameterValue(root, "m_out", "M_out", "mass_return", "mass2");
-
-            DateTime now = snapshot?.DeviceTime ?? DateTime.Now;
-
-            // 3. Если ЛЭРС прислал укороченный пакет без расхода, ВЫЧИСЛЯЕМ расход математически!
-            if (_prevTotals.TryGetValue(vm.Id, out var prev))
-            {
-                double hours = (now - prev.Time).TotalHours;
-                if (hours > 0 && hours < 24) // Защита от деления на ноль
-                {
-                    if (!flowV1.HasValue && totV1.HasValue && prev.V1.HasValue && totV1 >= prev.V1) 
-                        flowV1 = (totV1.Value - prev.V1.Value) / hours;
-                        
-                    if (!flowV2.HasValue && totV2.HasValue && prev.V2.HasValue && totV2 >= prev.V2) 
-                        flowV2 = (totV2.Value - prev.V2.Value) / hours;
-                        
-                    if (!flowM1.HasValue && totM1.HasValue && prev.M1.HasValue && totM1 >= prev.M1) 
-                        flowM1 = (totM1.Value - prev.M1.Value) / hours;
-                        
-                    if (!flowM2.HasValue && totM2.HasValue && prev.M2.HasValue && totM2 >= prev.M2) 
-                        flowM2 = (totM2.Value - prev.M2.Value) / hours;
-                }
-            }
-
-            // Обновляем память интеграторов для расчета в следующем цикле
-            _prevTotals[vm.Id] = (totV1 ?? prev.V1, totV2 ?? prev.V2, totM1 ?? prev.M1, totM2 ?? prev.M2, now);
-
-            // 4. Присваиваем итоговый расход (если это первый цикл после запуска, останется старое значение)
-            vm.V1 = flowV1 ?? vm.V1;
-            vm.V2 = flowV2 ?? vm.V2;
-            vm.M1 = flowM1 ?? vm.M1;
-            vm.M2 = flowM2 ?? vm.M2;
+            // Записываем расход. Если в кэше завис огромный интегратор (>5000), автоматически сбрасываем его.
+            vm.V1 = fV1 ?? (vm.V1 > 5000 ? null : vm.V1);
+            vm.V2 = fV2 ?? (vm.V2 > 5000 ? null : vm.V2);
+            vm.M1 = fM1 ?? (vm.M1 > 5000 ? null : vm.M1);
+            vm.M2 = fM2 ?? (vm.M2 > 5000 ? null : vm.M2);
 
             vm.Q = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy") ?? vm.Q;
         }
@@ -3540,10 +3506,12 @@ namespace LersMonitor
         private async Task<PollUpdate> PollDeviceAsync(PollTarget t, bool ignoreCache, CancellationToken ct)
         {
             // Повторная проверка: пока стояли в очереди, мог опросить кто-то другой / ЛЭРС сам.
-            Log.Add(t.PointId, PollState.Polling, "Проверка актуальных данных в базе ЛЭРС", "Снятие данных");
-            var first = await GetLastAsync(t.PointId, ct);
-            if (first != null && !ignoreCache && first.Age(DateTime.UtcNow) <= CacheTtl)
-            {
+                Log.Add(t.PointId, PollState.Polling, "Проверка снятых данных из базы ЛЭРС", "Снятие данных");
+                var snap = await GetLastAsync(t.PointId, ct);
+                
+                // ИСПРАВЛЕНИЕ ЗАВИСАНИЯ: завершаем опрос, если изменилось ВРЕМЯ или сами ДАННЫЕ (RawJson)
+                if (snap?.DeviceTime != null && (before == null || snap.DeviceTime > before || snap.RawJson != first?.RawJson))
+                {
                 _cache[t.PointId] = first;
                 return Publish(CachedUpdate(t.PointId, first));
             }
