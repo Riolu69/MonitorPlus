@@ -952,11 +952,11 @@
                                 </StackPanel>
                             </StackPanel>
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <local:CompactColumnsPanel Spacing="12" MinColumnWidth="190">
-                                    <local:CompactColumnsPanel.LayoutTransform>
-                                        <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}" 
-                                                        ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
-                                    </local:CompactColumnsPanel.LayoutTransform>
+                                <local:CompactColumnsPanel x:Name="SinglePointTilesPanel" Spacing="12" MinColumnWidth="190" Background="Transparent"
+                                                           AllowDrop="True"
+                                                           PreviewMouseLeftButtonDown="SingleDashCard_MouseDown"
+                                                           MouseMove="SingleDashCard_MouseMove"
+                                                           Drop="SingleDashCard_Drop">
 
                                     <!-- Тнв: та же точка, что выбрана в «Источник Тнв (улица)» -->
                                     <Border Width="190" Height="120" Background="{DynamicResource AccentTeal}" CornerRadius="16" Padding="18"
