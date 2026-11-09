@@ -1051,24 +1051,18 @@ namespace LersMonitor
 
 private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointSnapshot? snapshot = null)
         {
-            vm.T1 = ExtractParameterValue(root, "t_in", "t1", "temperatureIn", "T1", "t1Value", "T_in", "t_supply") ?? vm.T1;
-            vm.T2 = ExtractParameterValue(root, "t_out", "t2", "temperatureOut", "T2", "t2Value", "T_out", "t_return") ?? vm.T2;
-            vm.P1 = ExtractParameterValue(root, "p_in", "p1", "pressureIn", "P1", "p1Value", "P_in", "p_supply") ?? vm.P1;
-            vm.P2 = ExtractParameterValue(root, "p_out", "p2", "pressureOut", "P2", "p2Value", "P_out", "p_return") ?? vm.P2;
+            vm.T1 = ExtractParameterValue(root, "t_in", "t1", "temperatureIn", "T1", "t1Value", "T_in", "t_supply");
+            vm.T2 = ExtractParameterValue(root, "t_out", "t2", "temperatureOut", "T2", "t2Value", "T_out", "t_return");
+            vm.P1 = ExtractParameterValue(root, "p_in", "p1", "pressureIn", "P1", "p1Value", "P_in", "p_supply");
+            vm.P2 = ExtractParameterValue(root, "p_out", "p2", "pressureOut", "P2", "p2Value", "P_out", "p_return");
 
-            // Строго мгновенный расход. Никаких интеграторов (v_in).
-            double? fV1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in");
-            double? fV2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out");
-            double? fM1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in");
-            double? fM2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out");
+            // Ваш оригинальный код:
+            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in", "v_in", "V_in", "volume_supply", "volume1");
+            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out", "v_out", "V_out", "volume_return", "volume2");
+            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in", "m_in", "M_in", "mass_supply", "mass1");
+            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out", "m_out", "M_out", "mass_return", "mass2");
 
-            // Записываем расход. Если в кэше завис огромный интегратор (>5000), автоматически сбрасываем его.
-            vm.V1 = fV1 ?? (vm.V1 > 5000 ? null : vm.V1);
-            vm.V2 = fV2 ?? (vm.V2 > 5000 ? null : vm.V2);
-            vm.M1 = fM1 ?? (vm.M1 > 5000 ? null : vm.M1);
-            vm.M2 = fM2 ?? (vm.M2 > 5000 ? null : vm.M2);
-
-            vm.Q = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy") ?? vm.Q;
+            vm.Q  = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy");
         }
 
         private async void BtnStartMonitor_Click(object sender, RoutedEventArgs e)
