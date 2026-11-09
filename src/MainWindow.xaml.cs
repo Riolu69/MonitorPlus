@@ -1255,6 +1255,51 @@ namespace LersMonitor
             finally { BtnForcePoll.IsEnabled = true; }
         }
 
+// --- Drag-and-Drop для дашборда ---
+        private Point _dragStartPoint;
+
+        private void DashCard_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _dragStartPoint = e.GetPosition(null);
+        }
+
+        private void DashCard_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+            {
+                Point mousePos = e.GetPosition(null);
+                Vector diff = _dragStartPoint - mousePos;
+
+                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    if (sender is FrameworkElement fe && fe.DataContext is DashboardNodeViewModel node)
+                    {
+                        DragDrop.DoDragDrop(fe, node, DragDropEffects.Move);
+                    }
+                }
+            }
+        }
+
+        private void DashCard_Drop(object sender, DragEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is DashboardNodeViewModel targetNode)
+            {
+                if (e.Data.GetData(typeof(DashboardNodeViewModel)) is DashboardNodeViewModel sourceNode)
+                {
+                    if (sourceNode != targetNode)
+                    {
+                        int sourceIndex = _dashboardNodes.IndexOf(sourceNode);
+                        int targetIndex = _dashboardNodes.IndexOf(targetNode);
+
+                        if (sourceIndex >= 0 && targetIndex >= 0)
+                        {
+                            _dashboardNodes.Move(sourceIndex, targetIndex);
+                        }
+                    }
+                }
+            }
+        }
         // --- Вкладка Подпитка ---
         
         private void RefreshPodpitkaNodes()
