@@ -1300,6 +1300,66 @@ namespace LersMonitor
                 }
             }
         }
+       
+        // --- Drag-and-Drop для одиночного режима (плитки параметров) ---
+        private Point _singleDragStart;
+        private UIElement? _singleDragElement;
+
+        private void SingleDashCard_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _singleDragStart = e.GetPosition(SinglePointTilesPanel);
+            _singleDragElement = GetTileUnderMouse(e.OriginalSource as DependencyObject);
+        }
+
+        private void SingleDashCard_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && _singleDragElement != null)
+            {
+                Vector diff = _singleDragStart - e.GetPosition(SinglePointTilesPanel);
+                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    DataObject dragData = new DataObject("SingleDashTile", _singleDragElement);
+                    DragDrop.DoDragDrop(SinglePointTilesPanel, dragData, DragDropEffects.Move);
+                    _singleDragElement = null;
+                }
+            }
+        }
+
+        private void SingleDashCard_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetData("SingleDashTile") is UIElement sourceTile)
+            {
+                UIElement? targetTile = GetTileUnderMouse(e.OriginalSource as DependencyObject);
+                if (targetTile != null && targetTile != sourceTile)
+                {
+                    int sourceIndex = SinglePointTilesPanel.Children.IndexOf(sourceTile);
+                    int targetIndex = SinglePointTilesPanel.Children.IndexOf(targetTile);
+
+                    if (sourceIndex >= 0 && targetIndex >= 0)
+                    {
+                        // Физически перемещаем UI-элемент в коллекции Children панели
+                        SinglePointTilesPanel.Children.RemoveAt(sourceIndex);
+                        SinglePointTilesPanel.Children.Insert(targetIndex, sourceTile);
+                    }
+                }
+            }
+        }
+        // Вспомогательный метод для поиска главной плитки (Border), на которую нажали
+        private UIElement? GetTileUnderMouse(DependencyObject? element)
+        {
+            while (element != null && element != SinglePointTilesPanel)
+            {
+                DependencyObject parent = VisualTreeHelper.GetParent(element) ?? LogicalTreeHelper.GetParent(element);
+                if (parent == SinglePointTilesPanel)
+                {
+                    return element as UIElement;
+                }
+                element = parent;
+            }
+            return null;
+        }
+        
         // --- Вкладка Подпитка ---
         
         private void RefreshPodpitkaNodes()
