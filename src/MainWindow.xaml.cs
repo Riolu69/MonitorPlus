@@ -1059,12 +1059,10 @@ namespace LersMonitor
 
             // Оставляем строго ключи расхода (Flow). Интеграторы (v_in, m_in и прочие) убраны,
             // чтобы на дашборд и в текущие не попадали накопительные значения счетчиков.
-            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in");
-            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out");
-            
-            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in");
-            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out");
-
+            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in", "v_in", "V_in", "volume_supply", "volume1");
+            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out", "v_out", "V_out", "volume_return", "volume2");
+            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in", "m_in", "M_in", "mass_supply", "mass1");
+            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out", "m_out", "M_out", "mass_return", "mass2");
             vm.Q  = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy");
         }
 
@@ -3636,7 +3634,7 @@ namespace LersMonitor
             {
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 cts.CancelAfter(RequestTimeout);
-                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{id}/Currents?once=true")
+                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{id}/Currents")
                 { Content = new ByteArrayContent(Array.Empty<byte>()) };
                 using var res = await _http.SendAsync(req, cts.Token);
                 if (res.IsSuccessStatusCode) return (true, (int)res.StatusCode, "");
