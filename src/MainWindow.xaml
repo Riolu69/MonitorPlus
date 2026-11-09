@@ -958,6 +958,13 @@
                                                            MouseMove="SingleDashCard_MouseMove"
                                                            Drop="SingleDashCard_Drop">
 
+                                                        <local:CompactColumnsPanel.LayoutTransform>
+                                                            <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}" 
+                                                                            ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
+                                                        </local:CompactColumnsPanel.LayoutTransform>
+                                                
+                                                        <Border Width="190" Height="120" Background="{DynamicResource AccentTeal}" ...
+
                                     <!-- Тнв: та же точка, что выбрана в «Источник Тнв (улица)» -->
                                     <Border Width="190" Height="120" Background="{DynamicResource AccentTeal}" CornerRadius="16" Padding="18"
                                             ToolTip="Температура наружного воздуха из точки, выбранной в «Источник Тнв (улица)»">
