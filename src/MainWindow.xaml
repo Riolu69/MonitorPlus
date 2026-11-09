@@ -959,38 +959,30 @@
                                                            Drop="SingleDashCard_Drop">
 
                                                         <local:CompactColumnsPanel.LayoutTransform>
-                                                            <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}" 
-                                                                            ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
-                                                        </local:CompactColumnsPanel.LayoutTransform>
-                                                
-                                                        <Border Width="190" Height="120" Background="{DynamicResource AccentTeal}" CornerRadius="16" Padding="18"
-                                            ToolTip="Температура наружного воздуха из точки, выбранной в «Источник Тнв (улица)»">
+                                    <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}" ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
+                                </local:CompactColumnsPanel.LayoutTransform>
 
-                                    <!-- Тнв: та же точка, что выбрана в «Источник Тнв (улица)» -->
-                                    <Border Width="190" Height="120" Background="{DynamicResource AccentTeal}" CornerRadius="16" Padding="18"
-                                            ToolTip="Температура наружного воздуха из точки, выбранной в «Источник Тнв (улица)»">
-                                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
-                                            <TextBlock Grid.Row="0" Text="Тнв (°C)" Foreground="White" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Top" Opacity="0.9"/>
-                                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,2,0,2">
-                                                <TextBlock Text="Источник Тнв" FontSize="10" Foreground="#B3FFFFFF"/>
-                                                <TextBlock Text="{Binding ElementName=CmbTnvSource, Path=SelectedItem.DisplayName, TargetNullValue='не выбран', FallbackValue='не выбран'}"
-                                                           FontSize="11" Foreground="#E6FFFFFF" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
-                                                           ToolTip="{Binding ElementName=CmbTnvSource, Path=SelectedItem.DisplayName, TargetNullValue='Источник не выбран'}"/>
-                                                <TextBlock x:Name="TxtTnvCardUpdated" Text="Ожидание данных..." FontSize="10" Foreground="#B3FFFFFF" Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                                                <TextBlock Text="{Binding ElementName=TxtGlobalTnv, Path=Text}" Foreground="White" FontSize="36" FontWeight="Bold" VerticalAlignment="Bottom"/>
-                                                <TextBlock Text=" °C" Foreground="#CCFFFFFF" FontSize="15" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-
+                                <!-- Тнв: та же точка, что выбрана в «Источник Тнв (улица)» -->
+                                <Border Background="{DynamicResource AccentTeal}" CornerRadius="16" Height="120" Padding="18" ToolTip="Температура наружного воздуха из точки, выбранной в «Источник Тнв (улица)»" Width="190">
+                                    <Border.Effect><DropShadowEffect BlurRadius="16" Color="#000000" Opacity="0.08" ShadowDepth="3"/></Border.Effect>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="White" Grid.Row="0" Opacity="0.9" Text="Тнв (°C)" VerticalAlignment="Top"/>
+                                        <StackPanel Grid.Row="1" Margin="0,2,0,2" VerticalAlignment="Center">
+                                            <TextBlock FontSize="10" Foreground="#B3FFFFFF" Text="Источник Тнв"/>
+                                            <TextBlock FontSize="11" Foreground="#E6FFFFFF" Text="{Binding ElementName=CmbTnvSource, Path=SelectedItem.DisplayName, TargetNullValue='не выбран', FallbackValue='не выбран'}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding ElementName=CmbTnvSource, Path=SelectedItem.DisplayName, TargetNullValue='Источник не выбран'}"/>
+                                            <TextBlock FontSize="10" Foreground="#B3FFFFFF" Margin="0,2,0,0" Text="Ожидание данных..." x:Name="TxtTnvCardUpdated"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                            <TextBlock FontSize="36" FontWeight="Bold" Foreground="White" Text="{Binding ElementName=TxtGlobalTnv, Path=Text}" VerticalAlignment="Bottom"/>
+                                            <TextBlock FontSize="15" Foreground="#CCFFFFFF" Margin="0,0,0,5" Text=" °C" VerticalAlignment="Bottom"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
                                     <Border Width="190" Height="120" Background="{Binding T1DashBg}" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="18">
                                         <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="#000000"/></Border.Effect>
                                         <Grid>
