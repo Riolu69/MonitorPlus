@@ -1100,7 +1100,9 @@
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <local:MasonryPanel Spacing="8" MaxCardWidth="420" MinCardWidth="240"/>
-                                    </ItemsPanelTemplate><ItemsControl.ItemTemplate>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border VerticalAlignment="Top" HorizontalAlignment="Stretch" Background="{Binding TileBackground}" CornerRadius="14" Margin="0" Padding="8"
                                                 AllowDrop="True"
