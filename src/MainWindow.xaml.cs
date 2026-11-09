@@ -3580,14 +3580,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
 
             return Publish(new PollUpdate(t.PointId, PollState.Error, $"Таймаут: {lastError}", first));
         }
-            }
-            // Отключаем прибор даже при таймауте — канал должен быть освобождён
-            Log.Add(t.PointId, PollState.Error, "Отключение прибора после таймаута", "Отключение");
-            try { await DisconnectAsync(t.PointId, ct).ConfigureAwait(false); }
-            catch { /* best-effort */ }
-
-            return Publish(new PollUpdate(t.PointId, PollState.Error, $"Таймаут: {lastError}", first));
-        }
 
         private PollUpdate CachedUpdate(int id, PointSnapshot s)
         {
