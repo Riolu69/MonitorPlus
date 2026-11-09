@@ -1049,7 +1049,7 @@ namespace LersMonitor
             return null;
         }
 
-        private void UpdatePointValues(PointResultViewModel vm, JsonElement root,
+       private void UpdatePointValues(PointResultViewModel vm, JsonElement root,
             PointSnapshot? snapshot = null)
         {
             vm.T1 = ExtractParameterValue(root, "t_in", "t1", "temperatureIn", "T1", "t1Value", "T_in", "t_supply");
@@ -1057,26 +1057,13 @@ namespace LersMonitor
             vm.P1 = ExtractParameterValue(root, "p_in", "p1", "pressureIn", "P1", "p1Value", "P_in", "p_supply");
             vm.P2 = ExtractParameterValue(root, "p_out", "p2", "pressureOut", "P2", "p2Value", "P_out", "p_return");
 
-            // V1/V2/M1/M2: расход в м³/ч (или т/ч).
-            //
-            // В ответе ЛЭРС Current для этого прибора параметры V_in/V_out/M_in/M_out —
-            // это РАСХОД (м³/ч и т/ч), а не накопительный счётчик.
-            // Доказано Cross-check'ом: M_in ≈ Q_in / (c × T_in) с точностью ~1.5 т/ч,
-            // V_in ≈ M_in / ρ (ρ≈980 кг/м³ при 65°C).
-            //
-            // Ранее считалось, что это интеграторы, и расход вычислялся через Δсчётчика/Δвремя —
-            // это давало абсурдные значения (153, 10145, 73940 м³/ч), потому что
-            // значения НЕ монотонны (ЛЭРС возвращает разные кэшированные снимки).
-            //
-            // Теперь берём V_in/V_out/M_in/M_out напрямую как значения расхода.
-            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in",
-                "v_in", "V_in", "volume_supply", "volume1");
-            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out",
-                "v_out", "V_out", "volume_return", "volume2");
-            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in",
-                "m_in", "M_in", "mass_supply", "mass1");
-            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out",
-                "m_out", "M_out", "mass_return", "mass2");
+            // Оставляем строго ключи расхода (Flow). Интеграторы (v_in, m_in и прочие) убраны,
+            // чтобы на дашборд и в текущие не попадали накопительные значения счетчиков.
+            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in");
+            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out");
+            
+            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in");
+            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out");
 
             vm.Q  = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy");
         }
