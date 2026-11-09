@@ -3506,12 +3506,10 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         private async Task<PollUpdate> PollDeviceAsync(PollTarget t, bool ignoreCache, CancellationToken ct)
         {
             // Повторная проверка: пока стояли в очереди, мог опросить кто-то другой / ЛЭРС сам.
-                Log.Add(t.PointId, PollState.Polling, "Проверка снятых данных из базы ЛЭРС", "Снятие данных");
-                var snap = await GetLastAsync(t.PointId, ct);
-                
-                // ИСПРАВЛЕНИЕ ЗАВИСАНИЯ: завершаем опрос, если изменилось ВРЕМЯ или сами ДАННЫЕ (RawJson)
-                if (snap?.DeviceTime != null && (before == null || snap.DeviceTime > before || snap.RawJson != first?.RawJson))
-                {
+            Log.Add(t.PointId, PollState.Polling, "Проверка актуальных данных в базе ЛЭРС", "Снятие данных");
+            var first = await GetLastAsync(t.PointId, ct);
+            if (first != null && !ignoreCache && first.Age(DateTime.UtcNow) <= CacheTtl)
+            {
                 _cache[t.PointId] = first;
                 return Publish(CachedUpdate(t.PointId, first));
             }
@@ -3558,14 +3556,15 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
 
                 Log.Add(t.PointId, PollState.Polling, "Проверка снятых данных из базы ЛЭРС", "Снятие данных");
                 var snap = await GetLastAsync(t.PointId, ct);
-                if (snap?.DeviceTime != null && (before == null || snap.DeviceTime > before))
+                
+                // ИСПРАВЛЕНИЕ ЗАВИСАНИЯ: завершаем опрос, если изменилось ВРЕМЯ или сами ДАННЫЕ (RawJson)
+                if (snap?.DeviceTime != null && (before == null || snap.DeviceTime > before || snap.RawJson != first?.RawJson))
                 {
                     var fresh = new PointSnapshot { PointId = snap.PointId, DeviceTime = snap.DeviceTime, RawJson = snap.RawJson,
                                                     ReadAtUtc = snap.ReadAtUtc, PolledOkAtUtc = DateTime.UtcNow };
                     _cache[t.PointId] = fresh;
 
                     // Отключаем прибор после успешного опроса — освобождаем канал связи
-                    // для других устройств на том же канале.
                     Log.Add(t.PointId, PollState.Polling, "Отключение прибора, освобождение канала", "Отключение");
                     try { await DisconnectAsync(t.PointId, ct).ConfigureAwait(false); }
                     catch { /* best-effort */ }
@@ -3573,6 +3572,14 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
 
                     return Publish(new PollUpdate(t.PointId, PollState.Ok, $"Опрошено {Fmt(fresh)}", fresh));
                 }
+            }
+            // Отключаем прибор даже при таймауте — канал должен быть освобождён
+            Log.Add(t.PointId, PollState.Error, "Отключение прибора после таймаута", "Отключение");
+            try { await DisconnectAsync(t.PointId, ct).ConfigureAwait(false); }
+            catch { /* best-effort */ }
+
+            return Publish(new PollUpdate(t.PointId, PollState.Error, $"Таймаут: {lastError}", first));
+        }
             }
             // Отключаем прибор даже при таймауте — канал должен быть освобождён
             Log.Add(t.PointId, PollState.Error, "Отключение прибора после таймаута", "Отключение");
