@@ -3634,7 +3634,7 @@ namespace LersMonitor
             {
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 cts.CancelAfter(RequestTimeout);
-                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{id}/Currents")
+                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{id}/Currents?once=true")
                 { Content = new ByteArrayContent(Array.Empty<byte>()) };
                 using var res = await _http.SendAsync(req, cts.Token);
                 if (res.IsSuccessStatusCode) return (true, (int)res.StatusCode, "");
