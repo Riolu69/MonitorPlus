@@ -3427,6 +3427,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         private readonly Func<string> _baseUrl;
         private readonly SemaphoreSlim _deviceSlots;   // одновременных «живых» опросов приборов
         private readonly SemaphoreSlim _httpSlots;     // одновременных лёгких GET
+        private readonly ConcurrentDictionary<string, int> _channelPendingCount = new();
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _channelLocks = new();
         private readonly ConcurrentDictionary<int, Lazy<Task<PollUpdate>>> _inFlight = new();
         private readonly ConcurrentDictionary<int, PointSnapshot> _cache = new();
@@ -3474,29 +3475,42 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         // ---------- ядро ----------
 
         private async Task<PollUpdate> RunAsync(PollTarget t, bool ignoreCache, CancellationToken ct)
+{
+    try
+    {
+        Publish(new PollUpdate(t.PointId, PollState.Queued, "В очереди", null));
+
+        if (!ignoreCache && _cache.TryGetValue(t.PointId, out var c) && c.Age(DateTime.UtcNow) <= CacheTtl)
+            return Publish(CachedUpdate(t.PointId, c));
+
+        // +1 к количеству точек в очереди для этого объекта
+        _channelPendingCount.AddOrUpdate(t.NodeKey, 1, (_, count) => count + 1);
+
+        var chanLock = _channelLocks.GetOrAdd(t.NodeKey, _ => new SemaphoreSlim(1, 1));
+        await chanLock.WaitAsync(ct).ConfigureAwait(false);
+        try
         {
-            try
-            {
-                Publish(new PollUpdate(t.PointId, PollState.Queued, "В очереди", null));
-
-                if (!ignoreCache && _cache.TryGetValue(t.PointId, out var c) && c.Age(DateTime.UtcNow) <= CacheTtl)
-                    return Publish(CachedUpdate(t.PointId, c));
-
-                var chanLock = _channelLocks.GetOrAdd(t.NodeKey, _ => new SemaphoreSlim(1, 1));
-                await chanLock.WaitAsync(ct).ConfigureAwait(false);        // 1 прибор/канал за раз
-                try
-                {
-                    await _deviceSlots.WaitAsync(ct).ConfigureAwait(false); // глобальный потолок
-                    try { return await PollDeviceAsync(t, ignoreCache, ct).ConfigureAwait(false); }
-                    finally { _deviceSlots.Release(); }
-                }
-                finally { chanLock.Release(); }
-            }
-            catch (OperationCanceledException) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: отменено", null)); }
-            catch (Exception ex) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: " + ex.Message, null)); }
-            finally { _inFlight.TryRemove(t.PointId, out _); }
+            await _deviceSlots.WaitAsync(ct).ConfigureAwait(false);
+            try { return await PollDeviceAsync(t, ignoreCache, ct).ConfigureAwait(false); }
+            finally { _deviceSlots.Release(); }
         }
-
+        finally 
+        { 
+            // -1 из очереди. Если остался 0 — мы закончили с этим объектом
+            int pending = _channelPendingCount.AddOrUpdate(t.NodeKey, 0, (_, count) => count - 1);
+            if (pending == 0)
+            {
+                Log.Add(t.PointId, PollState.Ok, "Опрос объекта завершен, освобождаем канал", "Отключение");
+                // Отправляем команду отключения без ожидания (Fire-and-forget)
+                _ = DisconnectAsync(t.PointId, CancellationToken.None);
+            }
+            chanLock.Release(); 
+        }
+    }
+    catch (OperationCanceledException) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: отменено", null)); }
+    catch (Exception ex) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: " + ex.Message, null)); }
+    finally { _inFlight.TryRemove(t.PointId, out _); }
+}
         private async Task<PollUpdate> PollDeviceAsync(PollTarget t, bool ignoreCache, CancellationToken ct)
         {
             // Повторная проверка: пока стояли в очереди, мог опросить кто-то другой / ЛЭРС сам.
@@ -3558,19 +3572,9 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                                                     ReadAtUtc = snap.ReadAtUtc, PolledOkAtUtc = DateTime.UtcNow };
                     _cache[t.PointId] = fresh;
 
-                    // Отключаем прибор после успешного опроса — освобождаем канал связи
-                    Log.Add(t.PointId, PollState.Polling, "Отключение прибора, освобождение канала", "Отключение");
-                    try { await DisconnectAsync(t.PointId, ct).ConfigureAwait(false); }
-                    catch { /* best-effort */ }
-                    Log.Add(t.PointId, PollState.Ok, "Прибор отключён, канал свободен", "Готово");
-
                     return Publish(new PollUpdate(t.PointId, PollState.Ok, $"Опрошено {Fmt(fresh)}", fresh));
                 }
             }
-            // Отключаем прибор даже при таймауте — канал должен быть освобождён
-            Log.Add(t.PointId, PollState.Error, "Отключение прибора после таймаута", "Отключение");
-            try { await DisconnectAsync(t.PointId, ct).ConfigureAwait(false); }
-            catch { /* best-effort */ }
 
             return Publish(new PollUpdate(t.PointId, PollState.Error, $"Таймаут: {lastError}", first));
         }
