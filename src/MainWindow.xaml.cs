@@ -315,51 +315,81 @@ namespace LersMonitor
         private void ApplyThemeColors(bool isDark)
         {
             var res = this.Resources;
+            SolidColorBrush B(string hex) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+
             if (isDark)
             {
-                res["SystemBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#000000"));
-                res["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
-                res["CardBackgroundAlt"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
-                res["BorderBrushColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#38383A"));
-                res["BorderBrushSubtle"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
-                res["LabelPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-                res["LabelSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#98989F"));
-                res["LabelTertiary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48484A"));
-                res["InputBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C2C2E"));
-                res["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
-                res["SelectionBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0A84FF"));
-                res["SelectionForeground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-                res["SegmentedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
-                res["SegmentedSelectedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#636366"));
-                res["AccentBlue"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0A84FF"));
-                res["AccentBlueHover"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#409CFF"));
-                res["AccentGreen"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#30D158"));
-                res["AccentRed"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF453A"));
-                res["AccentOrange"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9F0A"));
-                res["AccentGray"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8E8E93"));
+                res["SystemBackground"] = B("#09090B");
+                res["CardBackground"] = B("#121215");
+                res["CardBackgroundAlt"] = B("#18181C");
+                res["BorderBrushColor"] = B("#26262C");
+                res["BorderBrushSubtle"] = B("#1E1E24");
+                res["LabelPrimary"] = B("#F4F4F5");
+                res["LabelSecondary"] = B("#A1A1AA");
+                res["LabelTertiary"] = B("#52525B");
+                res["InputBackground"] = B("#18181C");
+                res["HeaderBackground"] = B("#121215");
+                res["SelectionBackground"] = B("#0A84FF");
+                res["SelectionForeground"] = B("#FFFFFF");
+                res["SegmentedBg"] = B("#16161A");
+                res["SegmentedSelectedBg"] = B("#27272E");
+                res["AccentBlue"] = B("#0A84FF");
+                res["AccentBlueHover"] = B("#3B9CFF");
+                res["AccentGreen"] = B("#30D158");
+                res["AccentRed"] = B("#FF453A");
+                res["AccentOrange"] = B("#FF9F0A");
+                res["AccentGray"] = B("#71717A");
+                res["AccentTeal"] = B("#38BDF8");
+
+                res["StatusOkBg"] = B("#122319");
+                res["StatusOkBorder"] = B("#1F4A30");
+                res["StatusErrBg"] = B("#291416");
+                res["StatusErrBorder"] = B("#592226");
+                res["StatusWarnBg"] = B("#291E11");
+                res["StatusWarnBorder"] = B("#573D1A");
+                res["StatusIdleBg"] = B("#19191E");
+                res["StatusIdleBorder"] = B("#2A2A32");
+                res["StatusInfoBg"] = B("#112233");
+                res["StatusInfoBorder"] = B("#1E3F60");
+                res["ScrollThumbBrush"] = B("#32323A");
+                res["ScrollThumbHoverBrush"] = B("#484854");
             }
             else
             {
-                res["SystemBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F2F2F7"));
-                res["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-                res["CardBackgroundAlt"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9F9FB"));
-                res["BorderBrushColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E5EA"));
-                res["BorderBrushSubtle"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0F0F2"));
-                res["LabelPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1C1E"));
-                res["LabelSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#86868B"));
-                res["LabelTertiary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C7C7CC"));
-                res["InputBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F2F2F7"));
-                res["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9F9FB"));
-                res["SelectionBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#007AFF"));
-                res["SelectionForeground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-                res["SegmentedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF0F3"));
-                res["SegmentedSelectedBg"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-                res["AccentBlue"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#007AFF"));
-                res["AccentBlueHover"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0051D5"));
-                res["AccentGreen"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34C759"));
-                res["AccentRed"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3B30"));
-                res["AccentOrange"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9500"));
-                res["AccentGray"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8E8E93"));
+                res["SystemBackground"] = B("#F4F4F6");
+                res["CardBackground"] = B("#FFFFFF");
+                res["CardBackgroundAlt"] = B("#F8F8FA");
+                res["BorderBrushColor"] = B("#E4E4E7");
+                res["BorderBrushSubtle"] = B("#EFEFF2");
+                res["LabelPrimary"] = B("#09090B");
+                res["LabelSecondary"] = B("#71717A");
+                res["LabelTertiary"] = B("#A1A1AA");
+                res["InputBackground"] = B("#F4F4F6");
+                res["HeaderBackground"] = B("#FFFFFF");
+                res["SelectionBackground"] = B("#007AFF");
+                res["SelectionForeground"] = B("#FFFFFF");
+                res["SegmentedBg"] = B("#EBEBEF");
+                res["SegmentedSelectedBg"] = B("#FFFFFF");
+                res["AccentBlue"] = B("#007AFF");
+                res["AccentBlueHover"] = B("#0051D5");
+                res["AccentGreen"] = B("#22C55E");
+                res["AccentRed"] = B("#EF4444");
+                res["AccentOrange"] = B("#F59E0B");
+                res["AccentGray"] = B("#71717A");
+                res["AccentTeal"] = B("#0284C7");
+
+                res["StatusOkBg"] = B("#ECFDF3");
+                res["StatusOkBorder"] = B("#BBF7D0");
+                res["StatusErrBg"] = B("#FEF2F2");
+                res["StatusErrBorder"] = B("#FECACA");
+                res["StatusWarnBg"] = B("#FFFBEB");
+                res["StatusWarnBorder"] = B("#FDE68A");
+                res["StatusIdleBg"] = B("#F4F4F6");
+                res["StatusIdleBorder"] = B("#E4E4E7");
+                res["StatusInfoBg"] = B("#EFF6FF");
+                res["StatusInfoBorder"] = B("#BFDBFE");
+                res["ScrollThumbBrush"] = B("#D4D4D8");
+                res["ScrollThumbHoverBrush"] = B("#A1A1AA");
             }
 
             foreach (var r in _results) r.RefreshColors();
@@ -388,7 +418,13 @@ namespace LersMonitor
                 _baseUrl = $"http://{host}:{port}/api/v1";
 
                 // Always use a fresh HttpClient instance on connect to prevent "This instance has already started one or more requests"
-                _http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+                var handler = new SocketsHttpHandler
+                {
+                    PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                    KeepAlivePingDelay = TimeSpan.FromSeconds(30),
+                    KeepAlivePingTimeout = TimeSpan.FromSeconds(10)
+                };
+                _http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
                 _http.DefaultRequestHeaders.Accept.Clear();
                 _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -1049,18 +1085,34 @@ namespace LersMonitor
             return null;
         }
 
-private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointSnapshot? snapshot = null)
+        private void UpdatePointValues(PointResultViewModel vm, JsonElement root,
+            PointSnapshot? snapshot = null)
         {
             vm.T1 = ExtractParameterValue(root, "t_in", "t1", "temperatureIn", "T1", "t1Value", "T_in", "t_supply");
             vm.T2 = ExtractParameterValue(root, "t_out", "t2", "temperatureOut", "T2", "t2Value", "T_out", "t_return");
             vm.P1 = ExtractParameterValue(root, "p_in", "p1", "pressureIn", "P1", "p1Value", "P_in", "p_supply");
             vm.P2 = ExtractParameterValue(root, "p_out", "p2", "pressureOut", "P2", "p2Value", "P_out", "p_return");
 
-            // Ваш оригинальный код:
-            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in", "v_in", "V_in", "volume_supply", "volume1");
-            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out", "v_out", "V_out", "volume_return", "volume2");
-            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in", "m_in", "M_in", "mass_supply", "mass1");
-            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out", "m_out", "M_out", "mass_return", "mass2");
+            // V1/V2/M1/M2: расход в м³/ч (или т/ч).
+            //
+            // В ответе ЛЭРС Current для этого прибора параметры V_in/V_out/M_in/M_out —
+            // это РАСХОД (м³/ч и т/ч), а не накопительный счётчик.
+            // Доказано Cross-check'ом: M_in ≈ Q_in / (c × T_in) с точностью ~1.5 т/ч,
+            // V_in ≈ M_in / ρ (ρ≈980 кг/м³ при 65°C).
+            //
+            // Ранее считалось, что это интеграторы, и расход вычислялся через Δсчётчика/Δвремя —
+            // это давало абсурдные значения (153, 10145, 73940 м³/ч), потому что
+            // значения НЕ монотонны (ЛЭРС возвращает разные кэшированные снимки).
+            //
+            // Теперь берём V_in/V_out/M_in/M_out напрямую как значения расхода.
+            vm.V1 = ExtractParameterValue(root, "g_v_in", "v_flow_in", "V_flow_in", "gv_in", "flow_in",
+                "v_in", "V_in", "volume_supply", "volume1");
+            vm.V2 = ExtractParameterValue(root, "g_v_out", "v_flow_out", "V_flow_out", "gv_out", "flow_out",
+                "v_out", "V_out", "volume_return", "volume2");
+            vm.M1 = ExtractParameterValue(root, "g_m_in", "m_flow_in", "M_flow_in", "gm_in", "mass_flow_in",
+                "m_in", "M_in", "mass_supply", "mass1");
+            vm.M2 = ExtractParameterValue(root, "g_m_out", "m_flow_out", "M_flow_out", "gm_out", "mass_flow_out",
+                "m_out", "M_out", "mass_return", "mass2");
 
             vm.Q  = ExtractParameterValue(root, "q_delta", "q", "q_in", "q_out", "q_gvs", "Q_delta", "Q", "heat", "thermalEnergy");
         }
@@ -1239,111 +1291,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             finally { BtnForcePoll.IsEnabled = true; }
         }
 
-// --- Drag-and-Drop для дашборда ---
-        private Point _dragStartPoint;
-
-        private void DashCard_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            _dragStartPoint = e.GetPosition(null);
-        }
-
-        private void DashCard_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
-            {
-                Point mousePos = e.GetPosition(null);
-                Vector diff = _dragStartPoint - mousePos;
-
-                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
-                {
-                    if (sender is FrameworkElement fe && fe.DataContext is DashboardNodeViewModel node)
-                    {
-                        DragDrop.DoDragDrop(fe, node, DragDropEffects.Move);
-                    }
-                }
-            }
-        }
-
-        private void DashCard_Drop(object sender, DragEventArgs e)
-        {
-            if (sender is FrameworkElement fe && fe.DataContext is DashboardNodeViewModel targetNode)
-            {
-                if (e.Data.GetData(typeof(DashboardNodeViewModel)) is DashboardNodeViewModel sourceNode)
-                {
-                    if (sourceNode != targetNode)
-                    {
-                        int sourceIndex = _dashboardNodes.IndexOf(sourceNode);
-                        int targetIndex = _dashboardNodes.IndexOf(targetNode);
-
-                        if (sourceIndex >= 0 && targetIndex >= 0)
-                        {
-                            _dashboardNodes.Move(sourceIndex, targetIndex);
-                        }
-                    }
-                }
-            }
-        }
-       
-        // --- Drag-and-Drop для одиночного режима (плитки параметров) ---
-        private Point _singleDragStart;
-        private UIElement? _singleDragElement;
-
-        private void SingleDashCard_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            _singleDragStart = e.GetPosition(SinglePointTilesPanel);
-            _singleDragElement = GetTileUnderMouse(e.OriginalSource as DependencyObject);
-        }
-
-        private void SingleDashCard_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && _singleDragElement != null)
-            {
-                Vector diff = _singleDragStart - e.GetPosition(SinglePointTilesPanel);
-                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
-                {
-                    DataObject dragData = new DataObject("SingleDashTile", _singleDragElement);
-                    DragDrop.DoDragDrop(SinglePointTilesPanel, dragData, DragDropEffects.Move);
-                    _singleDragElement = null;
-                }
-            }
-        }
-
-        private void SingleDashCard_Drop(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetData("SingleDashTile") is UIElement sourceTile)
-            {
-                UIElement? targetTile = GetTileUnderMouse(e.OriginalSource as DependencyObject);
-                if (targetTile != null && targetTile != sourceTile)
-                {
-                    int sourceIndex = SinglePointTilesPanel.Children.IndexOf(sourceTile);
-                    int targetIndex = SinglePointTilesPanel.Children.IndexOf(targetTile);
-
-                    if (sourceIndex >= 0 && targetIndex >= 0)
-                    {
-                        // Физически перемещаем UI-элемент в коллекции Children панели
-                        SinglePointTilesPanel.Children.RemoveAt(sourceIndex);
-                        SinglePointTilesPanel.Children.Insert(targetIndex, sourceTile);
-                    }
-                }
-            }
-        }
-        // Вспомогательный метод для поиска главной плитки (Border), на которую нажали
-        private UIElement? GetTileUnderMouse(DependencyObject? element)
-        {
-            while (element != null && element != SinglePointTilesPanel)
-            {
-                DependencyObject parent = VisualTreeHelper.GetParent(element) ?? LogicalTreeHelper.GetParent(element);
-                if (parent == SinglePointTilesPanel)
-                {
-                    return element as UIElement;
-                }
-                element = parent;
-            }
-            return null;
-        }
-        
         // --- Вкладка Подпитка ---
         
         private void RefreshPodpitkaNodes()
@@ -1546,12 +1493,12 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         private void BtnSettingsGear_Click(object sender, RoutedEventArgs e)
         {
             _settingsGearInitialLoad = true;
+            ChkExperimentalArchive.IsChecked = _settings.ExperimentalArchive;
             ChkExperimentalReportPeriod.IsChecked = _settings.ExperimentalReportPeriod;
             ChkSectionGeneral.IsChecked = !_settings.HideGeneral;
             ChkSectionTrend.IsChecked = !_settings.HideTrend;
             ChkSectionDashboard.IsChecked = !_settings.HideDashboard;
             ChkSectionPodpitka.IsChecked = !_settings.HidePodpitka;
-            ChkSectionArchive.IsChecked = !_settings.HideArchive;
             PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
 
             // Populate day ComboBoxes 1-31
@@ -1577,7 +1524,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             _settings.HideTrend = ChkSectionTrend.IsChecked != true;
             _settings.HideDashboard = ChkSectionDashboard.IsChecked != true;
             _settings.HidePodpitka = ChkSectionPodpitka.IsChecked != true;
-            _settings.HideArchive = ChkSectionArchive.IsChecked != true;
             ApplySectionVisibility();
             SaveUserSettings();
         }
@@ -1588,12 +1534,10 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             TabSingle.Visibility = _settings.HideTrend ? Visibility.Collapsed : Visibility.Visible;
             TabDashboard.Visibility = _settings.HideDashboard ? Visibility.Collapsed : Visibility.Visible;
             TabPodpitka.Visibility = _settings.HidePodpitka ? Visibility.Collapsed : Visibility.Visible;
-            TabArchive.Visibility = _settings.HideArchive ? Visibility.Collapsed : Visibility.Visible;
             if (TabAll.IsChecked == true && _settings.HideGeneral) SwitchToFirstVisibleTab();
             else if (TabSingle.IsChecked == true && _settings.HideTrend) SwitchToFirstVisibleTab();
             else if (TabDashboard.IsChecked == true && _settings.HideDashboard) SwitchToFirstVisibleTab();
             else if (TabPodpitka.IsChecked == true && _settings.HidePodpitka) SwitchToFirstVisibleTab();
-            else if (TabArchive.IsChecked == true && _settings.HideArchive) SwitchToFirstVisibleTab();
         }
 
         private void SwitchToFirstVisibleTab()
@@ -1602,14 +1546,12 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             else if (!_settings.HideTrend) TabSingle.IsChecked = true;
             else if (!_settings.HideDashboard) TabDashboard.IsChecked = true;
             else if (!_settings.HidePodpitka) TabPodpitka.IsChecked = true;
-            else if (!_settings.HideArchive) TabArchive.IsChecked = true;
         }
 
         private void ExperimentalToggle_Click(object sender, RoutedEventArgs e)
         {
             if (_settingsGearInitialLoad) return;
-            // Видимость вкладки «Архив» теперь управляется в разделе «Видимость разделов»
-            // (ChkSectionArchive / SectionToggle_Click). Здесь остаётся только отчётный период подпитки.
+            _settings.ExperimentalArchive = ChkExperimentalArchive.IsChecked == true;
             _settings.ExperimentalReportPeriod = ChkExperimentalReportPeriod.IsChecked == true;
             PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
             SaveUserSettings();
@@ -1675,108 +1617,26 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
 
         // --- Архив показаний (вкладка) ---
 
-        /// <summary>Защита от рекурсии при программном заполнении пресетов периода.</summary>
-        private bool _archiveUiUpdating;
-
-        /// <summary>Тип данных, под который сейчас заполнен список пресетов.</summary>
-        private string _archivePresetKind = "";
-
-        /// <summary>Числовые значения, соответствующие пунктам CmbArchiveDays.</summary>
-        private readonly List<int> _archivePresetValues = new();
-
-        /// <summary>Последние загруженные (нормализованные) строки — для перестроения колонок из настроек.</summary>
-        private List<Dictionary<string, string>>? _archiveRows;
-
         /// <summary>Заполняет список точек для вкладки Архив при первом открытии.</summary>
         private void EnsureArchivePointsLoaded()
         {
             if (_allPoints == null || !_allPoints.Any()) return;
             if (ListArchivePoints.ItemsSource == null)
             {
-                _archiveUiUpdating = true;
-                try
-                {
-                    ListArchivePoints.ItemsSource = _allPoints;
-                    RbArchiveKindHour.IsChecked = true;
-                    DpArchiveFrom.SelectedDate = DateTime.Now.AddDays(-7);
-                    DpArchiveTo.SelectedDate = DateTime.Now;
-                    RbArchivePreset.IsChecked = true;
-                }
-                finally { _archiveUiUpdating = false; }
-
-                ApplyArchivePresetItems("Hour");
-                if (CmbArchiveDays != null) CmbArchiveDays.SelectedIndex = 0;
+                ListArchivePoints.ItemsSource = _allPoints;
+                RbArchiveKindHour.IsChecked = true;
+                DpArchiveFrom.SelectedDate = DateTime.Now.AddDays(-7);
+                DpArchiveTo.SelectedDate = DateTime.Now;
+                CmbArchiveDays.SelectedIndex = 1;
+                RbArchivePreset.IsChecked = true;
             }
             UpdateArchiveInfoLabel();
         }
 
-        /// <summary>
-        /// Пункты пресета зависят от типа данных: для часовых/суточных — дни,
-        /// для месячных — месяцы (дни в этом режиме не показываются).
-        /// </summary>
-        private void ApplyArchivePresetItems(string kind)
+        private void ArchiveKind_Changed(object? sender, RoutedEventArgs e)
         {
-            if (CmbArchiveDays == null || _archiveUiUpdating) return;
-            if (kind == _archivePresetKind && _archivePresetValues.Count > 0) return;
-
-            _archiveUiUpdating = true;
-            try
-            {
-                _archivePresetKind = kind;
-                _archivePresetValues.Clear();
-
-                List<string> labels;
-                if (kind == "Month")
-                {
-                    _archivePresetValues.AddRange(new[] { 3, 6, 12, 24 });
-                    labels = new List<string>
-                    {
-                        "За последние 3 месяца", "За последние 6 месяцев",
-                        "За последние 12 месяцев", "За последние 24 месяца"
-                    };
-                }
-                else if (kind == "Hour")
-                {
-                    _archivePresetValues.AddRange(new[] { 1, 3, 7, 14 });
-                    labels = new List<string>
-                    {
-                        "За последние сутки", "За последние 3 дня",
-                        "За последние 7 дней", "За последние 14 дней"
-                    };
-                }
-                else // Day
-                {
-                    _archivePresetValues.AddRange(new[] { 7, 14, 30, 90 });
-                    labels = new List<string>
-                    {
-                        "За последние 7 дней", "За последние 14 дней",
-                        "За последние 30 дней", "За последние 90 дней"
-                    };
-                }
-
-                CmbArchiveDays.ItemsSource = labels;
-                CmbArchiveDays.SelectedIndex = 0;
-            }
-            finally { _archiveUiUpdating = false; }
-        }
-
-        /// <summary>Настройка видимости колонок архива.</summary>
-        private void BtnArchiveColumns_Click(object sender, RoutedEventArgs e)
-        {
-            ChkArchiveService.IsChecked = _settings.ArchiveShowService;
-            ChkArchiveOther.IsChecked = _settings.ArchiveShowOther;
-            OverlayArchiveColumns.Visibility = Visibility.Visible;
-        }
-
-        private void BtnCloseArchiveColumns_Click(object sender, RoutedEventArgs e)
-            => OverlayArchiveColumns.Visibility = Visibility.Collapsed;
-
-        private void ArchiveColumnToggle_Click(object sender, RoutedEventArgs e)
-        {
-            _settings.ArchiveShowService = ChkArchiveService.IsChecked == true;
-            _settings.ArchiveShowOther = ChkArchiveOther.IsChecked == true;
-            SaveUserSettings();
-            if (_archiveRows != null) BuildArchiveColumns(_archiveRows);
+            if (TxtArchiveInfo == null) return;
+            UpdateArchiveInfoLabel();
         }
 
         /// <summary>Выбор точки в списке архива — обновляем строку с параметрами выбора.</summary>
@@ -1794,7 +1654,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                 ? _allPoints
                 : _allPoints.Where(p => (p.DisplayName ?? "").ToLowerInvariant().Contains(query)).ToList();
 
-            // Сохраняем выделение, если выбранная точка осталась в отфильтрованном списке
             var selectedId = (ListArchivePoints.SelectedItem as MeasurePointItem)?.Id;
             ListArchivePoints.ItemsSource = filtered;
             if (selectedId.HasValue)
@@ -1804,7 +1663,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             }
         }
 
-        /// <summary>Сворачивание/разворачивание левой панели архива (как в общем мониторинге).</summary>
+        /// <summary>Сворачивание/разворачивание левой панели архива.</summary>
         private void BtnToggleArchivePanel_Click(object sender, RoutedEventArgs e)
         {
             bool isVis = PanelArchiveLeft.Visibility == Visibility.Visible;
@@ -1814,14 +1673,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
 
         /// <summary>Повторная загрузка архива для выбранной точки.</summary>
         private void BtnArchiveRefresh_Click(object sender, RoutedEventArgs e) => BtnArchiveLoad_Click(sender, e);
-
-        private void ArchiveKind_Changed(object sender, RoutedEventArgs e)
-        {
-            if (TxtArchiveInfo == null || _archiveUiUpdating) return;
-            // При смене типа данных перестраиваем список пресетов (дни → месяцы)
-            if (sender is RadioButton) ApplyArchivePresetItems(GetArchiveKindParam());
-            UpdateArchiveInfoLabel();
-        }
 
         /// <summary>Актуализирует строку с описанием текущего выбора (точка/тип/период).</summary>
         private void UpdateArchiveInfoLabel()
@@ -1838,10 +1689,9 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             string kindRu = GetArchiveKindRu();
             var (from, to) = GetArchivePeriod();
 
-            TxtArchiveInfo.Text = $"Точка: {pt.DisplayName}   •   Данные: {kindRu}   •   Период: {from:yyyy-MM-dd} — {to:yyyy-MM-dd}";
+            TxtArchiveInfo.Text = $"Точка: {pt.DisplayName}   •   Данные: {kindRu}   •   Период: {from:dd.MM.yyyy} — {to:dd.MM.yyyy}";
         }
 
-        /// <summary>Человекочитаемое название выбранного типа данных.</summary>
         private string GetArchiveKindRu()
         {
             if (RbArchiveKindDay?.IsChecked == true) return "Суточные";
@@ -1856,26 +1706,17 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             return "Hour";
         }
 
-        /// <summary>Возвращает выбранный период. Для месячных пресетов считаем месяцы, а не дни.</summary>
         private (DateTime from, DateTime to) GetArchivePeriod()
         {
             var now = DateTime.Now;
 
             if (RbArchivePreset?.IsChecked == true)
             {
-                int maxIdx = Math.Max(0, _archivePresetValues.Count - 1);
-                int idx = Math.Clamp(CmbArchiveDays?.SelectedIndex ?? 0, 0, maxIdx);
-                int count = _archivePresetValues.Count > 0 ? _archivePresetValues[idx] : 7;
-
-                if (GetArchiveKindParam() == "Month")
+                int days = Math.Max(0, CmbArchiveDays?.SelectedIndex ?? 1) switch
                 {
-                    // Месячный архив содержит только полностью завершившиеся месяцы.
-                    // Берём ровно count последних завершённых месяцев: граница «до» —
-                    // 1-е число текущего (ещё неполного) месяца.
-                    var monthStart = new DateTime(now.Year, now.Month, 1);
-                    return (monthStart.AddMonths(-count), monthStart);
-                }
-                return (now.AddDays(-count), now);
+                    0 => 1, 1 => 7, 2 => 14, 3 => 30, 4 => 90, 5 => 365, _ => 7
+                };
+                return (now.AddDays(-days), now);
             }
 
             var from = DpArchiveFrom?.SelectedDate ?? now.AddDays(-7);
@@ -1915,28 +1756,18 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
 
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
-                // Для часового архива сохраняем время границ, чтобы не подтягивать
-                // лишние сутки. Сервер одинаково принимает yyyy-MM-dd и полный ISO.
-                string fromStamp = kindParam == "Hour"
-                    ? from.ToString("yyyy-MM-ddTHH:mm:ss") : fromDate;
-                string toStamp = kindParam == "Hour"
-                    ? to.ToString("yyyy-MM-ddTHH:mm:ss") : toDate;
 
-                // Точное имя параметра найдено в сгенерированном клиенте веб-интерфейса
-                // ЛЭРС: /api/v0.1/Data/MeasurePoints/{id}/Consumption/{start}/{end}?dataTypes=...
-                // Без dataTypes сервер по умолчанию отдаёт ТОЛЬКО dayConsumption, из-за
-                // чего часовые и месячные данные казались отсутствующими. Варианты
-                // dataKind / archiveKind / kind / type сервер просто игнорирует.
-                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromStamp}/{toStamp}?dataTypes={kindParam}";
+                // Основной документированный формат ЛЭРС: путь с датами.
+                // Сервер сам выбирает набор доступных архивов и возвращает их в отдельных массивах.
+                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}";
 
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 using var res = await _http.SendAsync(req);
 
                 if (!res.IsSuccessStatusCode)
                 {
-                    TxtArchiveStatus.Text =
-                        $"Сервер вернул ошибку {(int)res.StatusCode} на запрос {kindRu} данных за период {fromDate} – {toDate}.";
-                    GridArchive.Columns.Clear();
+                    TxtArchiveStatus.Text = $"Ошибка сервера: {(int)res.StatusCode} {res.StatusCode}. " +
+                                          $"Возможно, для точки «{pt.Title}» нет архива за период {fromDate} – {toDate}.";
                     return;
                 }
 
@@ -1944,34 +1775,19 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                 if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
                 {
                     TxtArchiveStatus.Text = $"Сервер вернул пустой ответ за период {fromDate} – {toDate}.";
-                    GridArchive.Columns.Clear();
                     return;
                 }
 
-                ArchiveParseResult parsed;
-                try { parsed = ParseArchiveResponse(json, kindParam); }
-                catch (JsonException ex)
-                {
-                    TxtArchiveStatus.Text = "Не удалось разобрать ответ ЛЭРС: " + ex.Message;
-                    GridArchive.Columns.Clear();
-                    return;
-                }
-
-                var rows = NormalizeArchiveRows(parsed.Rows, kindParam);
-                _archiveRows = rows;
+                var parsed = ParseArchiveResponse(json, kindParam);
+                var rows = parsed.Rows;
 
                 if (rows.Count == 0)
                 {
-                    string hint = kindParam == "Month"
-                        ? " Месячный архив содержит только полностью завершившиеся месяцы — расширьте период."
-                        : " Проверьте, что нужный тип архива включён для точки в ЛЭРС УЧЁТ.";
                     var avail = parsed.AvailableKinds.Count > 0
-                        ? "В ответе ЛЭРС есть: " + string.Join(", ", parsed.AvailableKinds)
-                        : "Ответ ЛЭРС не содержит записей этого типа";
+                        ? "В ответе ЛЭРС есть: " + string.Join(", ", parsed.AvailableKinds.Select(k => k.ToLowerInvariant()))
+                        : "Ответ ЛЭРС не содержит архивов";
                     TxtArchiveStatus.Text =
-                        $"{kindRu.capitalize()} показаний за период {fromDate} – {toDate} на сервере нет. {avail}.{hint}";
-                    GridArchive.Columns.Clear();
-                    GridArchive.ItemsSource = null;
+                        $"{kindRu.capitalize()} показаний за период {fromDate} – {toDate} на сервере нет. {avail}.";
                     return;
                 }
 
@@ -1994,196 +1810,47 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         /// DataGrid не умеет автогенерировать колонки из Dictionary&lt;string,string&gt;,
         /// поэтому каждую колонку создаём вручную с биндингом через индексер.
         /// </summary>
-        /// <summary>Фиксированный порядок колонок архива. Базовые идут первыми.</summary>
-        private static readonly string[] ArchiveColumnOrder =
-        {
-            "date", "hour", "t1", "t2", "dt", "p1", "p2", "dp", "tnv",
-            "m1", "m2", "dm", "v1", "v2", "dv", "q", "worktime",
-            "tcw", "errors", "resource", "empty", "interval", "rawdate"
-        };
-
-        private static readonly Dictionary<string, string> ArchiveColumnTitles =
-            new(StringComparer.OrdinalIgnoreCase)
-            {
-                ["date"] = "Дата", ["hour"] = "Час",
-                ["t1"] = "T1 (°C)", ["t2"] = "T2 (°C)", ["dt"] = "ΔT (°C)",
-                ["p1"] = "P1 (атм)", ["p2"] = "P2 (атм)", ["dp"] = "ΔP (атм)",
-                ["tnv"] = "Тнв (°C)",
-                ["m1"] = "M1 (т)", ["m2"] = "M2 (т)", ["dm"] = "ΔM (т)",
-                ["q"] = "Q (Гкал)", ["worktime"] = "Наработка (ч)",
-                ["v1"] = "V1 (м³)", ["v2"] = "V2 (м³)", ["dv"] = "ΔV (м³)",
-                ["tcw"] = "Tхв (°C)", ["errors"] = "Ошибки", ["resource"] = "Ресурс",
-                ["empty"] = "Пусто", ["interval"] = "Интервал, с", ["rawdate"] = "Дата (raw)"
-            };
-
         private void BuildArchiveColumns(List<Dictionary<string, string>> rows)
         {
             GridArchive.AutoGenerateColumns = false;
             GridArchive.Columns.Clear();
+
             if (rows.Count == 0) return;
 
-            var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var otherIds = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            // Порядок колонок: сначала дата (если есть), затем параметры в порядке появления
+            var allKeys = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var row in rows)
+            {
                 foreach (var key in row.Keys)
                 {
-                    present.Add(key);
-                    if (key.StartsWith("other:", StringComparison.Ordinal)) otherIds.Add(key);
+                    if (seen.Add(key)) allKeys.Add(key);
                 }
+            }
 
-            var order = new List<string>(ArchiveColumnOrder);
-            if (_settings.ArchiveShowOther) order.AddRange(otherIds);
+            // Дату/время ставим первыми — это главный столбец архива
+            var dateKeys = allKeys.Where(IsArchiveDateKey).ToList();
+            var otherKeys = allKeys.Where(k => !IsArchiveDateKey(k)).ToList();
 
-            foreach (var id in order)
+            foreach (var key in dateKeys.Concat(otherKeys))
             {
-                if (!present.Contains(id)) continue;
-                if (!IsArchiveColumnVisible(id)) continue;
-
-                string header = id.StartsWith("other:", StringComparison.Ordinal)
-                    ? GetArchiveColumnTitle(id.Substring("other:".Length))
-                    : ArchiveColumnTitles[id];
-
-                GridArchive.Columns.Add(new DataGridTextColumn
+                var col = new DataGridTextColumn
                 {
-                    Header = header,
-                    Binding = new System.Windows.Data.Binding($"[{id}]"),
+                    Header = GetArchiveColumnTitle(key),
+                    Binding = new System.Windows.Data.Binding($"[{key}]"),
                     IsReadOnly = true,
-                    Width = id == "date" ? new DataGridLength(110) : DataGridLength.Auto
-                });
+                    Width = IsArchiveDateKey(key) ? new DataGridLength(150) : DataGridLength.Auto,
+                    ElementStyle = new Style(typeof(TextBlock))
+                };
+                GridArchive.Columns.Add(col);
             }
         }
 
-        /// <summary>Базовые колонки (включая V1/V2/ΔV) видны всегда, остальные — только по настройкам архива.</summary>
-        private bool IsArchiveColumnVisible(string id)
+        /// <summary>Ключ параметра, содержащий дату/время записи архива.</summary>
+        private static bool IsArchiveDateKey(string key)
         {
-            if (id.StartsWith("other:", StringComparison.Ordinal)) return _settings.ArchiveShowOther;
-            return id switch
-            {
-                "tcw" or "errors" or "resource" or "empty" or "interval" or "rawdate" => _settings.ArchiveShowService,
-                _ => true
-            };
-        }
-
-        /// <summary>Приводит системные имена ЛЭРС к стабильным идентификаторам колонок.</summary>
-        private static string NormalizeArchiveKey(string key)
-        {
-            var k = key.ToLowerInvariant().Replace("_", "").Replace("-", "").Replace(" ", "");
-            if (k.Contains("rawdatetime")) return "rawdate";
-
-            return k switch
-            {
-                "datetime" or "date" or "targetdate" or "timestamp" or "d" or "time" or "datatime" or "consumptiondate" => "date",
-                "hour" or "hournum" or "hourofday" or "hournumber" => "hour",
-                "tin" or "t1" or "tempin" or "temperaturein" => "t1",
-                "tout" or "t2" or "tempout" or "temperatureout" => "t2",
-                "deltat" or "dt" or "tdelta" or "temperaturedelta" => "dt",
-                "pin" or "p1" or "pressurein" => "p1",
-                "pout" or "p2" or "pressureout" => "p2",
-                "deltap" or "dp" or "pdelta" or "pressuredelta" => "dp",
-                "tnv" or "toutdoor" or "toutdoortemperature" or "outdoor" => "tnv",
-                "min" or "m1" or "massin" => "m1",
-                "mout" or "m2" or "massout" => "m2",
-                "deltam" or "dm" or "mdelta" or "massdelta" => "dm",
-                "vin" or "v1" or "volumein" => "v1",
-                "vout" or "v2" or "volumeout" => "v2",
-                "deltav" or "dv" or "vdelta" or "volumedelta" => "dv",
-                "q" or "qin" or "qdelta" or "heat" or "heatquantity" => "q",
-                "worktime" or "normalworktime" or "normaltime" or "operatingtime" or "runtime"
-                    or "normaloperationduration" or "normaloperationtime" => "worktime",
-                "tcw" or "tcoldwater" or "tcold" => "tcw",
-                "errors" or "deviceerrors" or "error" => "errors",
-                "resourcekind" or "resource" => "resource",
-                "isempty" or "empty" => "empty",
-                "intervalseconds" or "interval" => "interval",
-                _ => "other:" + key
-            };
-        }
-
-        /// <summary>
-        /// Разворачивает сырые строки в канонические колонки, разделяет дату и час,
-        /// вычисляет ΔT / ΔP / ΔM / ΔV, если сервер их не прислал,
-        /// и сортирует по убыванию даты: первая строка — самая свежая.
-        /// </summary>
-        private static List<Dictionary<string, string>> NormalizeArchiveRows(
-            List<Dictionary<string, string>> rawRows, string kind)
-        {
-            var result = new List<Dictionary<string, string>>();
-            // ЛЭРС отдаёт записи по возрастанию даты. В таблице нужен обратный
-            // порядок: сверху свежая запись, внизу — самая старая.
-            foreach (var raw in rawRows.OrderByDescending(GetArchiveRowDate))
-            {
-                var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                foreach (var kv in raw)
-                {
-                    var id = NormalizeArchiveKey(kv.Key);
-                    if (id == "date")
-                    {
-                        if (row.ContainsKey("date")) continue;
-                        if (DateTime.TryParse(kv.Value, CultureInfo.InvariantCulture,
-                                DateTimeStyles.None, out var dt) ||
-                            DateTime.TryParse(kv.Value, CultureInfo.CurrentCulture,
-                                DateTimeStyles.None, out dt))
-                        {
-                            row["date"] = dt.ToString("dd.MM.yyyy");
-                            // Час показываем для часового архива или если время не полночь
-                            if (kind == "Hour" || dt.TimeOfDay != TimeSpan.Zero)
-                                row["hour"] = dt.ToString("HH:mm");
-                        }
-                        else row["date"] = kv.Value;
-                    }
-                    else if (!row.ContainsKey(id)) row[id] = kv.Value;
-                }
-
-                TrySetArchiveDelta(row, "dt", "t1", "t2");
-                TrySetArchiveDelta(row, "dp", "p1", "p2");
-                TrySetArchiveDelta(row, "dm", "m1", "m2");
-                TrySetArchiveDelta(row, "dv", "v1", "v2");
-
-                if (row.Count > 0) result.Add(row);
-            }
-            return result;
-        }
-
-        /// <summary>Поля, в которых ЛЭРС передаёт полную дату/время записи.</summary>
-        private static readonly HashSet<string> ArchiveFullDateKeys =
-            new(StringComparer.OrdinalIgnoreCase)
-            { "dateTime", "date", "targetDate", "timestamp", "consumptionDate", "d" };
-
-        /// <summary>Достаёт дату записи из сырой строки для сортировки.</summary>
-        private static DateTime GetArchiveRowDate(Dictionary<string, string> raw)
-        {
-            // Сначала приоритетные поля с полной датой (поле «time» может содержать
-            // только время и само по себе не годится для упорядочивания).
-            foreach (var kv in raw.Where(kv => ArchiveFullDateKeys.Contains(kv.Key)))
-                if (TryParseArchiveDate(kv.Value, out var dt)) return dt;
-
-            foreach (var kv in raw)
-                if (NormalizeArchiveKey(kv.Key) == "date" && TryParseArchiveDate(kv.Value, out var dt))
-                    return dt;
-
-            return DateTime.MinValue;
-        }
-
-        private static bool TryParseArchiveDate(string s, out DateTime dt)
-        {
-            if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) return true;
-            return DateTime.TryParse(s, CultureInfo.CurrentCulture, DateTimeStyles.None, out dt);
-        }
-
-        private static void TrySetArchiveDelta(Dictionary<string, string> row,
-            string id, string a, string b)
-        {
-            if (row.ContainsKey(id)) return;
-            if (!row.TryGetValue(a, out var sa) || !row.TryGetValue(b, out var sb)) return;
-            if (!TryParseArchiveNumber(sa, out double da) || !TryParseArchiveNumber(sb, out double db)) return;
-            row[id] = (da - db).ToString("0.00", CultureInfo.CurrentCulture);
-        }
-
-        private static bool TryParseArchiveNumber(string s, out double value)
-        {
-            if (double.TryParse(s, NumberStyles.Any, CultureInfo.CurrentCulture, out value)) return true;
-            if (double.TryParse(s.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out value)) return true;
-            return false;
+            var k = key.ToLowerInvariant();
+            return k.Contains("datetime") || k == "date" || k.Contains("rawdatetime") || k.Contains("time");
         }
 
         /// <summary>Человекочитаемый заголовок колонки архива.</summary>
@@ -2197,7 +1864,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             if (k == "isempty") return "Пусто";
             if (k == "intervalseconds") return "Интервал, с";
 
-            // Маппинг системных параметров ЛЭРС в понятные названия
             if (k == "tin" || k == "t1" || k == "t_in") return "T1 (°C)";
             if (k == "tout" || k == "t2" || k == "t_out") return "T2 (°C)";
             if (k == "pin" || k == "p1" || k == "p_in") return "P1 (атм)";
@@ -2220,8 +1886,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         {
             public List<Dictionary<string, string>> Rows { get; } = new();
             public List<string> AvailableKinds { get; } = new();
-            /// <summary>В ответе действительно найдены записи запрошенного типа архива.</summary>
-            public bool RequestedKindFound { get; set; }
         }
 
         /// <summary>Парсит ответ ЛЭРС для архива показаний.
@@ -2309,12 +1973,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                         result.Rows.Add(flat);
                 }
 
-                if (result.Rows.Count > 0)
-                {
-                    result.AvailableKinds.Add(kind);
-                    // Legacy-ответ не содержит признака типа — считаем его запрошенным
-                    result.RequestedKindFound = true;
-                }
+                if (result.Rows.Count > 0) result.AvailableKinds.Add(kind);
                 return result;
             }
 
@@ -2328,61 +1987,44 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             };
 
             // Список всех массивов-архивов, которые реально присутствуют в ответе (для диагностики)
-            if (root.ValueKind == JsonValueKind.Object)
+            foreach (var prop in root.EnumerateObject())
             {
-                foreach (var prop in root.EnumerateObject())
-                {
-                    if (prop.Value.ValueKind == JsonValueKind.Array &&
-                        prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase) &&
-                        prop.Value.GetArrayLength() > 0)
-                        result.AvailableKinds.Add(prop.Name);
-                }
+                if (prop.Value.ValueKind == JsonValueKind.Array &&
+                    prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase) &&
+                    prop.Value.GetArrayLength() > 0)
+                    result.AvailableKinds.Add(prop.Name);
             }
 
             JsonElement? selected = null;
-            bool exactKind = false;
 
-            // 1) Строго массив нужного типа. НИКОГДА не подменяем его архивом другого
-            //    типа: иначе при выборе «часовые» в таблицу попадали бы суточные
-            //    записи с 00:00:00, и создавалось бы впечатление, что часовых нет.
-            if (root.ValueKind == JsonValueKind.Object)
+            // 1) Прямое совпадение по имени массива нужного типа
+            foreach (var name in kindArrayNames)
             {
-                foreach (var name in kindArrayNames)
+                if (root.TryGetProperty(name, out var direct) && direct.ValueKind == JsonValueKind.Array)
                 {
-                    if (root.TryGetProperty(name, out var direct) && direct.ValueKind == JsonValueKind.Array)
-                    {
-                        selected = direct;
-                        exactKind = true;
-                        break;
-                    }
-                }
-            }
-
-            // 2) Ответ может называть массив иначе, но содержать тип в имени
-            //    (hourData, hourlyConsumption, monthlyConsumption и т.п.).
-            if (selected is null && root.ValueKind == JsonValueKind.Object)
-            {
-                string need = kind switch
-                {
-                    "Hour" => "hour", "Day" => "day", "Month" => "month", _ => "current"
-                };
-                foreach (var prop in root.EnumerateObject())
-                {
-                    if (prop.Value.ValueKind != JsonValueKind.Array || prop.Value.GetArrayLength() == 0) continue;
-                    if (!prop.Name.Contains(need, StringComparison.OrdinalIgnoreCase)) continue;
-                    selected = prop.Value;
-                    exactKind = true;
+                    selected = direct;
                     break;
                 }
             }
 
-            // 3) Ответ в виде «голого» массива — query-эндпоинты ЛЭРС сразу отдают
-            //    записи запрошенного типа без обёртки с именами архивов.
-            if (selected is null && root.ValueKind == JsonValueKind.Array)
+            // 2) Фолбэк: если нужный массив пуст — берём любой непустой массив-архив,
+            //    исключая dataParametersUnit (это метаданные единиц, а не показания)
+            if (selected is null || selected.Value.GetArrayLength() == 0)
             {
-                selected = root;
-                exactKind = true;
+                foreach (var prop in root.EnumerateObject())
+                {
+                    if (prop.Value.ValueKind != JsonValueKind.Array) continue;
+                    if (prop.Value.GetArrayLength() == 0) continue;
+                    if (prop.Name.Equals("dataParametersUnit", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase)) continue;
+                    selected = prop.Value;
+                    break;
+                }
             }
+
+            // 3) Фолбэк: корневой массив
+            if (selected is null && root.ValueKind == JsonValueKind.Array)
+                selected = root;
 
             if (selected is null) return result;
 
@@ -2393,7 +2035,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                 if (row.Count > 0) result.Rows.Add(row);
             }
 
-            result.RequestedKindFound = exactKind && result.Rows.Count > 0;
             return result;
         }
 
@@ -2600,13 +2241,10 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             {
                 string s = e.GetString() ?? "";
                 if (string.IsNullOrEmpty(s)) return "";
-
-                // Если ЛЭРС вернул число строкой, форматируем до 2 знаков
-                if (double.TryParse(s.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out double dStr))
-                {
-                    if (!s.Contains("-") && !s.Contains("T")) // Отсекаем даты
-                        return dStr.ToString("0.00", CultureInfo.CurrentCulture);
-                }
+                if (s.Contains("T") && DateTime.TryParse(s, out var dt))
+                    return dt.ToString("dd.MM.yyyy HH:mm");
+                if (!s.Contains("-") && !s.Contains(":") && double.TryParse(s.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out double dStr))
+                    return dStr.ToString("0.00", CultureInfo.CurrentCulture);
                 return s;
             }
 
@@ -2681,10 +2319,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                     ExperimentalArchive = _settings.ExperimentalArchive,
                     ExperimentalReportPeriod = _settings.ExperimentalReportPeriod,
                     ReportPeriodStartDay = _settings.ReportPeriodStartDay,
-                    ReportPeriodEndDay = _settings.ReportPeriodEndDay,
-                    HideArchive = _settings.HideArchive,
-                    ArchiveShowService = _settings.ArchiveShowService,
-                    ArchiveShowOther = _settings.ArchiveShowOther
+                    ReportPeriodEndDay = _settings.ReportPeriodEndDay
                 };
 
                 var opts = new JsonSerializerOptions { WriteIndented = true };
@@ -2743,9 +2378,6 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                 _settings.HideTrend = imported.HideTrend;
                 _settings.HideDashboard = imported.HideDashboard;
                 _settings.HidePodpitka = imported.HidePodpitka;
-                _settings.HideArchive = imported.HideArchive;
-                _settings.ArchiveShowService = imported.ArchiveShowService;
-                _settings.ArchiveShowOther = imported.ArchiveShowOther;
                 _settings.ExperimentalArchive = imported.ExperimentalArchive;
                 _settings.ExperimentalReportPeriod = imported.ExperimentalReportPeriod;
                 _settings.ReportPeriodStartDay = imported.ReportPeriodStartDay;
@@ -3066,15 +2698,10 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         public bool HideTrend { get; set; } = false;
         public bool HideDashboard { get; set; } = false;
         public bool HidePodpitka { get; set; } = false;
-        public bool HideArchive { get; set; } = false;
         public bool ExperimentalArchive { get; set; } = false;
         public bool ExperimentalReportPeriod { get; set; } = false;
         public int ReportPeriodStartDay { get; set; } = 25;
         public int ReportPeriodEndDay { get; set; } = 24;
-
-        // --- Настройки колонок архива (базовые, включая V1/V2/ΔV, видны всегда) ---
-        public bool ArchiveShowService { get; set; } = false;
-        public bool ArchiveShowOther { get; set; } = false;
     }
 
     public class DashboardNodeViewModel : INotifyPropertyChanged
@@ -3082,41 +2709,66 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         public event PropertyChangedEventHandler? PropertyChanged;
         public string NodeTitle { get; set; } = string.Empty;
         public ObservableCollection<PointResultViewModel> Points { get; } = new();
-        
+
         private bool _isPaused;
         public bool IsPaused { get => _isPaused; set { _isPaused = value; Refresh(); } }
-        
+
         public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
 
+        private static Brush Res(string k) => (Brush)Application.Current.MainWindow.FindResource(k);
+
         public string ToggleIcon => IsPaused ? "▶" : "✕";
-        public Brush ToggleBg => IsPaused 
-            ? new SolidColorBrush(Color.FromArgb(180, 40, 167, 69))
-            : new SolidColorBrush(Color.FromArgb(210, 255, 59, 48));
-        public string ToggleTooltip => IsPaused 
-            ? "Опрос объекта остановлен (нажмите, чтобы включить)" 
+        public Brush ToggleFg => IsPaused ? Res("AccentGreen") : Res("LabelSecondary");
+        public string ToggleTooltip => IsPaused
+            ? "Опрос объекта остановлен (нажмите, чтобы включить)"
             : "Объект опрашивается (нажмите, чтобы остановить)";
 
-        public Brush TileBackground
+        public Brush TileBackground => Res("CardBackground");
+
+        public Brush TileBorderBrush
         {
             get
             {
-                if (IsPaused) return (Brush)Application.Current.MainWindow.FindResource("AccentGray");
-                if (Points.Any(p => !p.IsDone)) return (Brush)Application.Current.MainWindow.FindResource("AccentGray");
-                if (Points.Any(p => p.HasBreach)) return (Brush)Application.Current.MainWindow.FindResource("AccentRed");
-                if (Points.Any(p => p.HasError)) return (Brush)Application.Current.MainWindow.FindResource("AccentOrange");
-                return (Brush)Application.Current.MainWindow.FindResource("AccentGreen");
+                if (IsPaused || Points.Any(p => !p.IsDone)) return Res("BorderBrushColor");
+                if (Points.Any(p => p.HasBreach)) return Res("StatusErrBorder");
+                if (Points.Any(p => p.HasError)) return Res("StatusWarnBorder");
+                return Res("StatusOkBorder");
             }
         }
-        public Brush TileForeground => Brushes.White;
+
+        public Brush StatusBadgeBg
+        {
+            get
+            {
+                if (IsPaused || Points.Any(p => !p.IsDone)) return Res("StatusIdleBg");
+                if (Points.Any(p => p.HasBreach)) return Res("StatusErrBg");
+                if (Points.Any(p => p.HasError)) return Res("StatusWarnBg");
+                return Res("StatusOkBg");
+            }
+        }
+
+        public Brush StatusAccent
+        {
+            get
+            {
+                if (IsPaused || Points.Any(p => !p.IsDone)) return Res("AccentGray");
+                if (Points.Any(p => p.HasBreach)) return Res("AccentRed");
+                if (Points.Any(p => p.HasError)) return Res("AccentOrange");
+                return Res("AccentGreen");
+            }
+        }
+
+        public Brush TileForeground => Res("LabelPrimary");
         public DateTime? MaxDeviceTime => Points.Max(p => p.DeviceTime);
         public string GeneralStatus
         {
             get
             {
-                if (IsPaused) return "Опрос приостановлен";
+                if (IsPaused) return "Приостановлен";
                 if (Points.Any(p => !p.IsDone)) return $"Опрошено {Points.Count(p => p.IsDone)} из {Points.Count}";
                 var errPoint = Points.FirstOrDefault(p => p.HasError); if (errPoint != null) return errPoint.Status;
-                return "Опрошено успешно";
+                if (Points.Any(p => p.HasBreach)) return "Отклонение от нормы";
+                return "В норме";
             }
         }
     }
@@ -3140,6 +2792,13 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             OnPropertyChanged(nameof(P1DashBg)); OnPropertyChanged(nameof(P2DashBg));
             OnPropertyChanged(nameof(V1DashBg)); OnPropertyChanged(nameof(V2DashBg));
             OnPropertyChanged(nameof(M1DashBg)); OnPropertyChanged(nameof(M2DashBg)); OnPropertyChanged(nameof(QDashBg));
+            OnPropertyChanged(nameof(T1DashBorder)); OnPropertyChanged(nameof(T2DashBorder));
+            OnPropertyChanged(nameof(P1DashBorder)); OnPropertyChanged(nameof(P2DashBorder));
+            OnPropertyChanged(nameof(V1DashBorder)); OnPropertyChanged(nameof(V2DashBorder));
+            OnPropertyChanged(nameof(M1DashBorder)); OnPropertyChanged(nameof(M2DashBorder)); OnPropertyChanged(nameof(QDashBorder));
+            OnPropertyChanged(nameof(T1StatusDot)); OnPropertyChanged(nameof(T2StatusDot));
+            OnPropertyChanged(nameof(StatusBadgeBg)); OnPropertyChanged(nameof(StatusBadgeBorder));
+            OnPropertyChanged(nameof(PointCardBorder));
 
             OnPropertyChanged(nameof(T1DashForeground)); OnPropertyChanged(nameof(T2DashForeground));
             OnPropertyChanged(nameof(P1DashForeground)); OnPropertyChanged(nameof(P2DashForeground));
@@ -3175,11 +2834,12 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         [System.Text.Json.Serialization.JsonIgnore]
         public Visibility RetryVisibility => HasError ? Visibility.Visible : Visibility.Collapsed;
 
+        private static Brush Res(string k) => (Brush?)Application.Current.MainWindow?.TryFindResource(k) ?? Brushes.Gray;
+
         private Brush GetColor(double? val, double? min, double? max)
         {
-            var defaultColor = Application.Current.MainWindow?.TryFindResource("LabelPrimary") as Brush ?? Brushes.Black;
-            if (val == null) return defaultColor;
-            return IsBreached(val, min, max) ? Brushes.Red : defaultColor;
+            if (val == null) return Res("LabelPrimary");
+            return IsBreached(val, min, max) ? Res("AccentRed") : Res("LabelPrimary");
         }
 
         private bool IsBreached(double? val, double? min, double? max)
@@ -3193,14 +2853,10 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         private (double? expT1, double? expT2) GetExpectedTemps(List<TempSchedulePoint>? schedule)
             => TempScheduleMath.Expected(MainWindow.CurrentGlobalTnv, schedule);
 
-        /// <summary>Настроенный用户对 точки допуск; для старых настроек — 3.0 °C.</summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public double ScheduleTolerance =>
             Math.Max(0, Limits?.ScheduleTolerance ?? TempScheduleMath.DefaultTolerance);
 
-        // ---------- Заданные значения по температурному графику (для крупных плиток одиночного режима) ----------
-
-        /// <summary>Показывать цель только когда график задан и известна температура наружного воздуха.</summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public bool HasScheduleTarget =>
             Limits?.Schedule != null && Limits.Schedule.Count > 0 && MainWindow.CurrentGlobalTnv.HasValue;
@@ -3247,68 +2903,88 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             return exp.HasValue && Math.Abs(t2.Value - exp.Value) > ScheduleTolerance;
         }
 
-        private Brush GetDashBg(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false)
+        private bool ParamBreached(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false) =>
+            IsBreached(val, min, max) ||
+            (isT1 && IsT1ScheduleBreached(T1, Limits?.Schedule)) ||
+            (isT2 && IsT2ScheduleBreached(T2, Limits?.Schedule));
+
+        private Brush GetDashBg(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false) =>
+            ParamBreached(val, min, max, isT1, isT2) ? Res("StatusErrBg") : Res("CardBackground");
+
+        private Brush GetDashBorder(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false)
         {
-            if (IsBreached(val, min, max) || 
-               (isT1 && IsT1ScheduleBreached(T1, Limits?.Schedule)) || 
-               (isT2 && IsT2ScheduleBreached(T2, Limits?.Schedule))) 
-                return (Brush)Application.Current.MainWindow.FindResource("AccentRed");
-                
-            if (!IsDone) return (Brush)Application.Current.MainWindow.FindResource("AccentGray");
-            if (HasError) return (Brush)Application.Current.MainWindow.FindResource("AccentOrange");
-            return (Brush)Application.Current.MainWindow.FindResource("AccentGreen");
+            if (ParamBreached(val, min, max, isT1, isT2)) return Res("StatusErrBorder");
+            if (!IsDone) return Res("BorderBrushColor");
+            if (HasError) return Res("StatusWarnBorder");
+            return Res("BorderBrushColor");
         }
 
-        [System.Text.Json.Serialization.JsonIgnore] public Brush T1DashBg => GetDashBg(T1, Limits?.T1Min, Limits?.T1Max, true, false);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush T2DashBg => GetDashBg(T2, Limits?.T2Min, Limits?.T2Max, false, true);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush P1DashBg => GetDashBg(P1, Limits?.P1Min, Limits?.P1Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush P2DashBg => GetDashBg(P2, Limits?.P2Min, Limits?.P2Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush V1DashBg => GetDashBg(V1, Limits?.V1Min, Limits?.V1Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush V2DashBg => GetDashBg(V2, Limits?.V2Min, Limits?.V2Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush M1DashBg => GetDashBg(M1, Limits?.M1Min, Limits?.M1Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush M2DashBg => GetDashBg(M2, Limits?.M2Min, Limits?.M2Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush QDashBg => GetDashBg(Q, Limits?.QMin, Limits?.QMax);
-
-        private Brush DashFore(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false) => 
-            (IsBreached(val, min, max) || (isT1 && IsT1ScheduleBreached(T1, Limits?.Schedule)) || (isT2 && IsT2ScheduleBreached(T2, Limits?.Schedule))) 
-            ? Brushes.Yellow : Brushes.White;
-
-        [System.Text.Json.Serialization.JsonIgnore] public Brush T1DashForeground => DashFore(T1, Limits?.T1Min, Limits?.T1Max, true, false);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush T2DashForeground => DashFore(T2, Limits?.T2Min, Limits?.T2Max, false, true);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush P1DashForeground => DashFore(P1, Limits?.P1Min, Limits?.P1Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush P2DashForeground => DashFore(P2, Limits?.P2Min, Limits?.P2Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush V1DashForeground => DashFore(V1, Limits?.V1Min, Limits?.V1Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush V2DashForeground => DashFore(V2, Limits?.V2Min, Limits?.V2Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush M1DashForeground => DashFore(M1, Limits?.M1Min, Limits?.M1Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush M2DashForeground => DashFore(M2, Limits?.M2Min, Limits?.M2Max);
-        [System.Text.Json.Serialization.JsonIgnore] public Brush QDashForeground => DashFore(Q, Limits?.QMin, Limits?.QMax);
-
-        [System.Text.Json.Serialization.JsonIgnore]
-        public Brush SingleStatusColor
+        private Brush GetStatusDot(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false)
         {
-            get
-            {
-                if (HasBreach) return (Brush)Application.Current.MainWindow.FindResource("AccentRed");
-                if (HasError) return (Brush)Application.Current.MainWindow.FindResource("AccentOrange");
-                if (!IsDone) return (Brush)Application.Current.MainWindow.FindResource("AccentGray");
-                return (Brush)Application.Current.MainWindow.FindResource("AccentGreen");
-            }
+            if (ParamBreached(val, min, max, isT1, isT2)) return Res("AccentRed");
+            if (!IsDone) return Res("AccentGray");
+            if (HasError) return Res("AccentOrange");
+            return Res("AccentGreen");
         }
-        
-        [System.Text.Json.Serialization.JsonIgnore]
-        public Brush PointTitleColor
-        {
-            get
-            {
-                if (HasBreach) return (Brush)Application.Current.MainWindow.FindResource("AccentRed");
-                if (HasError) return (Brush)Application.Current.MainWindow.FindResource("AccentOrange");
-                if (!IsDone) return (Brush)Application.Current.MainWindow.FindResource("AccentGray");
-                return Brushes.White;
-            }
-        }
-        
-        [System.Text.Json.Serialization.JsonIgnore]
-        public Brush TileForeground => Brushes.White;
+
+        private Brush DashFore(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false) =>
+            ParamBreached(val, min, max, isT1, isT2) ? Res("AccentRed") : Res("LabelPrimary");
+
+        [JsonIgnore] public Brush T1DashBg => GetDashBg(T1, Limits?.T1Min, Limits?.T1Max, true, false);
+        [JsonIgnore] public Brush T2DashBg => GetDashBg(T2, Limits?.T2Min, Limits?.T2Max, false, true);
+        [JsonIgnore] public Brush P1DashBg => GetDashBg(P1, Limits?.P1Min, Limits?.P1Max);
+        [JsonIgnore] public Brush P2DashBg => GetDashBg(P2, Limits?.P2Min, Limits?.P2Max);
+        [JsonIgnore] public Brush V1DashBg => GetDashBg(V1, Limits?.V1Min, Limits?.V1Max);
+        [JsonIgnore] public Brush V2DashBg => GetDashBg(V2, Limits?.V2Min, Limits?.V2Max);
+        [JsonIgnore] public Brush M1DashBg => GetDashBg(M1, Limits?.M1Min, Limits?.M1Max);
+        [JsonIgnore] public Brush M2DashBg => GetDashBg(M2, Limits?.M2Min, Limits?.M2Max);
+        [JsonIgnore] public Brush QDashBg => GetDashBg(Q, Limits?.QMin, Limits?.QMax);
+
+        [JsonIgnore] public Brush T1DashBorder => GetDashBorder(T1, Limits?.T1Min, Limits?.T1Max, true, false);
+        [JsonIgnore] public Brush T2DashBorder => GetDashBorder(T2, Limits?.T2Min, Limits?.T2Max, false, true);
+        [JsonIgnore] public Brush P1DashBorder => GetDashBorder(P1, Limits?.P1Min, Limits?.P1Max);
+        [JsonIgnore] public Brush P2DashBorder => GetDashBorder(P2, Limits?.P2Min, Limits?.P2Max);
+        [JsonIgnore] public Brush V1DashBorder => GetDashBorder(V1, Limits?.V1Min, Limits?.V1Max);
+        [JsonIgnore] public Brush V2DashBorder => GetDashBorder(V2, Limits?.V2Min, Limits?.V2Max);
+        [JsonIgnore] public Brush M1DashBorder => GetDashBorder(M1, Limits?.M1Min, Limits?.M1Max);
+        [JsonIgnore] public Brush M2DashBorder => GetDashBorder(M2, Limits?.M2Min, Limits?.M2Max);
+        [JsonIgnore] public Brush QDashBorder => GetDashBorder(Q, Limits?.QMin, Limits?.QMax);
+
+        [JsonIgnore] public Brush T1StatusDot => GetStatusDot(T1, Limits?.T1Min, Limits?.T1Max, true, false);
+        [JsonIgnore] public Brush T2StatusDot => GetStatusDot(T2, Limits?.T2Min, Limits?.T2Max, false, true);
+
+        [JsonIgnore] public Brush T1DashForeground => DashFore(T1, Limits?.T1Min, Limits?.T1Max, true, false);
+        [JsonIgnore] public Brush T2DashForeground => DashFore(T2, Limits?.T2Min, Limits?.T2Max, false, true);
+        [JsonIgnore] public Brush P1DashForeground => DashFore(P1, Limits?.P1Min, Limits?.P1Max);
+        [JsonIgnore] public Brush P2DashForeground => DashFore(P2, Limits?.P2Min, Limits?.P2Max);
+        [JsonIgnore] public Brush V1DashForeground => DashFore(V1, Limits?.V1Min, Limits?.V1Max);
+        [JsonIgnore] public Brush V2DashForeground => DashFore(V2, Limits?.V2Min, Limits?.V2Max);
+        [JsonIgnore] public Brush M1DashForeground => DashFore(M1, Limits?.M1Min, Limits?.M1Max);
+        [JsonIgnore] public Brush M2DashForeground => DashFore(M2, Limits?.M2Min, Limits?.M2Max);
+        [JsonIgnore] public Brush QDashForeground => DashFore(Q, Limits?.QMin, Limits?.QMax);
+
+        [JsonIgnore]
+        public Brush SingleStatusColor =>
+            HasBreach ? Res("AccentRed") : HasError ? Res("AccentOrange") : !IsDone ? Res("AccentGray") : Res("AccentGreen");
+
+        [JsonIgnore]
+        public Brush StatusBadgeBg =>
+            HasBreach ? Res("StatusErrBg") : HasError ? Res("StatusWarnBg") : !IsDone ? Res("StatusIdleBg") : Res("StatusOkBg");
+
+        [JsonIgnore]
+        public Brush StatusBadgeBorder =>
+            HasBreach ? Res("StatusErrBorder") : HasError ? Res("StatusWarnBorder") : !IsDone ? Res("BorderBrushColor") : Res("StatusOkBorder");
+
+        [JsonIgnore]
+        public Brush PointCardBorder =>
+            HasBreach ? Res("StatusErrBorder") : HasError ? Res("StatusWarnBorder") : Res("BorderBrushSubtle");
+
+        [JsonIgnore]
+        public Brush PointTitleColor =>
+            HasBreach ? Res("AccentRed") : HasError ? Res("AccentOrange") : Res("LabelPrimary");
+
+        [JsonIgnore]
+        public Brush TileForeground => Res("LabelPrimary");
 
         private int _id; public int Id { get => _id; set { _id = value; OnPropertyChanged(); } }
         private string _nodeTitle = string.Empty; public string NodeTitle { get => _nodeTitle; set { _nodeTitle = value; OnPropertyChanged(); } }
@@ -3316,10 +2992,10 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         private DateTime? _deviceTime; public DateTime? DeviceTime { get => _deviceTime; set { _deviceTime = value; OnPropertyChanged(); } }
         
         private double? _t1; public double? T1 { get => _t1; set { _t1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T1Color)); OnPropertyChanged(nameof(T1DashBg)); OnPropertyChanged(nameof(T1DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(DeltaT)); OnPropertyChanged(nameof(DeltaTColor)); OnPropertyChanged(nameof(DeltaTDashBg)); } }
-        [System.Text.Json.Serialization.JsonIgnore] public Brush T1Color => (IsBreached(T1, Limits?.T1Min, Limits?.T1Max) || IsT1ScheduleBreached(T1, Limits?.Schedule)) ? Brushes.Red : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black);
+        [System.Text.Json.Serialization.JsonIgnore] public Brush T1Color => (IsBreached(T1, Limits?.T1Min, Limits?.T1Max) || IsT1ScheduleBreached(T1, Limits?.Schedule)) ? Res("AccentRed") : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black);
         
         private double? _t2; public double? T2 { get => _t2; set { _t2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T2Color)); OnPropertyChanged(nameof(T2DashBg)); OnPropertyChanged(nameof(T2DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(DeltaT)); OnPropertyChanged(nameof(DeltaTColor)); OnPropertyChanged(nameof(DeltaTDashBg)); } }
-        [System.Text.Json.Serialization.JsonIgnore] public Brush T2Color => (IsBreached(T2, Limits?.T2Min, Limits?.T2Max) || IsT2ScheduleBreached(T2, Limits?.Schedule)) ? Brushes.Red : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black);
+        [System.Text.Json.Serialization.JsonIgnore] public Brush T2Color => (IsBreached(T2, Limits?.T2Min, Limits?.T2Max) || IsT2ScheduleBreached(T2, Limits?.Schedule)) ? Res("AccentRed") : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black);
         
         private double? _p1; public double? P1 { get => _p1; set { _p1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(P1Color)); OnPropertyChanged(nameof(P1DashBg)); OnPropertyChanged(nameof(P1DashForeground)); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(DeltaP)); OnPropertyChanged(nameof(DeltaPColor)); OnPropertyChanged(nameof(DeltaPDashBg)); } }
         [System.Text.Json.Serialization.JsonIgnore] public Brush P1Color => GetColor(P1, Limits?.P1Min, Limits?.P1Max);
@@ -3427,8 +3103,8 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         private readonly Func<string> _baseUrl;
         private readonly SemaphoreSlim _deviceSlots;   // одновременных «живых» опросов приборов
         private readonly SemaphoreSlim _httpSlots;     // одновременных лёгких GET
-        private readonly ConcurrentDictionary<string, int> _channelPendingCount = new();
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _channelLocks = new();
+        private readonly ConcurrentDictionary<string, int> _channelPendingCount = new();
         private readonly ConcurrentDictionary<int, Lazy<Task<PollUpdate>>> _inFlight = new();
         private readonly ConcurrentDictionary<int, PointSnapshot> _cache = new();
         private static readonly Random Rng = new();
@@ -3475,42 +3151,39 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         // ---------- ядро ----------
 
         private async Task<PollUpdate> RunAsync(PollTarget t, bool ignoreCache, CancellationToken ct)
-{
-    try
-    {
-        Publish(new PollUpdate(t.PointId, PollState.Queued, "В очереди", null));
-
-        if (!ignoreCache && _cache.TryGetValue(t.PointId, out var c) && c.Age(DateTime.UtcNow) <= CacheTtl)
-            return Publish(CachedUpdate(t.PointId, c));
-
-        // +1 к количеству точек в очереди для этого объекта
-        _channelPendingCount.AddOrUpdate(t.NodeKey, 1, (_, count) => count + 1);
-
-        var chanLock = _channelLocks.GetOrAdd(t.NodeKey, _ => new SemaphoreSlim(1, 1));
-        await chanLock.WaitAsync(ct).ConfigureAwait(false);
-        try
         {
-            await _deviceSlots.WaitAsync(ct).ConfigureAwait(false);
-            try { return await PollDeviceAsync(t, ignoreCache, ct).ConfigureAwait(false); }
-            finally { _deviceSlots.Release(); }
-        }
-        finally 
-        { 
-            // -1 из очереди. Если остался 0 — мы закончили с этим объектом
-            int pending = _channelPendingCount.AddOrUpdate(t.NodeKey, 0, (_, count) => count - 1);
-            if (pending == 0)
+            try
             {
-                Log.Add(t.PointId, PollState.Ok, "Опрос объекта завершен, освобождаем канал", "Отключение");
-                // Отправляем команду отключения без ожидания (Fire-and-forget)
-                _ = DisconnectAsync(t.PointId, CancellationToken.None);
+                Publish(new PollUpdate(t.PointId, PollState.Queued, "В очереди", null));
+
+                if (!ignoreCache && _cache.TryGetValue(t.PointId, out var c) && c.Age(DateTime.UtcNow) <= CacheTtl)
+                    return Publish(CachedUpdate(t.PointId, c));
+
+                _channelPendingCount.AddOrUpdate(t.NodeKey, 1, (_, count) => count + 1);
+                var chanLock = _channelLocks.GetOrAdd(t.NodeKey, _ => new SemaphoreSlim(1, 1));
+                await chanLock.WaitAsync(ct).ConfigureAwait(false);        // 1 прибор/канал за раз
+                try
+                {
+                    await _deviceSlots.WaitAsync(ct).ConfigureAwait(false); // глобальный потолок
+                    try { return await PollDeviceAsync(t, ignoreCache, ct).ConfigureAwait(false); }
+                    finally { _deviceSlots.Release(); }
+                }
+                finally
+                {
+                    int pending = _channelPendingCount.AddOrUpdate(t.NodeKey, 0, (_, count) => Math.Max(0, count - 1));
+                    if (pending == 0)
+                    {
+                        Log.Add(t.PointId, PollState.Ok, "Опрос объекта завершён, освобождаем канал", "Отключение");
+                        _ = DisconnectAsync(t.PointId, CancellationToken.None);
+                    }
+                    chanLock.Release();
+                }
             }
-            chanLock.Release(); 
+            catch (OperationCanceledException) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: отменено", null)); }
+            catch (Exception ex) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: " + ex.Message, null)); }
+            finally { _inFlight.TryRemove(t.PointId, out _); }
         }
-    }
-    catch (OperationCanceledException) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: отменено", null)); }
-    catch (Exception ex) { return Publish(new PollUpdate(t.PointId, PollState.Error, "Ошибка: " + ex.Message, null)); }
-    finally { _inFlight.TryRemove(t.PointId, out _); }
-}
+
         private async Task<PollUpdate> PollDeviceAsync(PollTarget t, bool ignoreCache, CancellationToken ct)
         {
             // Повторная проверка: пока стояли в очереди, мог опросить кто-то другой / ЛЭРС сам.
@@ -3564,17 +3237,18 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
 
                 Log.Add(t.PointId, PollState.Polling, "Проверка снятых данных из базы ЛЭРС", "Снятие данных");
                 var snap = await GetLastAsync(t.PointId, ct);
-                
-                // ИСПРАВЛЕНИЕ ЗАВИСАНИЯ: завершаем опрос, если изменилось ВРЕМЯ или сами ДАННЫЕ (RawJson)
-                if (snap?.DeviceTime != null && (before == null || snap.DeviceTime > before || snap.RawJson != first?.RawJson))
+                if (snap?.DeviceTime != null && (before == null || snap.DeviceTime > before))
                 {
                     var fresh = new PointSnapshot { PointId = snap.PointId, DeviceTime = snap.DeviceTime, RawJson = snap.RawJson,
                                                     ReadAtUtc = snap.ReadAtUtc, PolledOkAtUtc = DateTime.UtcNow };
                     _cache[t.PointId] = fresh;
 
+
+
                     return Publish(new PollUpdate(t.PointId, PollState.Ok, $"Опрошено {Fmt(fresh)}", fresh));
                 }
             }
+
 
             return Publish(new PollUpdate(t.PointId, PollState.Error, $"Таймаут: {lastError}", first));
         }
@@ -3628,6 +3302,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return null; } // таймаут запроса
             catch (HttpRequestException) { return null; }
+            catch (IOException) { return null; }
             finally { _httpSlots.Release(); }
         }
 
@@ -3647,6 +3322,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return (false, 0, "Сбой сети (таймаут запроса)"); }
             catch (HttpRequestException) { return (false, 0, "Сбой сети"); }
+            catch (IOException) { return (false, 0, "Сбой сети (разрыв соединения)"); }
             finally { _httpSlots.Release(); }
         }
 
@@ -4100,8 +3776,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         /// <summary>
         /// Чтение суммарного объёма V1 за период через LERS REST API.
         /// Эндпоинт: /Data/MeasurePoints/{id}/Consumption/{start}/{end}
-        /// Дата в формате yyyy-MM-dd. Тип архива задаётся параметром dataTypes=Hour|Day
-        /// (найден в сгенерированном API-клиенте ЛЭРС); без него сервер отдаёт только суточные записи.
+        /// Дата в формате yyyy-MM-dd (или yyyy-MM-ddTHH:mm:ss для часового).
         /// </summary>
         /// <param name="hourFilterFrom">Если задано — фильтровать почасовые записи по времени (от).</param>
         /// <param name="hourFilterTo">Если задано — фильтровать почасовые записи по времени (до, эксклюзивно).</param>
@@ -4114,30 +3789,34 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
                 string kind = hourly ? "Hour" : "Day";
-                string arrayName = hourly ? "hourConsumption" : "dayConsumption";
 
-                // Без dataTypes сервер отдаёт только суточный архив, поэтому
-                // почасовые суммы (подпитка, отчёты) считались неверно.
-                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}?dataTypes={kind}";
+                // Основной формат: path-based (документированный в LERS REST API)
+                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}";
 
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 using var res = await _http.SendAsync(req, ct);
 
                 if (res.IsSuccessStatusCode)
                 {
-                    return await ParseLersConsumptionArray(res, hourFilterFrom, hourFilterTo, arrayName);
+                    return await ParseLersConsumptionArray(res, hourFilterFrom, hourFilterTo);
                 }
 
-                // Фолбэк для старых серверов без поддержки dataTypes.
-                // Для часового архива он НЕ применяется: нетипизированный ответ
-                // содержит суточные записи и дал бы заведомо ложную сумму.
-                if (!hourly)
+                // Фолбэк 1: query-based с dataKind
+                string altUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?start={fromDate}&end={toDate}&dataKind={kind}";
+                using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
+                using var altRes = await _http.SendAsync(altReq, ct);
+                if (altRes.IsSuccessStatusCode)
                 {
-                    string altUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}";
-                    using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
-                    using var altRes = await _http.SendAsync(altReq, ct);
-                    if (altRes.IsSuccessStatusCode)
-                        return await ParseLersConsumptionArray(altRes, hourFilterFrom, hourFilterTo, arrayName);
+                    return await ParseLersConsumptionArray(altRes, hourFilterFrom, hourFilterTo);
+                }
+
+                // Фолбэк 2: startDate/endDate (старый формат)
+                string altUrl2 = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?startDate={fromDate}&endDate={toDate}&dataKind={kind}";
+                using var altReq2 = new HttpRequestMessage(HttpMethod.Get, altUrl2);
+                using var altRes2 = await _http.SendAsync(altReq2, ct);
+                if (altRes2.IsSuccessStatusCode)
+                {
+                    return await ParseLersConsumptionArray(altRes2, hourFilterFrom, hourFilterTo);
                 }
 
                 return null;
@@ -4158,8 +3837,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         /// оставляя только те, что попадают в указанный часовой интервал.
         /// </summary>
         private static async Task<double?> ParseLersConsumptionArray(HttpResponseMessage response,
-            DateTime? hourFilterFrom = null, DateTime? hourFilterTo = null,
-            string? preferredArray = null)
+            DateTime? hourFilterFrom = null, DateTime? hourFilterTo = null)
         {
             var json = await response.Content.ReadAsStringAsync();
             if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null" || json.Trim() == "[]") return null;
@@ -4178,28 +3856,13 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             if (root.ValueKind != JsonValueKind.Array)
             {
                 bool found = false;
-
-                // Берём именно запрошенный архив, а не «первый попавшийся» массив.
-                if (!string.IsNullOrEmpty(preferredArray) &&
-                    root.TryGetProperty(preferredArray, out var wanted) &&
-                    wanted.ValueKind == JsonValueKind.Array && wanted.GetArrayLength() > 0)
+                foreach (var prop in root.EnumerateObject())
                 {
-                    array = wanted;
-                    found = true;
-                }
-
-                if (!found)
-                {
-                    foreach (var prop in root.EnumerateObject())
+                    if (prop.Value.ValueKind == JsonValueKind.Array && prop.Value.GetArrayLength() > 0)
                     {
-                        // Метаданные единиц измерения — не данные архива.
-                        if (string.Equals(prop.Name, "dataParametersUnit", StringComparison.OrdinalIgnoreCase)) continue;
-                        if (prop.Value.ValueKind == JsonValueKind.Array && prop.Value.GetArrayLength() > 0)
-                        {
-                            array = prop.Value;
-                            found = true;
-                            break;
-                        }
+                        array = prop.Value;
+                        found = true;
+                        break;
                     }
                 }
                 if (!found) return null;
@@ -4411,12 +4074,17 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         public bool HasBreach => ReportBreach || DayBreach || TodayBreach || HourBreach;
 
         private static Brush Res(string k) => (Brush)Application.Current.MainWindow.FindResource(k);
-        private Brush Bg(bool breach) => breach ? Res("AccentRed") : (IsDone ? (HasError ? Res("AccentOrange") : Res("AccentGreen")) : Res("AccentGray"));
+        private Brush Bg(bool breach) => breach ? Res("StatusErrBg") : (IsDone ? (HasError ? Res("StatusWarnBg") : Res("CardBackground")) : Res("StatusIdleBg"));
+        private Brush Bd(bool breach) => breach ? Res("StatusErrBorder") : (IsDone ? (HasError ? Res("StatusWarnBorder") : Res("BorderBrushColor")) : Res("BorderBrushSubtle"));
+        private Brush Fg(bool breach) => breach ? Res("AccentRed") : Res("LabelPrimary");
+
         public Brush ReportBg => Bg(ReportBreach); public Brush DayBg => Bg(DayBreach);
         public Brush TodayBg => Bg(TodayBreach);   public Brush HourBg => Bg(HourBreach);
-        public Brush ReportFg => ReportBreach ? Brushes.Yellow : Brushes.White; public Brush DayFg => DayBreach ? Brushes.Yellow : Brushes.White;
-        public Brush TodayFg => TodayBreach ? Brushes.Yellow : Brushes.White;   public Brush HourFg => HourBreach ? Brushes.Yellow : Brushes.White;
-        public Brush PointTitleColor => HasBreach ? Res("AccentRed") : HasError ? Res("AccentOrange") : !IsDone ? Res("AccentGray") : Brushes.White;
+        public Brush ReportBorder => Bd(ReportBreach); public Brush DayBorder => Bd(DayBreach);
+        public Brush TodayBorder => Bd(TodayBreach);   public Brush HourBorder => Bd(HourBreach);
+        public Brush ReportFg => Fg(ReportBreach); public Brush DayFg => Fg(DayBreach);
+        public Brush TodayFg => Fg(TodayBreach);   public Brush HourFg => Fg(HourBreach);
+        public Brush PointTitleColor => HasBreach ? Res("AccentRed") : HasError ? Res("AccentOrange") : Res("LabelPrimary");
 
         public void RefreshColors() => On(null);
     }
@@ -4428,11 +4096,33 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         public ObservableCollection<PodpitkaPointViewModel> Points { get; } = new();
         public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
 
-        public Brush TileBackground
+        private static Brush R(string k) => (Brush)Application.Current.MainWindow.FindResource(k);
+
+        public Brush TileBackground => R("CardBackground");
+        public Brush TileBorderBrush
         {
             get
             {
-                Brush R(string k) => (Brush)Application.Current.MainWindow.FindResource(k);
+                if (Points.Any(p => !p.IsDone)) return R("BorderBrushColor");
+                if (Points.Any(p => p.HasBreach)) return R("StatusErrBorder");
+                if (Points.Any(p => p.HasError)) return R("StatusWarnBorder");
+                return R("StatusOkBorder");
+            }
+        }
+        public Brush StatusBadgeBg
+        {
+            get
+            {
+                if (Points.Any(p => !p.IsDone)) return R("StatusIdleBg");
+                if (Points.Any(p => p.HasBreach)) return R("StatusErrBg");
+                if (Points.Any(p => p.HasError)) return R("StatusWarnBg");
+                return R("StatusOkBg");
+            }
+        }
+        public Brush StatusAccent
+        {
+            get
+            {
                 if (Points.Any(p => !p.IsDone)) return R("AccentGray");
                 if (Points.Any(p => p.HasBreach)) return R("AccentRed");
                 if (Points.Any(p => p.HasError)) return R("AccentOrange");
@@ -4441,7 +4131,7 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         }
         public string GeneralStatus =>
             Points.Any(p => !p.IsDone) ? $"Опрошено {Points.Count(p => p.IsDone)} из {Points.Count}" :
-            Points.FirstOrDefault(p => p.HasError)?.Message ?? "Опрошено успешно";
+            Points.FirstOrDefault(p => p.HasError)?.Message ?? (Points.Any(p => p.HasBreach) ? "Превышение допуска" : "В норме");
     }
 
     // ==================== Poll Details Window ====================
@@ -4454,6 +4144,8 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
         private readonly PollLogStore _logStore;
         private readonly ScrollViewer _scrollViewer;
         private readonly StackPanel _logPanel;
+        private readonly Border _troubleBorder;
+        private readonly TextBlock _troubleText;
 
         public PollDetailsWindow(int pointId, string pointTitle, PollLogStore logStore)
         {
@@ -4462,84 +4154,109 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             _logStore = logStore;
 
             Title = $"Ход опроса — {pointTitle}";
-            Width = 560;
-            Height = 500;
-            MinWidth = 380;
-            MinHeight = 260;
+            Width = 600;
+            Height = 520;
+            MinWidth = 420;
+            MinHeight = 320;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ShowInTaskbar = false;
             ResizeMode = ResizeMode.CanResize;
 
-            // Try to get theme brushes, fallback to safe defaults
-            var bgBrush = TryFindRes("SystemBackground") ?? TryFindRes("CardBackground") ?? Brushes.White;
-            var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.Black;
+            var bgBrush = TryFindRes("SystemBackground") ?? Brushes.Black;
+            var cardBrush = TryFindRes("CardBackground") ?? Brushes.DimGray;
+            var borderBrush = TryFindRes("BorderBrushColor") ?? Brushes.Gray;
+            var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.White;
 
             Background = bgBrush;
 
-            var grid = new Grid { Margin = new Thickness(10) };
+            var grid = new Grid { Margin = new Thickness(14) };
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            // Header
             var header = new TextBlock
             {
                 Text = $"Точка: {pointTitle} (ID: {pointId})",
                 FontSize = 14,
-                FontWeight = FontWeights.Bold,
+                FontWeight = FontWeights.SemiBold,
                 Foreground = fgBrush,
-                Margin = new Thickness(0, 0, 0, 8)
+                Margin = new Thickness(2, 0, 0, 10)
             };
             Grid.SetRow(header, 0);
             grid.Children.Add(header);
 
-            // Scrollable log panel
             _logPanel = new StackPanel { Orientation = Orientation.Vertical };
             _scrollViewer = new ScrollViewer
             {
                 Content = _logPanel,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Background = bgBrush,
-                Padding = new Thickness(4),
-                BorderThickness = new Thickness(1),
-                BorderBrush = TryFindRes("AccentGray") ?? Brushes.LightGray,
+                Padding = new Thickness(8)
             };
-            Grid.SetRow(_scrollViewer, 1);
-            grid.Children.Add(_scrollViewer);
+            var logContainer = new Border
+            {
+                Background = cardBrush,
+                BorderBrush = borderBrush,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(12),
+                Child = _scrollViewer
+            };
+            Grid.SetRow(logContainer, 1);
+            grid.Children.Add(logContainer);
 
-            // Buttons panel
+            _troubleText = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                FontSize = 12.5,
+                Foreground = TryFindRes("AccentOrange") ?? Brushes.Orange
+            };
+            _troubleBorder = new Border
+            {
+                Background = TryFindRes("StatusWarnBg") ?? Brushes.LightYellow,
+                BorderBrush = TryFindRes("StatusWarnBorder") ?? Brushes.Orange,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(12, 10, 12, 10),
+                Margin = new Thickness(0, 10, 0, 0),
+                Visibility = Visibility.Collapsed,
+                Child = _troubleText
+            };
+            Grid.SetRow(_troubleBorder, 2);
+            grid.Children.Add(_troubleBorder);
+
             var btnPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
                 HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 8, 0, 0)
+                Margin = new Thickness(0, 12, 0, 0)
             };
 
-            var btnRefresh = new Button { Content = "Обновить", Margin = new Thickness(0, 0, 6, 0), Padding = new Thickness(12, 4, 12, 4) };
+            var secStyle = Application.Current?.MainWindow?.TryFindResource("BentoSecondaryButton") as Style;
+            var priStyle = Application.Current?.MainWindow?.TryFindResource("ApplePrimaryButton") as Style;
+
+            var btnRefresh = new Button { Content = "Обновить", Margin = new Thickness(0, 0, 8, 0), Style = secStyle };
             btnRefresh.Click += (s, e) => RefreshLog();
             btnPanel.Children.Add(btnRefresh);
 
-            var btnClear = new Button { Content = "Очистить", Margin = new Thickness(0, 0, 6, 0), Padding = new Thickness(12, 4, 12, 4) };
+            var btnClear = new Button { Content = "Очистить", Margin = new Thickness(0, 0, 8, 0), Style = secStyle };
             btnClear.Click += (s, e) => { _logStore.Clear(_pointId); RefreshLog(); };
             btnPanel.Children.Add(btnClear);
 
-            var btnClose = new Button { Content = "Закрыть", Padding = new Thickness(12, 4, 12, 4), IsCancel = true };
+            var btnClose = new Button { Content = "Закрыть", IsCancel = true, Style = priStyle };
             btnClose.Click += (s, e) => Close();
             btnPanel.Children.Add(btnClose);
 
-            Grid.SetRow(btnPanel, 2);
+            Grid.SetRow(btnPanel, 3);
             grid.Children.Add(btnPanel);
 
             Content = grid;
 
-            // Auto-refresh timer
             _timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (s, e) => RefreshLog();
             _timer.Start();
 
             Closed += (s, e) => _timer.Stop();
-
             Loaded += (s, e) => RefreshLog();
         }
 
@@ -4554,61 +4271,55 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
             return null;
         }
 
-        private static Brush StateBrush(PollState state)
+        private static Brush StateBrush(PollState state) => state switch
         {
-            return state switch
-            {
-                PollState.Ok or PollState.OkCached => TryFindRes("AccentGreen") ?? Brushes.Green,
-                PollState.Error => TryFindRes("AccentRed") ?? Brushes.Red,
-                PollState.Polling => TryFindRes("AccentOrange") ?? Brushes.Orange,
-                PollState.Queued => TryFindRes("AccentGray") ?? Brushes.Gray,
-                _ => TryFindRes("AccentGray") ?? Brushes.Gray,
-            };
-        }
+            PollState.Ok or PollState.OkCached => TryFindRes("AccentGreen") ?? Brushes.Green,
+            PollState.Error => TryFindRes("AccentRed") ?? Brushes.Red,
+            PollState.Polling => TryFindRes("AccentBlue") ?? Brushes.DeepSkyBlue,
+            _ => TryFindRes("AccentGray") ?? Brushes.Gray,
+        };
 
         private void RefreshLog()
         {
             var entries = _logStore.Get(_pointId);
             _logPanel.Children.Clear();
 
-            var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.Black;
+            var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.White;
 
             if (entries.Count == 0)
             {
                 _logPanel.Children.Add(new TextBlock
                 {
-                    Text = "Записей нет. Запустите опрос точки.",
-                    FontSize = 12,
+                    Text = "Записей нет. Ожидание запуска опроса...",
+                    FontSize = 12.5,
                     Foreground = fgBrush,
                     Margin = new Thickness(4),
                     FontStyle = FontStyles.Italic,
                     Opacity = 0.6
                 });
+                _troubleBorder.Visibility = Visibility.Collapsed;
                 return;
             }
 
             foreach (var entry in entries)
             {
-                // Each entry: a horizontal row with colored dot + text
                 var row = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(2),
+                    Margin = new Thickness(2, 3, 2, 3),
                 };
 
-                // Colored dot (small ellipse via Border)
                 var dot = new Border
                 {
-                    Width = 8,
-                    Height = 8,
-                    CornerRadius = new CornerRadius(4),
+                    Width = 7,
+                    Height = 7,
+                    CornerRadius = new CornerRadius(3.5),
                     Background = StateBrush(entry.State),
-                    Margin = new Thickness(0, 4, 6, 0),
+                    Margin = new Thickness(0, 5, 8, 0),
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 row.Children.Add(dot);
 
-                // Text
                 var text = new TextBlock
                 {
                     Text = $"{entry.Timestamp:HH:mm:ss}  [{entry.Phase}]  {entry.Message}",
@@ -4619,12 +4330,35 @@ private void UpdatePointValues(PointResultViewModel vm, JsonElement root, PointS
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 row.Children.Add(text);
-
                 _logPanel.Children.Add(row);
             }
 
-            // Auto-scroll to bottom
             _scrollViewer.ScrollToBottom();
+
+            var lastEntry = entries.LastOrDefault();
+            if (lastEntry != null && lastEntry.State == PollState.Error)
+            {
+                _troubleBorder.Visibility = Visibility.Visible;
+                _troubleText.Text = GetSmartTroubleshootingTip(lastEntry.Message);
+            }
+            else
+            {
+                _troubleBorder.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private static string GetSmartTroubleshootingTip(string errorMessage)
+        {
+            var e = errorMessage.ToLowerInvariant();
+            if (e.Contains("10061") || e.Contains("отверг") || e.Contains("connection refused"))
+                return "💡 Что делать: Модем на объекте временно занят (сбрасывает прошлую сессию или занят другим ПО). Программа автоматически переподключится через минуту.";
+            if (e.Contains("10053") || e.Contains("10054") || e.Contains("разорвал"))
+                return "💡 Что делать: Удалённый модем или провайдер разорвал соединение. Если повторяется подряд — перезагрузите модем и вычислитель по питанию.";
+            if (e.Contains("нет ответа") || e.Contains("таймаут") || e.Contains("timeout"))
+                return "💡 Что делать: Прибор не отвечает. Проверьте питание модема и вычислителя, уровень связи и линию RS-232/RS-485.";
+            if (e.Contains("занят"))
+                return "💡 Что делать: Канал связи занят другим сеансом в ЛЭРС УЧЁТ. Дождитесь его завершения.";
+            return "💡 Что делать: Сбой опроса. Проверьте канал связи в ЛЭРС УЧЁТ или перезагрузите модем на объекте по питанию.";
         }
     }
 
