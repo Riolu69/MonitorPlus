@@ -22,7 +22,34 @@ using System.Windows.Threading;
 
 namespace LersMonitor
 {
-    public partial class App : Application { }
+    public partial class App : Application
+    {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            this.DispatcherUnhandledException += (s, ex) =>
+            {
+                try
+                {
+                    var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash.log");
+                    File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] UI Exception:\n{ex.Exception}\n\n");
+                }
+                catch { }
+                MessageBox.Show($"Ошибка интерфейса:\n\n{ex.Exception.Message}\n\n{ex.Exception.InnerException?.Message}\n\nПодробности сохранены в crash.log",
+                    "Ошибка LersMonitor", MessageBoxButton.OK, MessageBoxImage.Error);
+                ex.Handled = true;
+            };
+            AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
+            {
+                try
+                {
+                    var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash.log");
+                    File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Fatal Exception:\n{ex.ExceptionObject}\n\n");
+                }
+                catch { }
+            };
+        }
+    }
 
     public class DashSettings : INotifyPropertyChanged
     {
@@ -1229,6 +1256,8 @@ namespace LersMonitor
 
         private void BtnStartDashboard_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
             var selectedPoints = ListPointsDashboard.SelectedItems.Cast<MeasurePointItem>().ToList();
             if (!selectedPoints.Any()) { MessageBox.Show("Выберите точки учёта для дашборда."); return; }
 
@@ -1272,6 +1301,11 @@ namespace LersMonitor
                 TxtStatus.Text = $"Дашборд: следующий опрос через {remain:mm\\:ss}";
             };
             statusTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка запуска дашборда:\n\n{ex}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnStopDashboard_Click(object sender, RoutedEventArgs e)
