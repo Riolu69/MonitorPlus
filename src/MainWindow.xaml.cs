@@ -144,7 +144,7 @@ namespace LersMonitor
         
         private void InitPolling()
         {
-            _coord = new PollCoordinator(_http, () => _baseUrl, maxDevicePolls: 6, maxHttp: 16);
+            _coord = new PollCoordinator(_http, () => _baseUrl, maxDevicePolls: 20, maxHttp: 40);
             _coord.Updated += u => Dispatcher.InvokeAsync(() => ApplyUpdate(u));
             _volumes = new PodpitkaVolumeService(_http, () => _baseUrl);
         }
@@ -537,7 +537,7 @@ namespace LersMonitor
                 {
                     CmbTnvSource.SelectedItem = _allPoints.FirstOrDefault(p => p.Id == _settings.TnvSourcePointId.Value);
                 }
-                _globalTnvTimer.Start();
+                // Тнв опрашивается синхронно с опросом точек учёта (без отдельного 1-минутного таймера)
 
                 ApplyFilters(); ApplyFiltersDashboard(); ApplyFiltersPodpitka();
 
@@ -627,6 +627,7 @@ namespace LersMonitor
         {
             if (sender is Button btn && btn.Tag is PointResultViewModel vm && _dashboardCts != null)
             {
+                _ = UpdateGlobalTnvAsync();
                 await _coord.PollPointAsync(new PollTarget(vm.Id, vm.NodeTitle), ignoreCache: true, _dashboardCts.Token);
             }
         }
@@ -1229,6 +1230,7 @@ namespace LersMonitor
             {
                 BtnStartMonitor.IsEnabled = false; BtnCancelMonitor.Visibility = Visibility.Visible;
                 TxtStatus.Text = "Фиксация времени до опроса...";
+                _ = UpdateGlobalTnvAsync();
                 var targets = selectedPoints.Select(p => new PollTarget(p.Id, p.NodeTitle)).ToList();
                 await _coord.PollManyAsync(targets, false, token);
                 if (!token.IsCancellationRequested) TxtStatus.Text = "Мониторинг завершен.";
@@ -1336,7 +1338,16 @@ namespace LersMonitor
 
             _dashboardNodes.Clear(); _dashboardFlatPoints.Clear();
 
-            var groups = selectedPoints.GroupBy(p => p.NodeTitle);
+            var orderMap = (_settings.DashboardNodeOrder ?? new List<string>())
+                .Select((name, idx) => (name, idx))
+                .GroupBy(x => x.name)
+                .ToDictionary(g => g.Key, g => g.First().idx);
+
+            var groups = selectedPoints
+                .GroupBy(p => p.NodeTitle)
+                .OrderBy(g => orderMap.TryGetValue(g.Key, out var idx) ? idx : int.MaxValue)
+                .ThenBy(g => g.Key);
+
             foreach (var g in groups)
             {
                 var nodeVm = new DashboardNodeViewModel { NodeTitle = g.Key };
@@ -1356,7 +1367,7 @@ namespace LersMonitor
             IReadOnlyList<PollTarget> Targets() => _dashboardNodes.Where(n => !n.IsPaused)
                 .SelectMany(n => n.Points.Select(p => new PollTarget(p.Id, n.NodeTitle))).ToList();
 
-            _dashScheduler = new PollScheduler(_coord, Targets);
+            _dashScheduler = new PollScheduler(_coord, Targets, () => Dispatcher.InvokeAsync(() => _ = UpdateGlobalTnvAsync()));
             _ = _dashScheduler.RunAsync(TimeSpan.FromMinutes(intervalMin), token);
             
             var statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -1372,6 +1383,146 @@ namespace LersMonitor
             {
                 MessageBox.Show($"Ошибка запуска дашборда:\n\n{ex}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+
+        // --- Свободное перемещение карточек в Дашборде (Drag & Drop) ---
+
+        private Point _dragStartPoint;
+        private DashboardNodeViewModel? _draggedDashNode;
+        private UIElement? _draggedSingleTile;
+
+        private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
+        {
+            while (child != null)
+            {
+                if (child is T found) return found;
+                child = VisualTreeHelper.GetParent(child);
+            }
+            return null;
+        }
+
+        private void DashCard_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (FindVisualParent<Button>(e.OriginalSource as DependencyObject) != null)
+            {
+                _draggedDashNode = null;
+                return;
+            }
+            _dragStartPoint = e.GetPosition(null);
+            _draggedDashNode = (sender as FrameworkElement)?.DataContext as DashboardNodeViewModel;
+        }
+
+        private void DashCard_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed || _draggedDashNode == null) return;
+            var pos = e.GetPosition(null);
+            if (Math.Abs(pos.X - _dragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
+                Math.Abs(pos.Y - _dragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+
+            if (sender is FrameworkElement fe)
+            {
+                var node = _draggedDashNode;
+                _draggedDashNode = null;
+                fe.Opacity = 0.6;
+                try
+                {
+                    DragDrop.DoDragDrop(fe, new DataObject("DashNodeCard", node), DragDropEffects.Move);
+                }
+                finally
+                {
+                    fe.Opacity = 1.0;
+                }
+            }
+        }
+
+        private void DashCard_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("DashNodeCard"))
+            {
+                e.Effects = DragDropEffects.Move;
+                e.Handled = true;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        private void DashCard_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent("DashNodeCard")) return;
+            if (e.Data.GetData("DashNodeCard") is not DashboardNodeViewModel sourceNode) return;
+            if ((sender as FrameworkElement)?.DataContext is not DashboardNodeViewModel targetNode) return;
+            if (ReferenceEquals(sourceNode, targetNode)) return;
+
+            int oldIndex = _dashboardNodes.IndexOf(sourceNode);
+            int newIndex = _dashboardNodes.IndexOf(targetNode);
+            if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex) return;
+
+            _dashboardNodes.Move(oldIndex, newIndex);
+            _settings.DashboardNodeOrder = _dashboardNodes.Select(n => n.NodeTitle).ToList();
+            SaveUserSettings();
+            e.Handled = true;
+        }
+
+        private void SingleTile_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (FindVisualParent<Button>(e.OriginalSource as DependencyObject) != null)
+            {
+                _draggedSingleTile = null;
+                return;
+            }
+            _dragStartPoint = e.GetPosition(null);
+            _draggedSingleTile = sender as UIElement;
+        }
+
+        private void SingleTile_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed || _draggedSingleTile == null) return;
+            var pos = e.GetPosition(null);
+            if (Math.Abs(pos.X - _dragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
+                Math.Abs(pos.Y - _dragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+
+            var tile = _draggedSingleTile;
+            _draggedSingleTile = null;
+            tile.Opacity = 0.6;
+            try
+            {
+                DragDrop.DoDragDrop(tile, new DataObject("SingleKpiTile", tile), DragDropEffects.Move);
+            }
+            finally
+            {
+                tile.Opacity = 1.0;
+            }
+        }
+
+        private void SingleTile_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("SingleKpiTile"))
+            {
+                e.Effects = DragDropEffects.Move;
+                e.Handled = true;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        private void SingleTile_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent("SingleKpiTile")) return;
+            if (e.Data.GetData("SingleKpiTile") is not UIElement sourceTile) return;
+            if (sender is not UIElement targetTile || ReferenceEquals(sourceTile, targetTile)) return;
+
+            int oldIndex = SinglePointCardsPanel.Children.IndexOf(sourceTile);
+            int newIndex = SinglePointCardsPanel.Children.IndexOf(targetTile);
+            if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex) return;
+
+            SinglePointCardsPanel.Children.RemoveAt(oldIndex);
+            SinglePointCardsPanel.Children.Insert(newIndex, sourceTile);
+            e.Handled = true;
         }
 
         private void BtnStopDashboard_Click(object sender, RoutedEventArgs e)
@@ -1634,10 +1785,13 @@ namespace LersMonitor
             TabSingle.Visibility = _settings.HideTrend ? Visibility.Collapsed : Visibility.Visible;
             TabDashboard.Visibility = _settings.HideDashboard ? Visibility.Collapsed : Visibility.Visible;
             TabPodpitka.Visibility = _settings.HidePodpitka ? Visibility.Collapsed : Visibility.Visible;
+            TabArchive.Visibility = _settings.ExperimentalArchive ? Visibility.Visible : Visibility.Collapsed;
+
             if (TabAll.IsChecked == true && _settings.HideGeneral) SwitchToFirstVisibleTab();
             else if (TabSingle.IsChecked == true && _settings.HideTrend) SwitchToFirstVisibleTab();
             else if (TabDashboard.IsChecked == true && _settings.HideDashboard) SwitchToFirstVisibleTab();
             else if (TabPodpitka.IsChecked == true && _settings.HidePodpitka) SwitchToFirstVisibleTab();
+            else if (TabArchive.IsChecked == true && !_settings.ExperimentalArchive) SwitchToFirstVisibleTab();
         }
 
         private void SwitchToFirstVisibleTab()
@@ -1646,6 +1800,7 @@ namespace LersMonitor
             else if (!_settings.HideTrend) TabSingle.IsChecked = true;
             else if (!_settings.HideDashboard) TabDashboard.IsChecked = true;
             else if (!_settings.HidePodpitka) TabPodpitka.IsChecked = true;
+            else if (_settings.ExperimentalArchive) TabArchive.IsChecked = true;
         }
 
         private void ExperimentalToggle_Click(object sender, RoutedEventArgs e)
@@ -1654,6 +1809,7 @@ namespace LersMonitor
             _settings.ExperimentalArchive = ChkExperimentalArchive.IsChecked == true;
             _settings.ExperimentalReportPeriod = ChkExperimentalReportPeriod.IsChecked == true;
             PanelReportPeriodSettings.Visibility = _settings.ExperimentalReportPeriod ? Visibility.Visible : Visibility.Collapsed;
+            ApplySectionVisibility();
             SaveUserSettings();
         }
 
@@ -2841,6 +2997,7 @@ namespace LersMonitor
         public bool ExperimentalReportPeriod { get; set; } = false;
         public int ReportPeriodStartDay { get; set; } = 25;
         public int ReportPeriodEndDay { get; set; } = 24;
+        public List<string> DashboardNodeOrder { get; set; } = new();
     }
 
     public class DashboardNodeViewModel : INotifyPropertyChanged
@@ -3555,13 +3712,20 @@ namespace LersMonitor
     {
         private readonly PollCoordinator _coord;
         private readonly Func<IReadOnlyList<PollTarget>> _targets;   // только НЕ приостановленные
+        private readonly Action? _onCycleStart;
         public DateTime NextRunLocal { get; private set; }
 
-        public PollScheduler(PollCoordinator coord, Func<IReadOnlyList<PollTarget>> targets) { _coord = coord; _targets = targets; }
+        public PollScheduler(PollCoordinator coord, Func<IReadOnlyList<PollTarget>> targets, Action? onCycleStart = null)
+        {
+            _coord = coord;
+            _targets = targets;
+            _onCycleStart = onCycleStart;
+        }
 
         public async Task RunAsync(TimeSpan interval, CancellationToken ct)
         {
             using var timer = new PeriodicTimer(interval);
+            _onCycleStart?.Invoke();
             _ = _coord.PollManyAsync(_targets(), false, ct);               // первый цикл сразу (с учётом кэша)
             NextRunLocal = DateTime.Now + interval;
             try
@@ -3569,6 +3733,7 @@ namespace LersMonitor
                 while (await timer.WaitForNextTickAsync(ct))
                 {
                     NextRunLocal = DateTime.Now + interval;
+                    _onCycleStart?.Invoke();
                     _ = _coord.PollManyAsync(_targets(), false, ct);       // не ждём: пересечения гасит дедупликация
                 }
             }
@@ -3576,7 +3741,11 @@ namespace LersMonitor
         }
 
         /// <summary>Кнопка «Принудительный опрос». Игнорирует кэш и опрашивает принудительно.</summary>
-        public Task ForceNowAsync(CancellationToken ct) => _coord.PollManyAsync(_targets(), true, ct);
+        public Task ForceNowAsync(CancellationToken ct)
+        {
+            _onCycleStart?.Invoke();
+            return _coord.PollManyAsync(_targets(), true, ct);
+        }
     }
 
     // ==================== MasonryPanel ====================

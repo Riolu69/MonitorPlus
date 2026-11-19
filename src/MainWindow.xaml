@@ -1325,15 +1325,20 @@
                         </Border>
 
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <local:CompactColumnsPanel Spacing="10" MinColumnWidth="200">
+                            <local:CompactColumnsPanel x:Name="SinglePointCardsPanel" Spacing="10" MinColumnWidth="200"
+                                                       TextOptions.TextFormattingMode="Ideal"
+                                                       TextOptions.TextHintingMode="Animated"
+                                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                                       UseLayoutRounding="True"
+                                                       SnapsToDevicePixels="True">
                                 <local:CompactColumnsPanel.LayoutTransform>
                                     <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}"
                                                     ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
                                 </local:CompactColumnsPanel.LayoutTransform>
 
                                 <!-- Тнв Bento Card -->
-                                <Border Height="124" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource StatusInfoBorder}" BorderThickness="1" CornerRadius="16" Padding="16"
-                                        ToolTip="Температура наружного воздуха из точки, выбранной в «Источник Тнв (улица)»">
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource StatusInfoBorder}" BorderThickness="1" CornerRadius="16" Padding="16"
+                                        ToolTip="Температура наружного воздуха (перетащите для изменения порядка)">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -1344,11 +1349,7 @@
                                             <TextBlock Text="Тнв (улица)" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
                                             <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentTeal}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                         </Grid>
-                                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding ElementName=CmbTnvSource, Path=SelectedItem.DisplayName, TargetNullValue='не выбран', FallbackValue='не выбран'}"
-                                                       FontSize="10.5" Foreground="{DynamicResource LabelTertiary}" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock x:Name="TxtTnvCardUpdated" Text="Ожидание..." FontSize="10" Foreground="{DynamicResource LabelTertiary}" Margin="0,1,0,0"/>
-                                        </StackPanel>
+                                        <TextBlock x:Name="TxtTnvCardUpdated" Grid.Row="1" Text="Ожидание..." FontSize="10.5" Foreground="{DynamicResource LabelTertiary}" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
                                             <TextBlock Text="{Binding ElementName=TxtGlobalTnv, Path=Text}" Foreground="{DynamicResource AccentTeal}" FontSize="34" FontWeight="Bold"/>
                                             <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
@@ -1357,7 +1358,7 @@
                                 </Border>
 
                                 <!-- T1 -->
-                                <Border Height="124" Background="{Binding T1DashBg}" BorderBrush="{Binding T1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T1DashBg}" BorderBrush="{Binding T1DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -1386,7 +1387,7 @@
                                 </Border>
 
                                 <!-- T2 -->
-                                <Border Height="124" Background="{Binding T2DashBg}" BorderBrush="{Binding T2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T2DashBg}" BorderBrush="{Binding T2DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -1415,7 +1416,7 @@
                                 </Border>
 
                                 <!-- ΔT -->
-                                <Border Height="124" Background="{Binding DeltaTDashBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaTDashBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="ΔT · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1427,7 +1428,7 @@
                                 </Border>
 
                                 <!-- P1 -->
-                                <Border Height="124" Background="{Binding P1DashBg}" BorderBrush="{Binding P1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P1DashBg}" BorderBrush="{Binding P1DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="P1 · Давление" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1439,7 +1440,7 @@
                                 </Border>
 
                                 <!-- P2 -->
-                                <Border Height="124" Background="{Binding P2DashBg}" BorderBrush="{Binding P2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P2DashBg}" BorderBrush="{Binding P2DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="P2 · Обратка" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1451,7 +1452,7 @@
                                 </Border>
 
                                 <!-- ΔP -->
-                                <Border Height="124" Background="{Binding DeltaPDashBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaPDashBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="ΔP · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1463,7 +1464,7 @@
                                 </Border>
 
                                 <!-- V1 -->
-                                <Border Height="124" Background="{Binding V1DashBg}" BorderBrush="{Binding V1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V1DashBg}" BorderBrush="{Binding V1DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="V1 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1475,7 +1476,7 @@
                                 </Border>
 
                                 <!-- V2 -->
-                                <Border Height="124" Background="{Binding V2DashBg}" BorderBrush="{Binding V2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V2DashBg}" BorderBrush="{Binding V2DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="V2 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1487,7 +1488,7 @@
                                 </Border>
 
                                 <!-- M1 -->
-                                <Border Height="124" Background="{Binding M1DashBg}" BorderBrush="{Binding M1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M1DashBg}" BorderBrush="{Binding M1DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="M1 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1499,7 +1500,7 @@
                                 </Border>
 
                                 <!-- M2 -->
-                                <Border Height="124" Background="{Binding M2DashBg}" BorderBrush="{Binding M2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M2DashBg}" BorderBrush="{Binding M2DashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="M2 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1511,7 +1512,7 @@
                                 </Border>
 
                                 <!-- Q -->
-                                <Border Height="124" Background="{Binding QDashBg}" BorderBrush="{Binding QDashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding QDashBg}" BorderBrush="{Binding QDashBorder}" BorderThickness="1"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="Q · Теплоэнергия" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1527,7 +1528,12 @@
 
                     <!-- Множественный режим (Bento Masonry Cards) -->
                     <ScrollViewer x:Name="PanelMultiPoint" Grid.Row="1" VerticalScrollBarVisibility="Auto" CanContentScroll="False">
-                        <ItemsControl x:Name="ItemsDashboard">
+                        <ItemsControl x:Name="ItemsDashboard"
+                                      TextOptions.TextFormattingMode="Ideal"
+                                      TextOptions.TextHintingMode="Animated"
+                                      RenderOptions.BitmapScalingMode="HighQuality"
+                                      UseLayoutRounding="True"
+                                      SnapsToDevicePixels="True">
                             <ItemsControl.LayoutTransform>
                                 <ScaleTransform ScaleX="{Binding ElementName=SldUiScale, Path=Value}"
                                                 ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
@@ -1541,7 +1547,12 @@
                                 <DataTemplate>
                                     <Border VerticalAlignment="Top" HorizontalAlignment="Stretch"
                                             Background="{Binding TileBackground}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1.5"
-                                            CornerRadius="16" Margin="0" Padding="12">
+                                            CornerRadius="16" Margin="0" Padding="12"
+                                            AllowDrop="True" Cursor="Hand"
+                                            PreviewMouseLeftButtonDown="DashCard_PreviewMouseLeftButtonDown"
+                                            PreviewMouseMove="DashCard_PreviewMouseMove"
+                                            DragOver="DashCard_DragOver"
+                                            Drop="DashCard_Drop">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
@@ -1778,7 +1789,12 @@
                     </Border>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl x:Name="ItemsPodpitka">
+                        <ItemsControl x:Name="ItemsPodpitka"
+                                      TextOptions.TextFormattingMode="Ideal"
+                                      TextOptions.TextHintingMode="Animated"
+                                      RenderOptions.BitmapScalingMode="HighQuality"
+                                      UseLayoutRounding="True"
+                                      SnapsToDevicePixels="True">
                             <ItemsControl.LayoutTransform>
                                 <ScaleTransform ScaleX="{Binding ElementName=SldPodpitkaScale, Path=Value}"
                                                 ScaleY="{Binding ElementName=SldPodpitkaScale, Path=Value}"/>
