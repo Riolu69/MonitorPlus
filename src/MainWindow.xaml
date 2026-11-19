@@ -1086,7 +1086,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding NodeTitle}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}"/>
+                                        <TextBlock Text="{Binding NodeTitle}" FontSize="20" FontWeight="Bold" Foreground="{Binding TileForeground}"/>
                                         <TextBlock Text="  ·  " FontSize="18" Foreground="{DynamicResource LabelTertiary}"/>
                                         <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Medium" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
                                         <Button Tag="{Binding}" Click="BtnPollDetails_Click" Margin="10,0,0,0" Width="24" Height="24"
@@ -1329,7 +1329,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border VerticalAlignment="Top" HorizontalAlignment="Stretch"
-                                            Background="{Binding TileBackground}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1"
+                                            Background="{Binding TileBackground}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1.5"
                                             CornerRadius="16" Margin="0" Padding="12">
                                         <Grid>
                                             <Grid.RowDefinitions>
@@ -1375,7 +1375,7 @@
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{Binding PointCardBorder}" BorderThickness="1" CornerRadius="10" Padding="9,8">
+                                                        <Border Background="{Binding PointCardBg}" BorderBrush="{Binding PointCardBorder}" BorderThickness="1" CornerRadius="10" Padding="9,8">
                                                             <Grid>
                                                                 <Grid.RowDefinitions>
                                                                     <RowDefinition Height="Auto"/>
@@ -1413,34 +1413,34 @@
                                                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,6,4" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="T1 / T2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T1DashForeground}"/><Run Text=" / " Foreground="{DynamicResource LabelTertiary}"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T2DashForeground}"/>
+                                                                            <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T2DashForeground}"/>
                                                                         </TextBlock>
                                                                         <TextBlock FontSize="10" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}">
-                                                                            <Run Text="ΔT "/><Run Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—'}" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                                                            <Run Text="ΔT "/><Run Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—'}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,4" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="P1 / P2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P1DashForeground}"/><Run Text=" / " Foreground="{DynamicResource LabelTertiary}"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P2DashForeground}"/>
+                                                                            <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P2DashForeground}"/>
                                                                         </TextBlock>
                                                                         <TextBlock FontSize="10" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}">
-                                                                            <Run Text="ΔP "/><Run Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—'}" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                                                            <Run Text="ΔP "/><Run Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—'}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,2,6,2" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="V1 / V2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V1DashForeground}"/><Run Text=" / " Foreground="{DynamicResource LabelTertiary}"/><Run Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V2DashForeground}"/>
+                                                                            <Run Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V2DashForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,2,0,2" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="M1 / M2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M1DashForeground}"/><Run Text=" / " Foreground="{DynamicResource LabelTertiary}"/><Run Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M2DashForeground}"/>
+                                                                            <Run Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M2DashForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
@@ -1550,7 +1550,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding TileBackground}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="12" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+                                    <Border Background="{Binding TileBackground}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1.5" CornerRadius="16" Padding="12" VerticalAlignment="Top" HorizontalAlignment="Stretch">
                                         <StackPanel>
                                             <TextBlock Text="{Binding NodeTitle}" Foreground="{DynamicResource LabelPrimary}" FontWeight="Bold" FontSize="14" TextWrapping="Wrap"/>
                                             <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="6,2" HorizontalAlignment="Left" Margin="0,4,0,8">
@@ -1746,7 +1746,7 @@
         <Grid x:Name="OverlayLimits" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="100">
             <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="340">
                 <StackPanel>
-                    <TextBlock x:Name="TxtLimitsTitle" Text="Границы" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock x:Name="TxtLimitsTitle" Text="Границы" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" Foreground="{Binding TileForeground}"/>
                     <TextBlock x:Name="TxtLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,12"/>
 
                     <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
@@ -1830,7 +1830,7 @@
         <Grid x:Name="OverlayTempSchedule" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="110">
             <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="640">
                 <StackPanel>
-                    <TextBlock Text="Температурный график (Тнв → Т1/Т2)" FontWeight="Bold" FontSize="17" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock Text="Температурный график (Тнв → Т1/Т2)" FontWeight="Bold" FontSize="17" Margin="0,0,0,4" Foreground="{Binding TileForeground}"/>
 
                     <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,9" Margin="0,8,0,12">
                         <StackPanel>
@@ -1885,7 +1885,7 @@
         <Grid x:Name="OverlayScheduleSource" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="120">
             <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="520">
                 <StackPanel>
-                    <TextBlock Text="Выбрать температурный график из другой точки" FontWeight="Bold" FontSize="16" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock Text="Выбрать температурный график из другой точки" FontWeight="Bold" FontSize="16" Margin="0,0,0,4" Foreground="{Binding TileForeground}"/>
                     <TextBlock x:Name="TxtScheduleSourceHint" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource LabelSecondary}"
                                Text="Список точек, у которых уже сохранён график."/>
 
@@ -1914,7 +1914,7 @@
         <Grid x:Name="OverlayPodpitkaLimits" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="130">
             <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="340">
                 <StackPanel>
-                    <TextBlock x:Name="TxtPodpitkaLimitsTitle" Text="Допуски подпитки (V1)" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock x:Name="TxtPodpitkaLimitsTitle" Text="Допуски подпитки (V1)" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" Foreground="{Binding TileForeground}"/>
                     <TextBlock x:Name="TxtPodpitkaLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,12"/>
                     <Grid Margin="0,0,0,14" HorizontalAlignment="Center">
                         <Grid.ColumnDefinitions>
@@ -1961,7 +1961,7 @@
         <Grid x:Name="OverlayTnvCorrection" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="140">
             <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="420">
                 <StackPanel>
-                    <TextBlock Text="Корректировка датчика Тнв" FontWeight="Bold" FontSize="17" Margin="0,0,0,4" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock Text="Корректировка датчика Тнв" FontWeight="Bold" FontSize="17" Margin="0,0,0,4" Foreground="{Binding TileForeground}"/>
                     <TextBlock Text="Поправка (±°C) прибавляется к показаниям датчика и используется для температурного графика."
                                FontSize="12" TextWrapping="Wrap" Margin="0,0,0,14" Foreground="{DynamicResource LabelSecondary}"/>
                     <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,14">
@@ -1996,7 +1996,7 @@
         <Grid x:Name="OverlayAppSettings" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="150">
             <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="460">
                 <StackPanel>
-                    <TextBlock Text="⚙ Настройки" FontWeight="Bold" FontSize="17" Margin="0,0,0,14" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock Text="⚙ Настройки" FontWeight="Bold" FontSize="17" Margin="0,0,0,14" Foreground="{Binding TileForeground}"/>
 
                     <TextBlock Text="Видимость разделов" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,6"/>
                     <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,12">

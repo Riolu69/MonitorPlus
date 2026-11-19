@@ -341,12 +341,12 @@ namespace LersMonitor
                 res["AccentGray"] = B("#71717A");
                 res["AccentTeal"] = B("#38BDF8");
 
-                res["StatusOkBg"] = B("#122319");
-                res["StatusOkBorder"] = B("#1F4A30");
-                res["StatusErrBg"] = B("#291416");
-                res["StatusErrBorder"] = B("#592226");
-                res["StatusWarnBg"] = B("#291E11");
-                res["StatusWarnBorder"] = B("#573D1A");
+                res["StatusOkBg"] = B("#11291B");
+                res["StatusOkBorder"] = B("#225C3B");
+                res["StatusErrBg"] = B("#2D1316");
+                res["StatusErrBorder"] = B("#7F1D1D");
+                res["StatusWarnBg"] = B("#2D1F0E");
+                res["StatusWarnBorder"] = B("#78350F");
                 res["StatusIdleBg"] = B("#19191E");
                 res["StatusIdleBorder"] = B("#2A2A32");
                 res["StatusInfoBg"] = B("#112233");
@@ -378,12 +378,12 @@ namespace LersMonitor
                 res["AccentGray"] = B("#71717A");
                 res["AccentTeal"] = B("#0284C7");
 
-                res["StatusOkBg"] = B("#ECFDF3");
-                res["StatusOkBorder"] = B("#BBF7D0");
-                res["StatusErrBg"] = B("#FEF2F2");
-                res["StatusErrBorder"] = B("#FECACA");
-                res["StatusWarnBg"] = B("#FFFBEB");
-                res["StatusWarnBorder"] = B("#FDE68A");
+                res["StatusOkBg"] = B("#DCFCE7");
+                res["StatusOkBorder"] = B("#4ADE80");
+                res["StatusErrBg"] = B("#FEE2E2");
+                res["StatusErrBorder"] = B("#F87171");
+                res["StatusWarnBg"] = B("#FEF3C7");
+                res["StatusWarnBorder"] = B("#FBBF24");
                 res["StatusIdleBg"] = B("#F4F4F6");
                 res["StatusIdleBorder"] = B("#E4E4E7");
                 res["StatusInfoBg"] = B("#EFF6FF");
@@ -2715,7 +2715,7 @@ namespace LersMonitor
 
         public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
 
-        private static Brush Res(string k) => (Brush)Application.Current.MainWindow.FindResource(k);
+        private static Brush Res(string k) => Application.Current?.MainWindow?.TryFindResource(k) as Brush ?? Brushes.Gray;
 
         public string ToggleIcon => IsPaused ? "▶" : "✕";
         public Brush ToggleFg => IsPaused ? Res("AccentGreen") : Res("LabelSecondary");
@@ -2798,7 +2798,7 @@ namespace LersMonitor
             OnPropertyChanged(nameof(M1DashBorder)); OnPropertyChanged(nameof(M2DashBorder)); OnPropertyChanged(nameof(QDashBorder));
             OnPropertyChanged(nameof(T1StatusDot)); OnPropertyChanged(nameof(T2StatusDot));
             OnPropertyChanged(nameof(StatusBadgeBg)); OnPropertyChanged(nameof(StatusBadgeBorder));
-            OnPropertyChanged(nameof(PointCardBorder));
+            OnPropertyChanged(nameof(PointCardBg)); OnPropertyChanged(nameof(PointCardBorder)); OnPropertyChanged(nameof(SeparatorBrush)); OnPropertyChanged(nameof(TileForeground));
 
             OnPropertyChanged(nameof(T1DashForeground)); OnPropertyChanged(nameof(T2DashForeground));
             OnPropertyChanged(nameof(P1DashForeground)); OnPropertyChanged(nameof(P2DashForeground));
@@ -2908,15 +2908,20 @@ namespace LersMonitor
             (isT1 && IsT1ScheduleBreached(T1, Limits?.Schedule)) ||
             (isT2 && IsT2ScheduleBreached(T2, Limits?.Schedule));
 
-        private Brush GetDashBg(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false) =>
-            ParamBreached(val, min, max, isT1, isT2) ? Res("StatusErrBg") : Res("CardBackground");
+        private Brush GetDashBg(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false)
+        {
+            if (ParamBreached(val, min, max, isT1, isT2)) return Res("StatusErrBg");
+            if (!IsDone) return Res("StatusIdleBg");
+            if (HasError) return Res("StatusWarnBg");
+            return Res("StatusOkBg");
+        }
 
         private Brush GetDashBorder(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false)
         {
             if (ParamBreached(val, min, max, isT1, isT2)) return Res("StatusErrBorder");
             if (!IsDone) return Res("BorderBrushColor");
             if (HasError) return Res("StatusWarnBorder");
-            return Res("BorderBrushColor");
+            return Res("StatusOkBorder");
         }
 
         private Brush GetStatusDot(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false)
@@ -2976,8 +2981,15 @@ namespace LersMonitor
             HasBreach ? Res("StatusErrBorder") : HasError ? Res("StatusWarnBorder") : !IsDone ? Res("BorderBrushColor") : Res("StatusOkBorder");
 
         [JsonIgnore]
+        public Brush PointCardBg =>
+            HasBreach ? Res("StatusErrBg") : HasError ? Res("StatusWarnBg") : !IsDone ? Res("StatusIdleBg") : Res("StatusOkBg");
+
+        [JsonIgnore]
         public Brush PointCardBorder =>
-            HasBreach ? Res("StatusErrBorder") : HasError ? Res("StatusWarnBorder") : Res("BorderBrushSubtle");
+            HasBreach ? Res("StatusErrBorder") : HasError ? Res("StatusWarnBorder") : !IsDone ? Res("BorderBrushSubtle") : Res("StatusOkBorder");
+
+        [JsonIgnore]
+        public Brush SeparatorBrush => Res("LabelTertiary");
 
         [JsonIgnore]
         public Brush PointTitleColor =>
@@ -4073,9 +4085,9 @@ namespace LersMonitor
         public bool HourBreach   => Out(Hour,   Limits?.HourMin,   Limits?.HourMax);
         public bool HasBreach => ReportBreach || DayBreach || TodayBreach || HourBreach;
 
-        private static Brush Res(string k) => (Brush)Application.Current.MainWindow.FindResource(k);
-        private Brush Bg(bool breach) => breach ? Res("StatusErrBg") : (IsDone ? (HasError ? Res("StatusWarnBg") : Res("CardBackground")) : Res("StatusIdleBg"));
-        private Brush Bd(bool breach) => breach ? Res("StatusErrBorder") : (IsDone ? (HasError ? Res("StatusWarnBorder") : Res("BorderBrushColor")) : Res("BorderBrushSubtle"));
+        private static Brush Res(string k) => Application.Current?.MainWindow?.TryFindResource(k) as Brush ?? Brushes.Gray;
+        private Brush Bg(bool breach) => breach ? Res("StatusErrBg") : (IsDone ? (HasError ? Res("StatusWarnBg") : Res("StatusOkBg")) : Res("StatusIdleBg"));
+        private Brush Bd(bool breach) => breach ? Res("StatusErrBorder") : (IsDone ? (HasError ? Res("StatusWarnBorder") : Res("StatusOkBorder")) : Res("BorderBrushSubtle"));
         private Brush Fg(bool breach) => breach ? Res("AccentRed") : Res("LabelPrimary");
 
         public Brush ReportBg => Bg(ReportBreach); public Brush DayBg => Bg(DayBreach);
@@ -4096,7 +4108,7 @@ namespace LersMonitor
         public ObservableCollection<PodpitkaPointViewModel> Points { get; } = new();
         public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
 
-        private static Brush R(string k) => (Brush)Application.Current.MainWindow.FindResource(k);
+        private static Brush R(string k) => Application.Current?.MainWindow?.TryFindResource(k) as Brush ?? Brushes.Gray;
 
         public Brush TileBackground => R("CardBackground");
         public Brush TileBorderBrush
