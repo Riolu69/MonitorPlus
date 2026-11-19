@@ -665,18 +665,34 @@ namespace LersMonitor
             }
         }
 
+        private void SetSideToggleIcon(Button? btn, bool collapsed)
+        {
+            if (btn == null) return;
+            var geom = TryFindResource(collapsed ? "IconChevronRight" : "IconChevronLeft") as Geometry;
+            var stroke = TryFindResource("LabelSecondary") as Brush ?? Brushes.Gray;
+            var style = TryFindResource("StrokeIcon") as Style;
+            btn.Content = new System.Windows.Shapes.Path
+            {
+                Data = geom,
+                Style = style,
+                Width = 11,
+                Height = 11,
+                Stroke = stroke
+            };
+        }
+
         private void BtnToggleGeneral_Click(object sender, RoutedEventArgs e)
         {
             bool isVis = PanelGeneralLeft.Visibility == Visibility.Visible;
             PanelGeneralLeft.Visibility = isVis ? Visibility.Collapsed : Visibility.Visible;
-            if (BtnToggleGenPanel != null) BtnToggleGenPanel.Content = isVis ? "▶" : "◀";
+            SetSideToggleIcon(BtnToggleGenPanel, isVis);
         }
 
         private void BtnToggleDashboard_Click(object sender, RoutedEventArgs e)
         {
             bool isVis = PanelDashboardLeft.Visibility == Visibility.Visible;
             PanelDashboardLeft.Visibility = isVis ? Visibility.Collapsed : Visibility.Visible;
-            if (BtnToggleDashPanel != null) BtnToggleDashPanel.Content = isVis ? "▶" : "◀";
+            SetSideToggleIcon(BtnToggleDashPanel, isVis);
         }
 
         private void ApplyFilters_Changed(object sender, RoutedEventArgs e) => ApplyFilters();
@@ -1069,9 +1085,43 @@ namespace LersMonitor
             OverlayLimits.Visibility = Visibility.Collapsed; _editingPoints.Clear();
         }
 
+        private void BtnResetLimits_Click(object sender, RoutedEventArgs e)
+        {
+            ClearLimitsFields();
+            if (_editingPoints.Count > 1)
+            {
+                var answer = MessageBox.Show(
+                    $"Сбросить все числовые границы для выбранных точек ({_editingPoints.Count} шт.)?\nТемпературный график останется без изменений.",
+                    "Сброс границ", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (answer != MessageBoxResult.Yes) return;
+
+                foreach (var point in _editingPoints)
+                {
+                    if (_settings.PointLimits.TryGetValue(point.Id, out var limits))
+                    {
+                        limits.T1Min = limits.T1Max = null;
+                        limits.T2Min = limits.T2Max = null;
+                        limits.P1Min = limits.P1Max = null;
+                        limits.P2Min = limits.P2Max = null;
+                        limits.V1Min = limits.V1Max = null;
+                        limits.V2Min = limits.V2Max = null;
+                        limits.M1Min = limits.M1Max = null;
+                        limits.M2Min = limits.M2Max = null;
+                        limits.QMin = limits.QMax = null;
+                    }
+                }
+                SyncLimitsToViews(_editingPoints.Select(p => p.Id));
+                SaveUserSettings();
+                OverlayLimits.Visibility = Visibility.Collapsed;
+                _editingPoints.Clear();
+            }
+        }
+
         private void BtnSaveLimits_Click(object sender, RoutedEventArgs e)
         {
             if (!_editingPoints.Any()) return;
+            bool isSingle = _editingPoints.Count == 1;
+
             var t1Min = ParseDouble(TxtT1Min.Text); var t1Max = ParseDouble(TxtT1Max.Text);
             var t2Min = ParseDouble(TxtT2Min.Text); var t2Max = ParseDouble(TxtT2Max.Text);
             var p1Min = ParseDouble(TxtP1Min.Text); var p1Max = ParseDouble(TxtP1Max.Text);
@@ -1084,25 +1134,41 @@ namespace LersMonitor
 
             foreach (var point in _editingPoints)
             {
-                if (!_settings.PointLimits.TryGetValue(point.Id, out var limits)) { limits = new PointThresholds(); _settings.PointLimits[point.Id] = limits; }
+                if (!_settings.PointLimits.TryGetValue(point.Id, out var limits))
+                {
+                    limits = new PointThresholds();
+                    _settings.PointLimits[point.Id] = limits;
+                }
 
-                if (!string.IsNullOrWhiteSpace(TxtT1Min.Text)) limits.T1Min = t1Min; if (!string.IsNullOrWhiteSpace(TxtT1Max.Text)) limits.T1Max = t1Max;
-                if (!string.IsNullOrWhiteSpace(TxtT2Min.Text)) limits.T2Min = t2Min; if (!string.IsNullOrWhiteSpace(TxtT2Max.Text)) limits.T2Max = t2Max;
-                if (!string.IsNullOrWhiteSpace(TxtP1Min.Text)) limits.P1Min = p1Min; if (!string.IsNullOrWhiteSpace(TxtP1Max.Text)) limits.P1Max = p1Max;
-                if (!string.IsNullOrWhiteSpace(TxtP2Min.Text)) limits.P2Min = p2Min; if (!string.IsNullOrWhiteSpace(TxtP2Max.Text)) limits.P2Max = p2Max;
-                if (!string.IsNullOrWhiteSpace(TxtV1Min.Text)) limits.V1Min = v1Min; if (!string.IsNullOrWhiteSpace(TxtV1Max.Text)) limits.V1Max = v1Max;
-                if (!string.IsNullOrWhiteSpace(TxtV2Min.Text)) limits.V2Min = v2Min; if (!string.IsNullOrWhiteSpace(TxtV2Max.Text)) limits.V2Max = v2Max;
-                if (!string.IsNullOrWhiteSpace(TxtM1Min.Text)) limits.M1Min = m1Min; if (!string.IsNullOrWhiteSpace(TxtM1Max.Text)) limits.M1Max = m1Max;
-                if (!string.IsNullOrWhiteSpace(TxtM2Min.Text)) limits.M2Min = m2Min; if (!string.IsNullOrWhiteSpace(TxtM2Max.Text)) limits.M2Max = m2Max;
-                if (!string.IsNullOrWhiteSpace(TxtQMin.Text)) limits.QMin = qMin; if (!string.IsNullOrWhiteSpace(TxtQMax.Text)) limits.QMax = qMax;
+                // Для одной точки пустое поле очищает границу (null).
+                // Для групповой настройки пустые поля не перезаписывают существующие значения.
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtT1Min.Text)) limits.T1Min = t1Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtT1Max.Text)) limits.T1Max = t1Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtT2Min.Text)) limits.T2Min = t2Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtT2Max.Text)) limits.T2Max = t2Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtP1Min.Text)) limits.P1Min = p1Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtP1Max.Text)) limits.P1Max = p1Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtP2Min.Text)) limits.P2Min = p2Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtP2Max.Text)) limits.P2Max = p2Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtV1Min.Text)) limits.V1Min = v1Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtV1Max.Text)) limits.V1Max = v1Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtV2Min.Text)) limits.V2Min = v2Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtV2Max.Text)) limits.V2Max = v2Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtM1Min.Text)) limits.M1Min = m1Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtM1Max.Text)) limits.M1Max = m1Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtM2Min.Text)) limits.M2Min = m2Min;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtM2Max.Text)) limits.M2Max = m2Max;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtQMin.Text)) limits.QMin = qMin;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtQMax.Text)) limits.QMax = qMax;
 
                 var vm = _results.FirstOrDefault(r => r.Id == point.Id); if (vm != null) { vm.Limits = limits; vm.RefreshColors(); }
                 var vmDash = _dashboardFlatPoints.FirstOrDefault(r => r.Id == point.Id); if (vmDash != null) { vmDash.Limits = limits; vmDash.RefreshColors(); }
             }
-            
+
             foreach (var node in _dashboardNodes) node.Refresh();
             SaveUserSettings();
-            OverlayLimits.Visibility = Visibility.Collapsed; _editingPoints.Clear();
+            OverlayLimits.Visibility = Visibility.Collapsed;
+            _editingPoints.Clear();
         }
 
         private double? ParseDouble(string text)
@@ -1424,7 +1490,7 @@ namespace LersMonitor
         {
             bool isVis = PanelPodpitkaLeft.Visibility == Visibility.Visible;
             PanelPodpitkaLeft.Visibility = isVis ? Visibility.Collapsed : Visibility.Visible;
-            BtnTogglePodpPanel.Content = isVis ? "▶" : "◀";
+            SetSideToggleIcon(BtnTogglePodpPanel, isVis);
         }
 
         private void BtnSelectAllPodpitka_Click(object sender, RoutedEventArgs e) => ListPodpitka.SelectAll();
@@ -1702,7 +1768,7 @@ namespace LersMonitor
         {
             bool isVis = PanelArchiveLeft.Visibility == Visibility.Visible;
             PanelArchiveLeft.Visibility = isVis ? Visibility.Collapsed : Visibility.Visible;
-            if (BtnToggleArchivePanel != null) BtnToggleArchivePanel.Content = isVis ? "▶" : "◀";
+            SetSideToggleIcon(BtnToggleArchivePanel, isVis);
         }
 
         /// <summary>Повторная загрузка архива для выбранной точки.</summary>
@@ -2491,9 +2557,39 @@ namespace LersMonitor
 
         private void BtnCancelPodpitkaLimits_Click(object sender, RoutedEventArgs e) => OverlayPodpitkaLimits.Visibility = Visibility.Collapsed;
 
+        private void BtnResetPodpitkaLimits_Click(object sender, RoutedEventArgs e)
+        {
+            ClearPodpitkaLimitsFields();
+            if (_editingPodpitkaPoints.Count > 1)
+            {
+                var answer = MessageBox.Show(
+                    $"Сбросить все допуски подпитки для выбранных точек ({_editingPodpitkaPoints.Count} шт.)?",
+                    "Сброс допусков", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (answer != MessageBoxResult.Yes) return;
+
+                foreach (var point in _editingPodpitkaPoints)
+                {
+                    if (_settings.PodpitkaLimits.TryGetValue(point.Id, out var limits))
+                    {
+                        limits.ReportMin = limits.ReportMax = null;
+                        limits.DayMin = limits.DayMax = null;
+                        limits.TodayMin = limits.TodayMax = null;
+                        limits.HourMin = limits.HourMax = null;
+                    }
+                    var vm = _podpitkaNodes.SelectMany(n => n.Points).FirstOrDefault(p => p.Id == point.Id);
+                    if (vm != null) { vm.Limits = _settings.PodpitkaLimits.GetValueOrDefault(point.Id); vm.RefreshColors(); }
+                }
+                foreach (var n in _podpitkaNodes) n.Refresh();
+                SaveUserSettings();
+                OverlayPodpitkaLimits.Visibility = Visibility.Collapsed;
+            }
+        }
+
         private void BtnSavePodpitkaLimits_Click(object sender, RoutedEventArgs e)
         {
             if (!_editingPodpitkaPoints.Any()) return;
+            bool isSingle = _editingPodpitkaPoints.Count == 1;
+
             var rMin = ParseDouble(TxtPodpReportMin.Text); var rMax = ParseDouble(TxtPodpReportMax.Text);
             var dMin = ParseDouble(TxtPodpDayMin.Text);    var dMax = ParseDouble(TxtPodpDayMax.Text);
             var tMin = ParseDouble(TxtPodpTodayMin.Text);  var tMax = ParseDouble(TxtPodpTodayMax.Text);
@@ -2501,11 +2597,20 @@ namespace LersMonitor
 
             foreach (var point in _editingPodpitkaPoints)
             {
-                if (!_settings.PodpitkaLimits.TryGetValue(point.Id, out var limits)) { limits = new VolumeThresholds(); _settings.PodpitkaLimits[point.Id] = limits; }
-                if (!string.IsNullOrWhiteSpace(TxtPodpReportMin.Text)) limits.ReportMin = rMin; if (!string.IsNullOrWhiteSpace(TxtPodpReportMax.Text)) limits.ReportMax = rMax;
-                if (!string.IsNullOrWhiteSpace(TxtPodpDayMin.Text))    limits.DayMin = dMin;    if (!string.IsNullOrWhiteSpace(TxtPodpDayMax.Text))    limits.DayMax = dMax;
-                if (!string.IsNullOrWhiteSpace(TxtPodpTodayMin.Text))  limits.TodayMin = tMin;  if (!string.IsNullOrWhiteSpace(TxtPodpTodayMax.Text))  limits.TodayMax = tMax;
-                if (!string.IsNullOrWhiteSpace(TxtPodpHourMin.Text))   limits.HourMin = hMin;   if (!string.IsNullOrWhiteSpace(TxtPodpHourMax.Text))   limits.HourMax = hMax;
+                if (!_settings.PodpitkaLimits.TryGetValue(point.Id, out var limits))
+                {
+                    limits = new VolumeThresholds();
+                    _settings.PodpitkaLimits[point.Id] = limits;
+                }
+
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpReportMin.Text)) limits.ReportMin = rMin;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpReportMax.Text)) limits.ReportMax = rMax;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpDayMin.Text))    limits.DayMin = dMin;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpDayMax.Text))    limits.DayMax = dMax;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpTodayMin.Text))  limits.TodayMin = tMin;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpTodayMax.Text))  limits.TodayMax = tMax;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpHourMin.Text))   limits.HourMin = hMin;
+                if (isSingle || !string.IsNullOrWhiteSpace(TxtPodpHourMax.Text))   limits.HourMax = hMax;
 
                 var vm = _podpitkaNodes.SelectMany(n => n.Points).FirstOrDefault(p => p.Id == point.Id);
                 if (vm != null) { vm.Limits = limits; vm.RefreshColors(); }
@@ -2752,6 +2857,7 @@ namespace LersMonitor
         private static Brush Res(string k) => Application.Current?.MainWindow?.TryFindResource(k) as Brush ?? Brushes.Gray;
 
         public string ToggleIcon => IsPaused ? "▶" : "✕";
+        public Geometry? ToggleGeometry => Application.Current?.MainWindow?.TryFindResource(IsPaused ? "IconPlay" : "IconClose") as Geometry;
         public Brush ToggleFg => IsPaused ? Res("AccentGreen") : Res("LabelSecondary");
         public string ToggleTooltip => IsPaused
             ? "Опрос объекта остановлен (нажмите, чтобы включить)"
@@ -4192,53 +4298,67 @@ namespace LersMonitor
         private readonly StackPanel _logPanel;
         private readonly Border _troubleBorder;
         private readonly TextBlock _troubleText;
+        private readonly FontFamily _appFont;
 
         public PollDetailsWindow(int pointId, string pointTitle, PollLogStore logStore)
         {
             _pointId = pointId;
             _pointTitle = pointTitle;
             _logStore = logStore;
+            _appFont = Application.Current?.MainWindow?.TryFindResource("AppFont") as FontFamily
+                       ?? new FontFamily("Segoe UI Variable Text, Segoe UI, Arial");
 
             Title = $"Ход опроса — {pointTitle}";
-            Width = 600;
+            Width = 620;
             Height = 520;
-            MinWidth = 420;
+            MinWidth = 440;
             MinHeight = 320;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ShowInTaskbar = false;
             ResizeMode = ResizeMode.CanResize;
+            FontFamily = _appFont;
 
             var bgBrush = TryFindRes("SystemBackground") ?? Brushes.Black;
             var cardBrush = TryFindRes("CardBackground") ?? Brushes.DimGray;
             var borderBrush = TryFindRes("BorderBrushColor") ?? Brushes.Gray;
             var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.White;
+            var secFgBrush = TryFindRes("LabelSecondary") ?? Brushes.Gray;
 
             Background = bgBrush;
 
-            var grid = new Grid { Margin = new Thickness(14) };
+            var grid = new Grid { Margin = new Thickness(16) };
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var header = new TextBlock
+            var headerStack = new StackPanel { Margin = new Thickness(2, 0, 0, 12) };
+            headerStack.Children.Add(new TextBlock
             {
-                Text = $"Точка: {pointTitle} (ID: {pointId})",
-                FontSize = 14,
+                Text = pointTitle,
+                FontSize = 15,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = fgBrush,
-                Margin = new Thickness(2, 0, 0, 10)
-            };
-            Grid.SetRow(header, 0);
-            grid.Children.Add(header);
+                FontFamily = _appFont
+            });
+            headerStack.Children.Add(new TextBlock
+            {
+                Text = $"Журнал обмена с прибором · ID точки: {pointId}",
+                FontSize = 11.5,
+                Foreground = secFgBrush,
+                Margin = new Thickness(0, 2, 0, 0),
+                FontFamily = _appFont
+            });
+            Grid.SetRow(headerStack, 0);
+            grid.Children.Add(headerStack);
 
             _logPanel = new StackPanel { Orientation = Orientation.Vertical };
             _scrollViewer = new ScrollViewer
             {
                 Content = _logPanel,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Padding = new Thickness(8)
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Padding = new Thickness(10, 8, 10, 8)
             };
             var logContainer = new Border
             {
@@ -4254,8 +4374,9 @@ namespace LersMonitor
             _troubleText = new TextBlock
             {
                 TextWrapping = TextWrapping.Wrap,
-                FontSize = 12.5,
-                Foreground = TryFindRes("AccentOrange") ?? Brushes.Orange
+                FontSize = 12,
+                Foreground = TryFindRes("AccentOrange") ?? Brushes.Orange,
+                FontFamily = _appFont
             };
             _troubleBorder = new Border
             {
@@ -4331,6 +4452,9 @@ namespace LersMonitor
             _logPanel.Children.Clear();
 
             var fgBrush = TryFindRes("LabelPrimary") ?? Brushes.White;
+            var secBrush = TryFindRes("LabelSecondary") ?? Brushes.Gray;
+            var badgeBg = TryFindRes("CardBackgroundAlt") ?? Brushes.Transparent;
+            var badgeBorder = TryFindRes("BorderBrushSubtle") ?? Brushes.Transparent;
 
             if (entries.Count == 0)
             {
@@ -4338,10 +4462,9 @@ namespace LersMonitor
                 {
                     Text = "Записей нет. Ожидание запуска опроса...",
                     FontSize = 12.5,
-                    Foreground = fgBrush,
+                    Foreground = secBrush,
                     Margin = new Thickness(4),
-                    FontStyle = FontStyles.Italic,
-                    Opacity = 0.6
+                    FontFamily = _appFont
                 });
                 _troubleBorder.Visibility = Visibility.Collapsed;
                 return;
@@ -4349,11 +4472,11 @@ namespace LersMonitor
 
             foreach (var entry in entries)
             {
-                var row = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(2, 3, 2, 3),
-                };
+                var row = new Grid { Margin = new Thickness(0, 3, 0, 3) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
                 var dot = new Border
                 {
@@ -4361,21 +4484,61 @@ namespace LersMonitor
                     Height = 7,
                     CornerRadius = new CornerRadius(3.5),
                     Background = StateBrush(entry.State),
-                    Margin = new Thickness(0, 5, 8, 0),
+                    Margin = new Thickness(0, 6, 8, 0),
                     VerticalAlignment = VerticalAlignment.Top
                 };
+                Grid.SetColumn(dot, 0);
                 row.Children.Add(dot);
 
-                var text = new TextBlock
+                var timeTb = new TextBlock
                 {
-                    Text = $"{entry.Timestamp:HH:mm:ss}  [{entry.Phase}]  {entry.Message}",
-                    FontFamily = new FontFamily("Consolas, Courier New"),
+                    Text = entry.Timestamp.ToString("HH:mm:ss"),
+                    FontFamily = _appFont,
+                    FontSize = 11.5,
+                    Foreground = secBrush,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, 2, 6, 0)
+                };
+                Grid.SetColumn(timeTb, 1);
+                row.Children.Add(timeTb);
+
+                if (!string.IsNullOrWhiteSpace(entry.Phase))
+                {
+                    var phaseBadge = new Border
+                    {
+                        Background = badgeBg,
+                        BorderBrush = badgeBorder,
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(5),
+                        Padding = new Thickness(6, 1, 6, 1),
+                        Margin = new Thickness(0, 1, 8, 0),
+                        VerticalAlignment = VerticalAlignment.Top,
+                        Child = new TextBlock
+                        {
+                            Text = entry.Phase,
+                            FontFamily = _appFont,
+                            FontSize = 10.5,
+                            FontWeight = FontWeights.SemiBold,
+                            Foreground = StateBrush(entry.State)
+                        }
+                    };
+                    Grid.SetColumn(phaseBadge, 2);
+                    row.Children.Add(phaseBadge);
+                }
+
+                var msgTb = new TextBlock
+                {
+                    Text = entry.Message,
+                    FontFamily = _appFont,
                     FontSize = 12,
                     Foreground = fgBrush,
                     TextWrapping = TextWrapping.Wrap,
-                    VerticalAlignment = VerticalAlignment.Top
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, 1, 0, 0)
                 };
-                row.Children.Add(text);
+                Grid.SetColumn(msgTb, 3);
+                row.Children.Add(msgTb);
+
                 _logPanel.Children.Add(row);
             }
 
@@ -4397,14 +4560,14 @@ namespace LersMonitor
         {
             var e = errorMessage.ToLowerInvariant();
             if (e.Contains("10061") || e.Contains("отверг") || e.Contains("connection refused"))
-                return "💡 Что делать: Модем на объекте временно занят (сбрасывает прошлую сессию или занят другим ПО). Программа автоматически переподключится через минуту.";
+                return "Рекомендация: модем на объекте временно занят (сбрасывает прошлую сессию или занят другим ПО). Программа автоматически переподключится через минуту.";
             if (e.Contains("10053") || e.Contains("10054") || e.Contains("разорвал"))
-                return "💡 Что делать: Удалённый модем или провайдер разорвал соединение. Если повторяется подряд — перезагрузите модем и вычислитель по питанию.";
+                return "Рекомендация: удалённый модем или провайдер разорвал соединение. Если ошибка повторяется подряд — перезагрузите модем и вычислитель по питанию.";
             if (e.Contains("нет ответа") || e.Contains("таймаут") || e.Contains("timeout"))
-                return "💡 Что делать: Прибор не отвечает. Проверьте питание модема и вычислителя, уровень связи и линию RS-232/RS-485.";
+                return "Рекомендация: прибор не отвечает. Проверьте питание модема и вычислителя, уровень связи и линию RS-232/RS-485.";
             if (e.Contains("занят"))
-                return "💡 Что делать: Канал связи занят другим сеансом в ЛЭРС УЧЁТ. Дождитесь его завершения.";
-            return "💡 Что делать: Сбой опроса. Проверьте канал связи в ЛЭРС УЧЁТ или перезагрузите модем на объекте по питанию.";
+                return "Рекомендация: канал связи занят другим сеансом в ЛЭРС УЧЁТ. Дождитесь его завершения.";
+            return "Рекомендация: сбой опроса. Проверьте канал связи в ЛЭРС УЧЁТ или перезагрузите модем на объекте по питанию.";
         }
     }
 

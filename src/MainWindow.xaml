@@ -9,12 +9,50 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource SystemBackground}"
         Foreground="{DynamicResource LabelPrimary}"
-        FontFamily="SF Pro Display, -apple-system, Segoe UI Variable Display, Segoe UI, Helvetica"
+        FontFamily="Segoe UI Variable Text, Segoe UI, Arial"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- ═══ Unified Font Family ═══ -->
+        <FontFamily x:Key="AppFont">Segoe UI Variable Text, Segoe UI, Arial</FontFamily>
+
+        <!-- ═══ Crisp Vector Icons (Lucide / SF Symbols style, 24x24 viewBox) ═══ -->
+        <Geometry x:Key="IconSettings">M12,15 A3,3 0 1,0 12,9 A3,3 0 1,0 12,15 M19.4,15 A1.65,1.65 0 0,0 19.73,16.82 L19.79,16.88 A2,2 0 1,1 16.96,19.71 L16.9,19.65 A1.65,1.65 0 0,0 15.08,19.32 A1.65,1.65 0 0,0 14.08,20.83 L14.08,21 A2,2 0 1,1 10.08,21 L10.08,20.91 A1.65,1.65 0 0,0 9,19.4 A1.65,1.65 0 0,0 7.18,19.73 L7.12,19.79 A2,2 0 1,1 4.29,16.96 L4.35,16.9 A1.65,1.65 0 0,0 4.68,15.08 A1.65,1.65 0 0,0 3.17,14.08 L3,14.08 A2,2 0 1,1 3,10.08 L3.09,10.08 A1.65,1.65 0 0,0 4.6,9 A1.65,1.65 0 0,0 4.27,7.18 L4.21,7.12 A2,2 0 1,1 7.04,4.29 L7.1,4.35 A1.65,1.65 0 0,0 8.92,4.68 H9 A1.65,1.65 0 0,0 10,3.17 V3 A2,2 0 1,1 14,3 V3.09 A1.65,1.65 0 0,0 15,4.6 A1.65,1.65 0 0,0 16.82,4.27 L16.88,4.21 A2,2 0 1,1 19.71,7.04 L19.65,7.1 A1.65,1.65 0 0,0 19.32,8.92 V9 A1.65,1.65 0 0,0 20.83,10 H21 A2,2 0 1,1 21,14 H20.91 A1.65,1.65 0 0,0 19.4,15 Z</Geometry>
+        <Geometry x:Key="IconSliders">M4,21 V14 M4,10 V3 M12,21 V12 M12,8 V3 M20,21 V16 M20,12 V3 M1,14 H7 M9,8 H15 M17,16 H23</Geometry>
+        <Geometry x:Key="IconPlay">M6,4 L20,12 L6,20 Z</Geometry>
+        <Geometry x:Key="IconStop">M6,6 H18 V18 H6 Z</Geometry>
+        <Geometry x:Key="IconRefresh">M21,12 A9,9 0 1,1 18.36,5.64 M21,3 V9 H15</Geometry>
+        <Geometry x:Key="IconClose">M6,6 L18,18 M18,6 L6,18</Geometry>
+        <Geometry x:Key="IconInfo">M12,22 A10,10 0 1,0 12,2 A10,10 0 1,0 12,22 M12,16 V12 M12,8 H12.01</Geometry>
+        <Geometry x:Key="IconCalendar">M19,4 H5 A2,2 0 0,0 3,6 V20 A2,2 0 0,0 5,22 H19 A2,2 0 0,0 21,20 V6 A2,2 0 0,0 19,4 Z M16,2 V6 M8,2 V6 M3,10 H21</Geometry>
+        <Geometry x:Key="IconChart">M3,3 V21 H21 M7,15 L11,11 L15,14 L20,8</Geometry>
+        <Geometry x:Key="IconCopy">M9,9 H20 V20 H9 Z M5,15 H4 A2,2 0 0,1 2,13 V4 A2,2 0 0,1 4,2 H13 A2,2 0 0,1 15,4 V5</Geometry>
+        <Geometry x:Key="IconGlobe">M12,22 A10,10 0 1,0 12,2 A10,10 0 1,0 12,22 M2,12 H22 M12,2 A15.3,15.3 0 0,1 16,12 A15.3,15.3 0 0,1 12,22 A15.3,15.3 0 0,1 8,12 A15.3,15.3 0 0,1 12,2 Z</Geometry>
+        <Geometry x:Key="IconPlus">M12,5 V19 M5,12 H19</Geometry>
+        <Geometry x:Key="IconTrash">M3,6 H21 M8,6 V4 A2,2 0 0,1 10,2 H14 A2,2 0 0,1 16,4 V6 M19,6 L18,20 A2,2 0 0,1 16,22 H8 A2,2 0 0,1 6,20 L5,6 M10,11 V17 M14,11 V17</Geometry>
+        <Geometry x:Key="IconDownload">M21,15 V19 A2,2 0 0,1 19,21 H5 A2,2 0 0,1 3,19 V15 M7,10 L12,15 L17,10 M12,15 V3</Geometry>
+        <Geometry x:Key="IconUpload">M21,15 V19 A2,2 0 0,1 19,21 H5 A2,2 0 0,1 3,19 V15 M17,8 L12,3 L7,8 M12,3 V15</Geometry>
+        <Geometry x:Key="IconChevronLeft">M15,18 L9,12 L15,6</Geometry>
+        <Geometry x:Key="IconChevronRight">M9,18 L15,12 L9,6</Geometry>
+        <Geometry x:Key="IconPlusMinus">M12,4 V12 M8,8 H16 M8,18 H16</Geometry>
+        <Geometry x:Key="IconPlug">M12,22 V17 M9,7 V2 M15,7 V2 M6,7 H18 V12 A6,6 0 0,1 6,12 Z</Geometry>
+
+        <!-- Icon Path Base Style -->
+        <Style x:Key="StrokeIcon" TargetType="Path">
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="Stretch" Value="Uniform"/>
+            <Setter Property="StrokeThickness" Value="1.8"/>
+            <Setter Property="StrokeStartLineCap" Value="Round"/>
+            <Setter Property="StrokeEndLineCap" Value="Round"/>
+            <Setter Property="StrokeLineJoin" Value="Round"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
 
         <!-- ═══ Bento / BoardUI Color Palette (Defaults to Dark, updated dynamically by ApplyThemeColors) ═══ -->
         <SolidColorBrush x:Key="SystemBackground" Color="#09090B"/>
@@ -46,12 +84,12 @@
         <SolidColorBrush x:Key="StatusDotWait" Color="#FF9F0A"/>
 
         <!-- Bento Status Surface Tints & Hairline Borders -->
-        <SolidColorBrush x:Key="StatusOkBg" Color="#122319"/>
-        <SolidColorBrush x:Key="StatusOkBorder" Color="#1F4A30"/>
-        <SolidColorBrush x:Key="StatusErrBg" Color="#291416"/>
-        <SolidColorBrush x:Key="StatusErrBorder" Color="#592226"/>
-        <SolidColorBrush x:Key="StatusWarnBg" Color="#291E11"/>
-        <SolidColorBrush x:Key="StatusWarnBorder" Color="#573D1A"/>
+        <SolidColorBrush x:Key="StatusOkBg" Color="#11291B"/>
+        <SolidColorBrush x:Key="StatusOkBorder" Color="#225C3B"/>
+        <SolidColorBrush x:Key="StatusErrBg" Color="#2D1316"/>
+        <SolidColorBrush x:Key="StatusErrBorder" Color="#7F1D1D"/>
+        <SolidColorBrush x:Key="StatusWarnBg" Color="#2D1F0E"/>
+        <SolidColorBrush x:Key="StatusWarnBorder" Color="#78350F"/>
         <SolidColorBrush x:Key="StatusIdleBg" Color="#19191E"/>
         <SolidColorBrush x:Key="StatusIdleBorder" Color="#2A2A32"/>
         <SolidColorBrush x:Key="StatusInfoBg" Color="#112233"/>
@@ -114,16 +152,19 @@
             </Style.Triggers>
         </Style>
 
-        <!-- ═══ TextBox — Bento Style ═══ -->
+        <!-- ═══ TextBox — Bento Style (Unified Height 34) ═══ -->
         <Style TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="CaretBrush" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="SelectionBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -148,23 +189,25 @@
 
         <!-- ═══ Компактное числовое поле ═══ -->
         <Style x:Key="CompactNumericTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-            <Setter Property="Width" Value="76"/>
+            <Setter Property="Width" Value="84"/>
             <Setter Property="Height" Value="30"/>
-            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="HorizontalContentAlignment" Value="Right"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Right"/>
         </Style>
 
-        <!-- ═══ ComboBox — Bento Style ═══ -->
+        <!-- ═══ ComboBox — Bento Style (Unified Height 34) ═══ -->
         <Style TargetType="ComboBox">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Padding" Value="6,0"/>
             <Setter Property="Height" Value="34"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -225,6 +268,8 @@
         </Style>
 
         <Style TargetType="ComboBoxItem">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+            <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="Padding" Value="10,8"/>
@@ -248,8 +293,9 @@
             </Setter>
         </Style>
 
-        <!-- ═══ DatePicker — Bento Style ═══ -->
+        <!-- ═══ DatePicker — Bento Style (Vector Calendar Icon) ═══ -->
         <Style TargetType="DatePickerTextBox">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="CaretBrush" Value="{DynamicResource AccentBlue}"/>
@@ -268,6 +314,7 @@
         </Style>
 
         <Style TargetType="DatePicker">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
@@ -289,13 +336,19 @@
                                 <DatePickerTextBox x:Name="PART_TextBox" Grid.Column="0"
                                                    Foreground="{TemplateBinding Foreground}"
                                                    VerticalAlignment="Center"/>
-                                <Button x:Name="PART_Button" Grid.Column="1" Width="26" Height="26"
+                                <Button x:Name="PART_Button" Grid.Column="1" Width="28" Height="28"
                                         Background="Transparent" BorderThickness="0" Cursor="Hand" Focusable="False">
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
-                                            <Border Background="Transparent" CornerRadius="6">
-                                                <TextBlock Text="📅" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.8"/>
+                                            <Border x:Name="calBd" Background="Transparent" CornerRadius="6">
+                                                <Path Data="{StaticResource IconCalendar}" Style="{StaticResource StrokeIcon}" Width="14" Height="14"
+                                                      Stroke="{DynamicResource LabelSecondary}"/>
                                             </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="calBd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
@@ -315,16 +368,19 @@
             </Setter>
         </Style>
 
-        <!-- ═══ PasswordBox — Bento Style ═══ -->
+        <!-- ═══ PasswordBox — Bento Style (Unified Height 34) ═══ -->
         <Style TargetType="PasswordBox">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="CaretBrush" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="SelectionBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="PasswordBox">
@@ -347,13 +403,15 @@
             </Setter>
         </Style>
 
-        <!-- ═══ Primary & Secondary Buttons — Bento Pills ═══ -->
+        <!-- ═══ Primary & Secondary Buttons — Bento Pills (Unified Height 34) ═══ -->
         <Style x:Key="ApplePrimaryButton" TargetType="Button">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12.5"/>
-            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="14,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -381,13 +439,15 @@
         </Style>
 
         <Style x:Key="BentoSecondaryButton" TargetType="Button">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12.5"/>
-            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="12,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -426,15 +486,18 @@
 
         <!-- ═══ Ghost Button ═══ -->
         <Style x:Key="AppleGhostButton" TargetType="Button">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="10,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="9,5">
+                        <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -450,6 +513,65 @@
             </Setter>
         </Style>
 
+        <!-- ═══ Modal Close Icon Button ═══ -->
+        <Style x:Key="ModalCloseButton" TargetType="Button">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <Path Data="{StaticResource IconClose}" Style="{StaticResource StrokeIcon}" Width="12" Height="12"
+                                  Stroke="{DynamicResource LabelSecondary}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource LabelTertiary}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══ Card Action Icon Button (for Info / Retry on Bento cards) ═══ -->
+        <Style x:Key="CardIconButton" TargetType="Button">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackground}"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ═══ Side Panel Toggle ═══ -->
         <Style x:Key="SidePanelToggleBtn" TargetType="Button">
             <Setter Property="Width" Value="20"/>
@@ -458,8 +580,6 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -472,7 +592,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource LabelTertiary}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -482,6 +602,7 @@
 
         <!-- ═══ CheckBox — Bento Toggle Style ═══ -->
         <Style TargetType="CheckBox">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -520,6 +641,7 @@
 
         <!-- ═══ DataGrid — Bento Table Style ═══ -->
         <Style TargetType="DataGrid">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="RowHeight" Value="40"/>
@@ -547,6 +669,7 @@
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -558,6 +681,7 @@
         </Style>
 
         <Style TargetType="DataGridCell">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Padding" Value="12,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
@@ -573,6 +697,7 @@
 
         <!-- ═══ Segmented Control — Bento / BoardUI Switcher ═══ -->
         <Style x:Key="TabNavButton" TargetType="RadioButton">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -672,6 +797,7 @@
 
         <!-- ═══ ListBoxItem — Bento Grouped List ═══ -->
         <Style x:Key="BentoListItem" TargetType="ListBoxItem">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Margin" Value="0,1"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -708,37 +834,40 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Верхняя панель подключения (Bento Header) -->
+            <!-- Верхняя панель подключения (Bento Header — все поля и кнопки на одной линии Height=34) -->
             <Border Grid.Row="0" Style="{StaticResource BentoCard}" Padding="16,12" Margin="0,0,0,10">
-                <WrapPanel VerticalAlignment="Center">
-                    <StackPanel Margin="0,0,12,6">
+                <WrapPanel VerticalAlignment="Bottom">
+                    <StackPanel Margin="0,0,10,4" VerticalAlignment="Bottom">
                         <TextBlock Text="Сервер" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4" FontWeight="Medium"/>
-                        <TextBox x:Name="TxtHost" Width="128" Text="localhost"/>
+                        <TextBox x:Name="TxtHost" Width="126" Text="localhost"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,12,6">
+                    <StackPanel Margin="0,0,10,4" VerticalAlignment="Bottom">
                         <TextBlock Text="Порт" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4" FontWeight="Medium"/>
                         <TextBox x:Name="TxtPort" Width="64" Text="10000"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,12,6">
+                    <StackPanel Margin="0,0,10,4" VerticalAlignment="Bottom">
                         <TextBlock Text="Логин" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4" FontWeight="Medium"/>
                         <TextBox x:Name="TxtLogin" Width="100"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,12,6">
+                    <StackPanel Margin="0,0,10,4" VerticalAlignment="Bottom">
                         <TextBlock Text="Пароль" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4" FontWeight="Medium"/>
                         <PasswordBox x:Name="TxtPassword" Width="100"/>
                     </StackPanel>
-                    <CheckBox x:Name="ChkRemember" Content="Запомнить" IsChecked="True" VerticalAlignment="Bottom" Margin="0,0,14,13"/>
 
-                    <StackPanel Margin="0,0,12,6">
+                    <Border Height="34" VerticalAlignment="Bottom" Margin="2,0,12,4">
+                        <CheckBox x:Name="ChkRemember" Content="Запомнить" IsChecked="True" Margin="0" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <StackPanel Margin="0,0,10,4" VerticalAlignment="Bottom">
                         <TextBlock Text="Тема" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4" FontWeight="Medium"/>
-                        <ComboBox x:Name="CmbTheme" Width="116" SelectionChanged="CmbTheme_SelectionChanged">
-                            <ComboBoxItem Content="☀ Светлая"/>
-                            <ComboBoxItem Content="🌙 Тёмная"/>
-                            <ComboBoxItem Content="🕒 Авто"/>
+                        <ComboBox x:Name="CmbTheme" Width="104" SelectionChanged="CmbTheme_SelectionChanged">
+                            <ComboBoxItem Content="Светлая"/>
+                            <ComboBoxItem Content="Тёмная"/>
+                            <ComboBoxItem Content="Авто"/>
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel x:Name="PanelAutoTheme" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,12,6">
+                    <StackPanel x:Name="PanelAutoTheme" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,10,4" VerticalAlignment="Bottom">
                         <StackPanel Margin="0,0,8,0">
                             <TextBlock Text="День с" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4" FontWeight="Medium"/>
                             <TextBox x:Name="TxtThemeLight" Width="56" Text="08:00"/>
@@ -749,7 +878,7 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <StackPanel Margin="0,0,12,6">
+                    <StackPanel Margin="0,0,12,4" VerticalAlignment="Bottom">
                         <TextBlock Text="Источник Тнв (улица)" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,4" FontWeight="Medium"/>
                         <StackPanel Orientation="Horizontal">
                             <ComboBox x:Name="CmbTnvSource" Width="196" DisplayMemberPath="DisplayName" SelectionChanged="CmbTnvSource_SelectionChanged"/>
@@ -760,11 +889,18 @@
                                     <TextBlock Text=" °C" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
                                 </StackPanel>
                             </Border>
-                            <Button x:Name="BtnTnvCorrection" Content="±" Style="{StaticResource BentoSecondaryButton}" Padding="10,6" Margin="6,0,0,0" ToolTip="Корректировка датчика наружного воздуха" Click="BtnTnvCorrection_Click"/>
+                            <Button x:Name="BtnTnvCorrection" Style="{StaticResource BentoSecondaryButton}" Width="34" Padding="0" Margin="6,0,0,0" ToolTip="Корректировка датчика наружного воздуха" Click="BtnTnvCorrection_Click">
+                                <Path Data="{StaticResource IconPlusMinus}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelPrimary}"/>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
 
-                    <Button x:Name="BtnConnect" Content="Подключиться" Style="{StaticResource ApplePrimaryButton}" Click="BtnConnect_Click" VerticalAlignment="Bottom" Margin="0,0,0,6"/>
+                    <Button x:Name="BtnConnect" Style="{StaticResource ApplePrimaryButton}" Click="BtnConnect_Click" VerticalAlignment="Bottom" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconPlug}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="White" Margin="0,0,7,0"/>
+                            <TextBlock Text="Подключиться" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </WrapPanel>
             </Border>
 
@@ -784,9 +920,12 @@
                         <RadioButton x:Name="TabArchive" Content="Архив" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
                     </StackPanel>
                 </Border>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="BtnSettingsGear" Content="⚙ Настройки" Style="{StaticResource BentoSecondaryButton}" Padding="12,7" Click="BtnSettingsGear_Click" ToolTip="Настройки приложения"/>
-                </StackPanel>
+                <Button x:Name="BtnSettingsGear" Grid.Column="2" Style="{StaticResource BentoSecondaryButton}" Click="BtnSettingsGear_Click" ToolTip="Настройки приложения" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconSettings}" Style="{StaticResource StrokeIcon}" Width="14" Height="14" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                        <TextBlock Text="Настройки" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </Grid>
 
             <!-- Экран 1: Общий мониторинг точек -->
@@ -811,9 +950,9 @@
                                    Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,10"/>
 
                         <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                            <TextBox x:Name="TxtSearch" Padding="10,7" Margin="0,0,0,8"
+                            <TextBox x:Name="TxtSearch" Margin="0,0,0,8"
                                      ToolTip="Поиск по названию" TextChanged="ApplyFilters_Changed"/>
-                            <Grid Margin="0,0,0,2">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -828,7 +967,7 @@
                                  ItemContainerStyle="{StaticResource BentoListItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
 
-                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0">
+                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0">
                             <Grid>
                                 <Button Content="Выделить всё" Style="{StaticResource AppleGhostButton}" HorizontalAlignment="Left" Click="BtnSelectAll_Click"/>
                                 <Button Content="Очистить" Style="{StaticResource AppleGhostButton}" Foreground="{DynamicResource AccentRed}" HorizontalAlignment="Right" Click="BtnClearSelection_Click"/>
@@ -837,7 +976,9 @@
                     </Grid>
                 </Border>
 
-                <Button x:Name="BtnToggleGenPanel" Grid.Column="1" Content="◀" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleGeneral_Click" ToolTip="Свернуть/развернуть панель объектов"/>
+                <Button x:Name="BtnToggleGenPanel" Grid.Column="1" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleGeneral_Click" ToolTip="Свернуть/развернуть панель объектов">
+                    <Path Data="{StaticResource IconChevronLeft}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Stroke="{DynamicResource LabelSecondary}"/>
+                </Button>
 
                 <!-- Правая колонка -->
                 <Border Grid.Column="2" Style="{StaticResource BentoCard}" Padding="16">
@@ -848,16 +989,37 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <WrapPanel Grid.Row="0" Margin="0,0,0,10" VerticalAlignment="Center">
-                            <TextBlock Text="Текущие параметры" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center" Margin="0,0,18,8"/>
-                            <Button x:Name="BtnSettings" Content="⚙ Границы" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,8" Click="BtnSettingsShared_Click"/>
-                            <Button x:Name="BtnStartMonitor" Content="▶ Опросить выбранные" Style="{StaticResource AppleGreenButton}" Margin="0,0,8,8" Click="BtnStartMonitor_Click" IsEnabled="False"/>
-                            <Button x:Name="BtnCancelMonitor" Content="✕ Отмена опроса" Style="{StaticResource AppleRedButton}" Margin="0,0,0,8" Visibility="Collapsed" Click="BtnCancelMonitor_Click"/>
-                        </WrapPanel>
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Текущие параметры" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="BtnSettings" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnSettingsShared_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconSliders}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Границы" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStartMonitor" Style="{StaticResource AppleGreenButton}" Margin="0,0,0,0" Click="BtnStartMonitor_Click" IsEnabled="False">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Опросить выбранные" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnCancelMonitor" Style="{StaticResource AppleRedButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="BtnCancelMonitor_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconStop}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Отмена опроса" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
 
-                        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="10,7" Margin="0,0,0,12">
+                        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,12">
                             <WrapPanel VerticalAlignment="Center">
-                                <TextBlock Text="Колонки:" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Колонки:" FontSize="11.5" FontWeight="Medium" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <CheckBox Content="T1" IsChecked="True" Click="ColumnToggle_Click"/>
                                 <CheckBox Content="T2" IsChecked="True" Click="ColumnToggle_Click"/>
                                 <CheckBox Content="P1" IsChecked="True" Click="ColumnToggle_Click"/>
@@ -927,21 +1089,44 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <WrapPanel Grid.Row="0" Margin="0,0,0,14" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,8">
-                                <TextBlock Text="Точка учёта:" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ComboBox x:Name="CmbTrendPoint" Width="380" DisplayMemberPath="DisplayName"/>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
+                                    <TextBlock Text="Точка учёта:" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <ComboBox x:Name="CmbTrendPoint" Width="380" DisplayMemberPath="DisplayName"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
+                                    <TextBlock Text="Длительность (мин):" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <ComboBox x:Name="CmbTrendDuration" Width="68"/>
+                                </StackPanel>
+                            </WrapPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
+                                <Button x:Name="BtnClearTrend" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnClearTrend_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconTrash}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Очистить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStartTrend" Style="{StaticResource AppleGreenButton}" Click="BtnStartTrend_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Запустить мониторинг" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStopTrend" Style="{StaticResource AppleRedButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="BtnStopTrend_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconStop}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Остановить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,8">
-                                <TextBlock Text="Длительность (мин):" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ComboBox x:Name="CmbTrendDuration" Width="68"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
-                                <Button x:Name="BtnClearTrend" Content="Очистить" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnClearTrend_Click"/>
-                                <Button x:Name="BtnStartTrend" Content="▶ Запустить мониторинг" Style="{StaticResource AppleGreenButton}" Click="BtnStartTrend_Click"/>
-                                <Button x:Name="BtnStopTrend" Content="⏹ Остановить" Style="{StaticResource AppleRedButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="BtnStopTrend_Click"/>
-                            </StackPanel>
-                        </WrapPanel>
+                        </Grid>
+
                         <Border Grid.Row="1" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
                             <DataGrid x:Name="GridTrend" AutoGenerateColumns="False" IsReadOnly="True">
                                 <DataGrid.Columns>
@@ -1005,8 +1190,8 @@
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Text="Точки для Дашборда" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,10"/>
                         <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                            <TextBox x:Name="TxtSearchDashboard" Padding="10,7" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersDashboard_Changed"/>
-                            <Grid Margin="0,0,0,2">
+                            <TextBox x:Name="TxtSearchDashboard" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersDashboard_Changed"/>
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -1018,7 +1203,7 @@
                         <ListBox Grid.Row="2" x:Name="ListPointsDashboard" SelectionMode="Multiple" DisplayMemberPath="DisplayName"
                                  BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource BentoListItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
-                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0">
+                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0">
                             <Grid>
                                 <Button Content="Выделить всё" Style="{StaticResource AppleGhostButton}" HorizontalAlignment="Left" Click="BtnSelectAllDashboard_Click"/>
                                 <Button Content="Очистить" Style="{StaticResource AppleGhostButton}" Foreground="{DynamicResource AccentRed}" HorizontalAlignment="Right" Click="BtnClearSelectionDashboard_Click"/>
@@ -1027,7 +1212,9 @@
                     </Grid>
                 </Border>
 
-                <Button x:Name="BtnToggleDashPanel" Grid.Column="1" Content="◀" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleDashboard_Click" ToolTip="Свернуть/развернуть список точек"/>
+                <Button x:Name="BtnToggleDashPanel" Grid.Column="1" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleDashboard_Click" ToolTip="Свернуть/развернуть список точек">
+                    <Path Data="{StaticResource IconChevronLeft}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Stroke="{DynamicResource LabelSecondary}"/>
+                </Button>
 
                 <!-- Правая колонка: Плитки Дашборда -->
                 <Grid Grid.Column="2">
@@ -1038,37 +1225,64 @@
 
                     <!-- Панель управления дашбордом -->
                     <Border Grid.Row="0" Style="{StaticResource BentoCard}" Padding="14,10" Margin="0,0,0,12">
-                        <WrapPanel VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,6">
-                                <TextBlock Text="Интервал (мин):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <ComboBox x:Name="CmbDashboardInterval" Width="64" VerticalAlignment="Center"/>
-                            </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                            <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="9" Padding="10,5" Margin="0,0,16,6">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <CheckBox x:Name="ChkDashT" Content="T" IsChecked="True" Click="DashFilter_Click"/>
-                                    <CheckBox x:Name="ChkDashP" Content="P" IsChecked="True" Click="DashFilter_Click"/>
-                                    <CheckBox x:Name="ChkDashV" Content="V" IsChecked="True" Click="DashFilter_Click"/>
-                                    <CheckBox x:Name="ChkDashM" Content="M" IsChecked="True" Click="DashFilter_Click"/>
-                                    <CheckBox x:Name="ChkDashQ" Content="Q" IsChecked="True" Click="DashFilter_Click"/>
-                                    <CheckBox x:Name="ChkDashDeltaT" Content="ΔT" IsChecked="True" Click="DashFilter_Click"/>
-                                    <CheckBox x:Name="ChkDashDeltaP" Content="ΔP" IsChecked="True" Margin="0" Click="DashFilter_Click"/>
+                            <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,14,3">
+                                    <TextBlock Text="Интервал (мин):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <ComboBox x:Name="CmbDashboardInterval" Width="64" VerticalAlignment="Center"/>
                                 </StackPanel>
-                            </Border>
 
-                            <!-- Масштаб ТОЛЬКО ПЛИТОК -->
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,6">
-                                <TextBlock Text="Масштаб плиток:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <Slider x:Name="SldUiScale" Width="88" Minimum="0.6" Maximum="1.6" Value="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
-                            </StackPanel>
+                                <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="10,0" Height="34" Margin="0,3,14,3">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <CheckBox x:Name="ChkDashT" Content="T" IsChecked="True" Click="DashFilter_Click"/>
+                                        <CheckBox x:Name="ChkDashP" Content="P" IsChecked="True" Click="DashFilter_Click"/>
+                                        <CheckBox x:Name="ChkDashV" Content="V" IsChecked="True" Click="DashFilter_Click"/>
+                                        <CheckBox x:Name="ChkDashM" Content="M" IsChecked="True" Click="DashFilter_Click"/>
+                                        <CheckBox x:Name="ChkDashQ" Content="Q" IsChecked="True" Click="DashFilter_Click"/>
+                                        <CheckBox x:Name="ChkDashDeltaT" Content="ΔT" IsChecked="True" Click="DashFilter_Click"/>
+                                        <CheckBox x:Name="ChkDashDeltaP" Content="ΔP" IsChecked="True" Margin="0" Click="DashFilter_Click"/>
+                                    </StackPanel>
+                                </Border>
 
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
-                                <Button x:Name="BtnSettingsDashboard" Content="⚙ Границы" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnSettingsShared_Click"/>
-                                <Button x:Name="BtnForcePoll" Content="⟳ Опросить сейчас" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnForcePoll_Click" IsEnabled="False"/>
-                                <Button x:Name="BtnStartDashboard" Content="▶ Запустить" Style="{StaticResource AppleGreenButton}" Margin="0,0,8,0" Click="BtnStartDashboard_Click" IsEnabled="False"/>
-                                <Button x:Name="BtnStopDashboard" Content="⏹ Стоп" Style="{StaticResource AppleRedButton}" Margin="0,0,0,0" Visibility="Collapsed" Click="BtnStopDashboard_Click"/>
+                                <!-- Масштаб ТОЛЬКО ПЛИТОК -->
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,12,3" Height="34">
+                                    <TextBlock Text="Масштаб плиток:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Slider x:Name="SldUiScale" Width="88" Minimum="0.6" Maximum="1.6" Value="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </WrapPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,3,0,3">
+                                <Button x:Name="BtnSettingsDashboard" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnSettingsShared_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconSliders}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Границы" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnForcePoll" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnForcePoll_Click" IsEnabled="False">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Опросить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStartDashboard" Style="{StaticResource AppleGreenButton}" Click="BtnStartDashboard_Click" IsEnabled="False">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Запустить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStopDashboard" Style="{StaticResource AppleRedButton}" Visibility="Collapsed" Click="BtnStopDashboard_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconStop}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Стоп" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
-                        </WrapPanel>
+                        </Grid>
                     </Border>
 
                     <!-- Одиночный режим (Bento KPI-плитки) -->
@@ -1086,19 +1300,9 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding NodeTitle}" FontSize="20" FontWeight="Bold" Foreground="{Binding TileForeground}"/>
-                                        <TextBlock Text="  ·  " FontSize="18" Foreground="{DynamicResource LabelTertiary}"/>
-                                        <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Medium" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
-                                        <Button Tag="{Binding}" Click="BtnPollDetails_Click" Margin="10,0,0,0" Width="24" Height="24"
-                                                Background="{DynamicResource StatusInfoBg}" BorderBrush="{DynamicResource StatusInfoBorder}" BorderThickness="1" Cursor="Hand" ToolTip="Открыть логи и ход опроса">
-                                            <Button.Template>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
-                                                        <TextBlock Text="ℹ" Foreground="{DynamicResource AccentTeal}" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Button.Template>
-                                        </Button>
+                                        <TextBlock Text="{Binding NodeTitle}" FontSize="19" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}"/>
+                                        <TextBlock Text="  ·  " FontSize="17" Foreground="{DynamicResource LabelTertiary}"/>
+                                        <TextBlock Text="{Binding Title}" FontSize="15.5" FontWeight="Medium" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                         <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding StatusBadgeBorder}" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="0,0,12,0">
@@ -1110,6 +1314,13 @@
                                         <TextBlock Text="{Binding DeviceTime, StringFormat='Обновлено: {0:dd.MM.yyyy HH:mm:ss}'}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
+
+                                <Button Grid.Column="1" Tag="{Binding}" Click="BtnPollDetails_Click" Style="{StaticResource BentoSecondaryButton}" VerticalAlignment="Center" ToolTip="Открыть журнал хода опроса">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconInfo}" Style="{StaticResource StrokeIcon}" Width="14" Height="14" Stroke="{DynamicResource AccentTeal}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Ход опроса" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </Grid>
                         </Border>
 
@@ -1346,7 +1557,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel Grid.Column="0">
                                                     <TextBlock Text="{Binding NodeTitle}" Foreground="{DynamicResource LabelPrimary}" FontSize="14" FontWeight="Bold" TextWrapping="Wrap" ToolTip="{Binding NodeTitle}"/>
-                                                    <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="6,2" HorizontalAlignment="Left" Margin="0,4,0,0">
+                                                    <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="7,2" HorizontalAlignment="Left" Margin="0,4,0,0">
                                                         <StackPanel Orientation="Horizontal">
                                                             <Ellipse Width="6" Height="6" Fill="{Binding StatusAccent}" Margin="0,0,5,0" VerticalAlignment="Center"/>
                                                             <TextBlock Text="{Binding GeneralStatus}" Foreground="{Binding StatusAccent}" FontSize="10.5" FontWeight="SemiBold"/>
@@ -1358,8 +1569,8 @@
                                                         ToolTip="{Binding ToggleTooltip}" Cursor="Hand" VerticalAlignment="Top" Margin="8,0,0,0">
                                                     <Button.Template>
                                                         <ControlTemplate TargetType="Button">
-                                                            <Border Width="24" Height="24" CornerRadius="8" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
-                                                                <TextBlock Text="{Binding ToggleIcon}" Foreground="{Binding ToggleFg}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            <Border Width="26" Height="26" CornerRadius="8" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
+                                                                <Path Data="{Binding ToggleGeometry}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Stroke="{Binding ToggleFg}"/>
                                                             </Border>
                                                         </ControlTemplate>
                                                     </Button.Template>
@@ -1390,12 +1601,12 @@
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <Ellipse Grid.Column="0" Width="6" Height="6" Fill="{Binding SingleStatusColor}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                                    <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                                    <Button Grid.Column="2" Tag="{Binding}" Click="BtnPollDetails_Click" Width="18" Height="18" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Ход опроса">
-                                                                        <TextBlock Text="ℹ" Foreground="{DynamicResource AccentTeal}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                                    <Button Grid.Column="2" Tag="{Binding}" Click="BtnPollDetails_Click" Style="{StaticResource CardIconButton}" ToolTip="Ход опроса">
+                                                                        <Path Data="{StaticResource IconInfo}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentTeal}"/>
                                                                     </Button>
-                                                                    <Button Grid.Column="3" Tag="{Binding}" Visibility="{Binding RetryVisibility}" Click="BtnRetryPoint_Click" Width="18" Height="18" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Повторить опрос">
-                                                                        <TextBlock Text="↻" Foreground="{DynamicResource AccentOrange}" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    <Button Grid.Column="3" Tag="{Binding}" Visibility="{Binding RetryVisibility}" Click="BtnRetryPoint_Click" Style="{StaticResource CardIconButton}" Margin="2,0,0,0" ToolTip="Повторить опрос">
+                                                                        <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentOrange}"/>
                                                                     </Button>
                                                                 </Grid>
 
@@ -1485,8 +1696,8 @@
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Text="Точки подпитки" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,10"/>
                         <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                            <TextBox x:Name="TxtSearchPodpitka" Padding="10,7" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersPodpitka_Changed"/>
-                            <Grid Margin="0,0,0,2">
+                            <TextBox x:Name="TxtSearchPodpitka" Margin="0,0,0,8" ToolTip="Поиск по названию" TextChanged="ApplyFiltersPodpitka_Changed"/>
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -1498,7 +1709,7 @@
                         <ListBox Grid.Row="2" x:Name="ListPodpitka" SelectionMode="Multiple" DisplayMemberPath="DisplayName"
                                  BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource BentoListItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="ListPodpitka_SelectionChanged"/>
-                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0">
+                        <Border Grid.Row="3" Margin="0,10,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0">
                             <Grid>
                                 <Button Content="Выделить всё" Style="{StaticResource AppleGhostButton}" HorizontalAlignment="Left" Click="BtnSelectAllPodpitka_Click"/>
                                 <Button Content="Очистить" Style="{StaticResource AppleGhostButton}" Foreground="{DynamicResource AccentRed}" HorizontalAlignment="Right" Click="BtnClearSelectionPodpitka_Click"/>
@@ -1507,7 +1718,9 @@
                     </Grid>
                 </Border>
 
-                <Button x:Name="BtnTogglePodpPanel" Grid.Column="1" Content="◀" Style="{StaticResource SidePanelToggleBtn}" Click="BtnTogglePodpitka_Click" ToolTip="Свернуть/развернуть список точек"/>
+                <Button x:Name="BtnTogglePodpPanel" Grid.Column="1" Style="{StaticResource SidePanelToggleBtn}" Click="BtnTogglePodpitka_Click" ToolTip="Свернуть/развернуть список точек">
+                    <Path Data="{StaticResource IconChevronLeft}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Stroke="{DynamicResource LabelSecondary}"/>
+                </Button>
 
                 <Grid Grid.Column="2">
                     <Grid.RowDefinitions>
@@ -1516,25 +1729,52 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0" Style="{StaticResource BentoCard}" Padding="14,10" Margin="0,0,0,12">
-                        <WrapPanel VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,6">
-                                <TextBlock Text="Интервал (мин):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <ComboBox x:Name="CmbPodpitkaInterval" Width="64" SelectionChanged="CmbPodpitkaInterval_Changed"/>
-                            </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                            <!-- Масштаб ТОЛЬКО ПЛИТОК -->
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,6">
-                                <TextBlock Text="Масштаб плиток:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <Slider x:Name="SldPodpitkaScale" Width="88" Minimum="0.6" Maximum="1.6" Value="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,16,3">
+                                    <TextBlock Text="Интервал (мин):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <ComboBox x:Name="CmbPodpitkaInterval" Width="64" SelectionChanged="CmbPodpitkaInterval_Changed"/>
+                                </StackPanel>
 
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
-                                <Button x:Name="BtnPodpitkaLimits" Content="⚙ Допуски V1" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnPodpitkaLimits_Click"/>
-                                <Button x:Name="BtnPodpitkaForce" Content="⟳ Опросить сейчас" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnPodpitkaForce_Click"/>
-                                <Button x:Name="BtnStartPodpitka" Content="▶ Запустить" Style="{StaticResource AppleGreenButton}" Margin="0,0,8,0" Click="BtnStartPodpitka_Click"/>
-                                <Button x:Name="BtnStopPodpitka" Content="⏹ Стоп" Style="{StaticResource AppleRedButton}" Margin="0,0,0,0" Visibility="Collapsed" Click="BtnStopPodpitka_Click"/>
+                                <!-- Масштаб ТОЛЬКО ПЛИТОК -->
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,12,3" Height="34">
+                                    <TextBlock Text="Масштаб плиток:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Slider x:Name="SldPodpitkaScale" Width="88" Minimum="0.6" Maximum="1.6" Value="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </WrapPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,3,0,3">
+                                <Button x:Name="BtnPodpitkaLimits" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnPodpitkaLimits_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconSliders}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Допуски V1" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnPodpitkaForce" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnPodpitkaForce_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Опросить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStartPodpitka" Style="{StaticResource AppleGreenButton}" Click="BtnStartPodpitka_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Запустить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStopPodpitka" Style="{StaticResource AppleRedButton}" Visibility="Collapsed" Click="BtnStopPodpitka_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconStop}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Стоп" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
-                        </WrapPanel>
+                        </Grid>
                     </Border>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -1553,7 +1793,7 @@
                                     <Border Background="{Binding TileBackground}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1.5" CornerRadius="16" Padding="12" VerticalAlignment="Top" HorizontalAlignment="Stretch">
                                         <StackPanel>
                                             <TextBlock Text="{Binding NodeTitle}" Foreground="{DynamicResource LabelPrimary}" FontWeight="Bold" FontSize="14" TextWrapping="Wrap"/>
-                                            <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="6,2" HorizontalAlignment="Left" Margin="0,4,0,8">
+                                            <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="7,2" HorizontalAlignment="Left" Margin="0,4,0,8">
                                                 <StackPanel Orientation="Horizontal">
                                                     <Ellipse Width="6" Height="6" Fill="{Binding StatusAccent}" Margin="0,0,5,0" VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding GeneralStatus}" Foreground="{Binding StatusAccent}" FontSize="10.5" FontWeight="SemiBold"/>
@@ -1574,10 +1814,13 @@
                                                                         <ColumnDefinition Width="Auto"/>
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
-                                                                    <TextBlock Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="11.5" FontWeight="SemiBold" HorizontalAlignment="Left"/>
-                                                                    <Button Grid.Column="1" Tag="{Binding}" Click="BtnPollDetails_Click" Background="Transparent" BorderThickness="0" Content="ℹ" Foreground="{DynamicResource AccentTeal}" ToolTip="Ход опроса" Cursor="Hand" Margin="4,0"/>
-                                                                    <Button Grid.Column="2" Tag="{Binding}" Click="BtnPodpitkaRetry_Click" Visibility="{Binding RetryVisibility}"
-                                                                            Background="Transparent" BorderThickness="0" Content="↻" Foreground="{DynamicResource AccentOrange}" ToolTip="Повторить опрос точки" Cursor="Hand"/>
+                                                                    <TextBlock Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="11.5" FontWeight="SemiBold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                                                    <Button Grid.Column="1" Tag="{Binding}" Click="BtnPollDetails_Click" Style="{StaticResource CardIconButton}" ToolTip="Ход опроса">
+                                                                        <Path Data="{StaticResource IconInfo}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentTeal}"/>
+                                                                    </Button>
+                                                                    <Button Grid.Column="2" Tag="{Binding}" Click="BtnPodpitkaRetry_Click" Visibility="{Binding RetryVisibility}" Style="{StaticResource CardIconButton}" Margin="2,0,0,0" ToolTip="Повторить опрос точки">
+                                                                        <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentOrange}"/>
+                                                                    </Button>
                                                                 </Grid>
                                                                 <UniformGrid Columns="2">
                                                                     <Border Background="{Binding ReportBg}" BorderBrush="{Binding ReportBorder}" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="2">
@@ -1640,7 +1883,7 @@
                         <TextBlock Grid.Row="0" Text="Точки учёта" FontWeight="SemiBold" FontSize="14"
                                    Foreground="{DynamicResource LabelPrimary}" Margin="2,0,0,10"/>
 
-                        <TextBox Grid.Row="1" x:Name="TxtArchiveSearch" Padding="10,7" Margin="0,0,0,10"
+                        <TextBox Grid.Row="1" x:Name="TxtArchiveSearch" Margin="0,0,0,10"
                                  ToolTip="Поиск по названию точки" TextChanged="TxtArchiveSearch_TextChanged"/>
 
                         <ListBox Grid.Row="2" x:Name="ListArchivePoints" SelectionMode="Single"
@@ -1670,7 +1913,7 @@
                                 </Border>
 
                                 <StackPanel x:Name="PanelArchivePreset" Margin="0,0,0,12">
-                                    <ComboBox x:Name="CmbArchiveDays" Height="34" SelectedIndex="1" SelectionChanged="ArchiveKind_Changed">
+                                    <ComboBox x:Name="CmbArchiveDays" SelectedIndex="1" SelectionChanged="ArchiveKind_Changed">
                                         <ComboBoxItem Content="За последние 24 часа"/>
                                         <ComboBoxItem Content="За последние 7 дней"/>
                                         <ComboBoxItem Content="За последние 14 дней"/>
@@ -1696,15 +1939,21 @@
                                     </StackPanel>
                                 </Grid>
 
-                                <Button x:Name="BtnArchiveLoad" Content="Загрузить архив" Style="{StaticResource ApplePrimaryButton}"
-                                        HorizontalAlignment="Stretch" Click="BtnArchiveLoad_Click"/>
+                                <Button x:Name="BtnArchiveLoad" Style="{StaticResource ApplePrimaryButton}" HorizontalAlignment="Stretch" Click="BtnArchiveLoad_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconDownload}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Загрузить архив" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                                 <TextBlock x:Name="TxtArchiveStatus" Text="" FontSize="11" Foreground="{DynamicResource LabelSecondary}" TextWrapping="Wrap" Margin="2,8,2,0"/>
                             </StackPanel>
                         </Border>
                     </Grid>
                 </Border>
 
-                <Button x:Name="BtnToggleArchivePanel" Grid.Column="1" Content="◀" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleArchivePanel_Click" ToolTip="Свернуть/развернуть панель точек"/>
+                <Button x:Name="BtnToggleArchivePanel" Grid.Column="1" Style="{StaticResource SidePanelToggleBtn}" Click="BtnToggleArchivePanel_Click" ToolTip="Свернуть/развернуть панель точек">
+                    <Path Data="{StaticResource IconChevronLeft}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Stroke="{DynamicResource LabelSecondary}"/>
+                </Button>
 
                 <!-- Правая колонка -->
                 <Border Grid.Column="2" Style="{StaticResource BentoCard}" Padding="16">
@@ -1718,7 +1967,12 @@
                         <Grid Grid.Row="0" Margin="0,0,0,10">
                             <TextBlock x:Name="TxtArchiveTitle" Text="Архив показаний" FontWeight="SemiBold" FontSize="15"
                                        Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <Button x:Name="BtnArchiveRefresh" Content="⟳ Обновить" Style="{StaticResource BentoSecondaryButton}" Padding="12,6" HorizontalAlignment="Right" Click="BtnArchiveRefresh_Click"/>
+                            <Button x:Name="BtnArchiveRefresh" Style="{StaticResource BentoSecondaryButton}" HorizontalAlignment="Right" Click="BtnArchiveRefresh_Click">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                    <TextBlock Text="Обновить" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </Grid>
 
                         <Border Grid.Row="1" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,12">
@@ -1742,159 +1996,273 @@
             </Border>
         </Grid>
 
-        <!-- Модальное окно настройки границ -->
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <!-- Модальное окно настройки границ (BoardUI / Bento Unified) -->
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
         <Grid x:Name="OverlayLimits" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="100">
-            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="340">
+            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" Width="400">
                 <StackPanel>
-                    <TextBlock x:Name="TxtLimitsTitle" Text="Границы" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" Foreground="{Binding TileForeground}"/>
-                    <TextBlock x:Name="TxtLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,12"/>
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock x:Name="TxtLimitsTitle" Text="Границы параметров" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource LabelPrimary}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="TxtLimitsSubtitle" Text="Очистите поле, чтобы убрать ограничение" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ModalCloseButton}" Click="BtnCancelLimits_Click" VerticalAlignment="Top" ToolTip="Закрыть"/>
+                    </Grid>
 
-                    <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
-                        <Grid HorizontalAlignment="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="110"/>
-                                <ColumnDefinition Width="84"/>
-                                <ColumnDefinition Width="84"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                    <!-- Grouped Parameter Grid -->
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,12">
+                        <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="92"/>
+                                    <ColumnDefinition Width="92"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Column="1" Text="Мин." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
-                            <TextBlock Grid.Column="2" Text="Макс." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Параметр" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="Минимум" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,0,6,8" Foreground="{DynamicResource LabelSecondary}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Максимум" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,0,6,8" Foreground="{DynamicResource LabelSecondary}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="T1 (°C)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtT1Min" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtT1Max" Grid.Row="1" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="T1" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · °C" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtT1Min" Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtT1Max" Grid.Row="1" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="T2 (°C)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtT2Min" Grid.Row="2" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtT2Max" Grid.Row="2" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="T2" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · °C" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtT2Min" Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtT2Max" Grid.Row="2" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="P1 (атм)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtP1Min" Grid.Row="3" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtP1Max" Grid.Row="3" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="P1" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · атм" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtP1Min" Grid.Row="3" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtP1Max" Grid.Row="3" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="P2 (атм)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtP2Min" Grid.Row="4" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtP2Max" Grid.Row="4" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="P2" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · атм" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtP2Min" Grid.Row="4" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtP2Max" Grid.Row="4" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="5" Grid.Column="0" Text="V1 (м³/ч)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtV1Min" Grid.Row="5" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtV1Max" Grid.Row="5" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="5" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="V1" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · м³/ч" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtV1Min" Grid.Row="5" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtV1Max" Grid.Row="5" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" Text="V2 (м³/ч)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtV2Min" Grid.Row="6" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtV2Max" Grid.Row="6" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="6" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="V2" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · м³/ч" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtV2Min" Grid.Row="6" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtV2Max" Grid.Row="6" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="7" Grid.Column="0" Text="M1 (т)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtM1Min" Grid.Row="7" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtM1Max" Grid.Row="7" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="7" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="M1" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · т" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtM1Min" Grid.Row="7" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtM1Max" Grid.Row="7" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="8" Grid.Column="0" Text="M2 (т)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtM2Min" Grid.Row="8" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtM2Max" Grid.Row="8" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
+                                <StackPanel Grid.Row="8" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="M2" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · т" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtM2Min" Grid.Row="8" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtM2Max" Grid.Row="8" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
 
-                            <TextBlock Grid.Row="9" Grid.Column="0" Text="Q (Гкал)" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <TextBox x:Name="TxtQMin" Grid.Row="9" Grid.Column="1" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}"/>
-                            <TextBox x:Name="TxtQMax" Grid.Row="9" Grid.Column="2" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}"/>
-                        </Grid>
-                    </ScrollViewer>
+                                <StackPanel Grid.Row="9" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Q" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}"/>
+                                    <TextBlock Text=" · Гкал" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                </StackPanel>
+                                <TextBox x:Name="TxtQMin" Grid.Row="9" Grid.Column="1" Style="{StaticResource CompactNumericTextBox}"/>
+                                <TextBox x:Name="TxtQMax" Grid.Row="9" Grid.Column="2" Style="{StaticResource CompactNumericTextBox}"/>
+                            </Grid>
+                        </ScrollViewer>
+                    </Border>
 
-                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,12">
+                    <!-- Температурный график секция -->
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="12,10" Margin="0,0,0,14">
                         <StackPanel>
-                            <Button Content="📈 Температурный график" Click="BtnEditTempSchedule_Click" HorizontalAlignment="Left" FontSize="11.5" Style="{StaticResource AppleGhostButton}"/>
-                            <Button Content="📋 График из другой точки" Click="BtnPickScheduleSourceDirect_Click" HorizontalAlignment="Left" FontSize="11.5" Style="{StaticResource AppleGhostButton}"/>
-                            <TextBlock Text="Создайте график один раз и применяйте его к любым точкам." FontSize="10.5" TextWrapping="Wrap" Margin="6,2,0,0" Foreground="{DynamicResource LabelSecondary}"/>
+                            <TextBlock Text="Температурный график" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Click="BtnEditTempSchedule_Click" Style="{StaticResource BentoSecondaryButton}" HorizontalAlignment="Stretch">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconChart}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource AccentBlue}" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Настроить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Click="BtnPickScheduleSourceDirect_Click" Style="{StaticResource BentoSecondaryButton}" HorizontalAlignment="Stretch">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconCopy}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Из другой точки" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Отмена" Click="BtnCancelLimits_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}"/>
-                        <Button Content="Применить" Click="BtnSaveLimits_Click" Style="{StaticResource ApplePrimaryButton}"/>
-                    </StackPanel>
+                    <!-- Footer -->
+                    <Grid>
+                        <Button Click="BtnResetLimits_Click" HorizontalAlignment="Left" Style="{StaticResource AppleGhostButton}" Foreground="{DynamicResource AccentRed}" ToolTip="Очистить все границы для выбранных точек">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Path Data="{StaticResource IconTrash}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentRed}" Margin="0,0,5,0"/>
+                                <TextBlock Text="Сбросить все" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Отмена" Click="BtnCancelLimits_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}"/>
+                            <Button Content="Применить" Click="BtnSaveLimits_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- Модальное окно настройки температурного графика -->
         <Grid x:Name="OverlayTempSchedule" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="110">
-            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="640">
+            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="640">
                 <StackPanel>
-                    <TextBlock Text="Температурный график (Тнв → Т1/Т2)" FontWeight="Bold" FontSize="17" Margin="0,0,0,4" Foreground="{Binding TileForeground}"/>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Температурный график" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource LabelPrimary}"/>
+                            <TextBlock Text="Зависимость T1 и T2 от температуры наружного воздуха (Тнв)" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ModalCloseButton}" Click="BtnCancelSchedule_Click" VerticalAlignment="Top"/>
+                    </Grid>
 
-                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,9" Margin="0,8,0,12">
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,12">
                         <StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="72"/>
+                                    <ColumnDefinition Width="76"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Допустимое отклонение от графика (±)" FontSize="13" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                                <TextBox x:Name="TxtScheduleTolerance" Grid.Column="1" Text="3" Margin="6,0,6,0" Width="56"
+                                <TextBlock Grid.Column="0" Text="Допустимое отклонение от графика (±)" FontSize="12.5" FontWeight="Medium" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="TxtScheduleTolerance" Grid.Column="1" Text="3" Margin="6,0,6,0" Width="62"
                                          Style="{StaticResource CompactNumericTextBox}" TextChanged="TxtScheduleTolerance_TextChanged"/>
-                                <TextBlock Grid.Column="2" Text="°C" FontSize="13" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="°C" FontSize="12.5" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
                             </Grid>
                             <TextBlock x:Name="TxtScheduleToleranceHint" FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap"
                                        Foreground="{DynamicResource LabelSecondary}" Text="Отклонение применяется к T1 и T2 для всех выбранных точек."/>
                         </StackPanel>
                     </Border>
 
-                    <Border CornerRadius="10" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Margin="0,0,0,12" Height="240" ClipToBounds="True">
+                    <Border CornerRadius="12" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Margin="0,0,0,12" Height="240" ClipToBounds="True">
                         <DataGrid x:Name="GridTempSchedule" AutoGenerateColumns="False" CanUserAddRows="False" RowEditEnding="GridTempSchedule_RowEditEnding">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Тнв, °C" Binding="{Binding Tnv, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
                                 <DataGridTextColumn Header="T1, °C" Binding="{Binding T1, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
                                 <DataGridTextColumn Header="T2, °C" Binding="{Binding T2, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                                <DataGridTextColumn Header="Допуск T1" Binding="{Binding T1Band, Mode=OneWay}" Width="110" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Допуск T2" Binding="{Binding T2Band, Mode=OneWay}" Width="110" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Допуск T1" Binding="{Binding T1Band, Mode=OneWay}" Width="115" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Допуск T2" Binding="{Binding T2Band, Mode=OneWay}" Width="115" IsReadOnly="True"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Border>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                        <Button Content="📋 Скопировать из другой точки" Click="BtnPickScheduleSource_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}"/>
-                        <Button Content="🌐 Применить ко всем точкам" Click="BtnApplyScheduleToAll_Click" Style="{StaticResource BentoSecondaryButton}"/>
-                    </StackPanel>
-                    <TextBlock x:Name="TxtScheduleSource" Text="" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8" Foreground="{DynamicResource AccentBlue}"/>
+                    <Grid Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Button Click="BtnAddSchedulePoint_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconPlus}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentBlue}" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Добавить строку" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Click="BtnRemoveSchedulePoint_Click" Style="{StaticResource BentoSecondaryButton}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconTrash}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentRed}" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Удалить" Foreground="{DynamicResource AccentRed}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
 
-                    <Grid Margin="0,0,0,14">
-                        <Button Content="+ Добавить строку" Click="BtnAddSchedulePoint_Click" HorizontalAlignment="Left" Style="{StaticResource AppleGhostButton}"/>
-                        <Button Content="Удалить выбранную" Click="BtnRemoveSchedulePoint_Click" HorizontalAlignment="Right" Foreground="{DynamicResource AccentRed}" Style="{StaticResource AppleGhostButton}"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Click="BtnPickScheduleSource_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconCopy}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Из точки" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Click="BtnApplyScheduleToAll_Click" Style="{StaticResource BentoSecondaryButton}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconGlobe}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Ко всем" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </Grid>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Отмена" Click="BtnCancelSchedule_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}"/>
-                        <Button Content="Сохранить график" Click="BtnSaveSchedule_Click" Style="{StaticResource ApplePrimaryButton}"/>
-                    </StackPanel>
+                    <TextBlock x:Name="TxtScheduleSource" Text="" FontSize="11" TextWrapping="Wrap" Margin="2,0,0,10" Foreground="{DynamicResource AccentTeal}"/>
+
+                    <Border BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Отмена" Click="BtnCancelSchedule_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}"/>
+                            <Button Content="Сохранить график" Click="BtnSaveSchedule_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- Выбор готового температурного графика -->
         <Grid x:Name="OverlayScheduleSource" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="120">
-            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="520">
+            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="520">
                 <StackPanel>
-                    <TextBlock Text="Выбрать температурный график из другой точки" FontWeight="Bold" FontSize="16" Margin="0,0,0,4" Foreground="{Binding TileForeground}"/>
-                    <TextBlock x:Name="TxtScheduleSourceHint" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource LabelSecondary}"
-                               Text="Список точек, у которых уже сохранён график."/>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Выбрать температурный график" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource LabelPrimary}"/>
+                            <TextBlock x:Name="TxtScheduleSourceHint" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0" Foreground="{DynamicResource LabelSecondary}"
+                                       Text="Список точек, у которых уже сохранён график."/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ModalCloseButton}" Click="BtnCancelScheduleSource_Click" VerticalAlignment="Top"/>
+                    </Grid>
 
-                    <Border CornerRadius="10" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Margin="0,0,0,14" Height="260" ClipToBounds="True" Background="{DynamicResource CardBackgroundAlt}">
+                    <Border CornerRadius="12" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Margin="0,0,0,14" Height="260" ClipToBounds="True" Background="{DynamicResource CardBackgroundAlt}">
                         <ListBox x:Name="ListScheduleSources" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource BentoListItem}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Margin="2,4">
-                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource LabelPrimary}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="12.5" Foreground="{DynamicResource LabelPrimary}" TextWrapping="Wrap"/>
                                         <TextBlock Text="{Binding Description}" FontSize="11" Margin="0,2,0,0" Foreground="{DynamicResource LabelSecondary}"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -1912,63 +2280,94 @@
 
         <!-- Модальное окно допусков подпитки -->
         <Grid x:Name="OverlayPodpitkaLimits" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="130">
-            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="340">
+            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" Width="400">
                 <StackPanel>
-                    <TextBlock x:Name="TxtPodpitkaLimitsTitle" Text="Допуски подпитки (V1)" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" Foreground="{Binding TileForeground}"/>
-                    <TextBlock x:Name="TxtPodpitkaLimitsSubtitle" Text="Пустые поля не изменят текущие значения точек" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,12"/>
-                    <Grid Margin="0,0,0,14" HorizontalAlignment="Center">
+                    <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="84"/>
-                            <ColumnDefinition Width="84"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Column="1" Text="Мин." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
-                        <TextBlock Grid.Column="2" Text="Макс." FontSize="11" HorizontalAlignment="Right" Margin="0,0,10,4" Foreground="{DynamicResource LabelSecondary}"/>
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Отчётный период" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpReportMin" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                        <TextBox x:Name="TxtPodpReportMax" Grid.Row="1" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Вчера" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpDayMin" Grid.Row="2" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                        <TextBox x:Name="TxtPodpDayMax" Grid.Row="2" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Сегодня" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpTodayMin" Grid.Row="3" Grid.Column="1" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-                        <TextBox x:Name="TxtPodpTodayMax" Grid.Row="3" Grid.Column="2" Margin="0,0,0,4" Style="{StaticResource CompactNumericTextBox}"/>
-
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Прошлый час" FontSize="12" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                        <TextBox x:Name="TxtPodpHourMin" Grid.Row="4" Grid.Column="1" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}"/>
-                        <TextBox x:Name="TxtPodpHourMax" Grid.Row="4" Grid.Column="2" Margin="0,0,0,0" Style="{StaticResource CompactNumericTextBox}"/>
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock x:Name="TxtPodpitkaLimitsTitle" Text="Допуски подпитки (V1)" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource LabelPrimary}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="TxtPodpitkaLimitsSubtitle" Text="Очистите поле, чтобы убрать ограничение" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ModalCloseButton}" Click="BtnCancelPodpitkaLimits_Click" VerticalAlignment="Top"/>
                     </Grid>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Отмена" Click="BtnCancelPodpitkaLimits_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}"/>
-                        <Button Content="Применить" Click="BtnSavePodpitkaLimits_Click" Style="{StaticResource ApplePrimaryButton}"/>
-                    </StackPanel>
+
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="92"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Период (м³)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Минимум" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,0,6,8" Foreground="{DynamicResource LabelSecondary}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Максимум" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,0,6,8" Foreground="{DynamicResource LabelSecondary}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Отчётный период" FontSize="12.5" FontWeight="Medium" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtPodpReportMin" Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                            <TextBox x:Name="TxtPodpReportMax" Grid.Row="1" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Вчера" FontSize="12.5" FontWeight="Medium" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtPodpDayMin" Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                            <TextBox x:Name="TxtPodpDayMax" Grid.Row="2" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Сегодня" FontSize="12.5" FontWeight="Medium" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtPodpTodayMin" Grid.Row="3" Grid.Column="1" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+                            <TextBox x:Name="TxtPodpTodayMax" Grid.Row="3" Grid.Column="2" Margin="0,0,0,6" Style="{StaticResource CompactNumericTextBox}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Прошлый час" FontSize="12.5" FontWeight="Medium" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TxtPodpHourMin" Grid.Row="4" Grid.Column="1" Style="{StaticResource CompactNumericTextBox}"/>
+                            <TextBox x:Name="TxtPodpHourMax" Grid.Row="4" Grid.Column="2" Style="{StaticResource CompactNumericTextBox}"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid>
+                        <Button Click="BtnResetPodpitkaLimits_Click" HorizontalAlignment="Left" Style="{StaticResource AppleGhostButton}" Foreground="{DynamicResource AccentRed}">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Path Data="{StaticResource IconTrash}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentRed}" Margin="0,0,5,0"/>
+                                <TextBlock Text="Сбросить все" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Отмена" Click="BtnCancelPodpitkaLimits_Click" Margin="0,0,8,0" Style="{StaticResource BentoSecondaryButton}"/>
+                            <Button Content="Применить" Click="BtnSavePodpitkaLimits_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- Модальное окно корректировки Тнв -->
         <Grid x:Name="OverlayTnvCorrection" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="140">
-            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="420">
+            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="420">
                 <StackPanel>
-                    <TextBlock Text="Корректировка датчика Тнв" FontWeight="Bold" FontSize="17" Margin="0,0,0,4" Foreground="{Binding TileForeground}"/>
-                    <TextBlock Text="Поправка (±°C) прибавляется к показаниям датчика и используется для температурного графика."
-                               FontSize="12" TextWrapping="Wrap" Margin="0,0,0,14" Foreground="{DynamicResource LabelSecondary}"/>
-                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,14">
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Корректировка датчика Тнв" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource LabelPrimary}"/>
+                            <TextBlock Text="Поправка (±°C) прибавляется к показаниям датчика." FontSize="11.5" Margin="0,2,0,0" Foreground="{DynamicResource LabelSecondary}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ModalCloseButton}" Click="BtnCancelTnvCorrection_Click" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="0,0,0,14">
                         <StackPanel>
-                            <TextBlock Text="Текущий Тнв с датчика:" FontSize="11" Foreground="{DynamicResource LabelSecondary}"/>
-                            <TextBlock x:Name="TxtTnvRawValue" Text="—" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}" Margin="0,2,0,8"/>
-                            <TextBlock Text="Поправка (°C):" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Текущий Тнв с датчика" FontSize="11" Foreground="{DynamicResource LabelSecondary}"/>
+                            <TextBlock x:Name="TxtTnvRawValue" Text="—" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}" Margin="0,2,0,10"/>
+                            <TextBlock Text="Поправка (°C)" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,6"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -1976,12 +2375,12 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtTnvCorrectionValue" Grid.Column="0" Style="{StaticResource CompactNumericTextBox}" HorizontalAlignment="Stretch" Width="Auto"/>
-                                <Button Grid.Column="1" Content="-0.5" Style="{StaticResource BentoSecondaryButton}" Padding="10,5" Margin="6,0,0,0" Click="BtnTnvCorrectionStep_Click" Tag="-0.5"/>
-                                <Button Grid.Column="2" Content="+0.5" Style="{StaticResource BentoSecondaryButton}" Padding="10,5" Margin="4,0,0,0" Click="BtnTnvCorrectionStep_Click" Tag="0.5"/>
+                                <TextBox x:Name="TxtTnvCorrectionValue" Grid.Column="0" Style="{StaticResource CompactNumericTextBox}" HorizontalAlignment="Stretch" Width="Auto" Height="34"/>
+                                <Button Grid.Column="1" Content="−0.5" Style="{StaticResource BentoSecondaryButton}" Padding="10,0" Margin="6,0,0,0" Click="BtnTnvCorrectionStep_Click" Tag="-0.5"/>
+                                <Button Grid.Column="2" Content="+0.5" Style="{StaticResource BentoSecondaryButton}" Padding="10,0" Margin="4,0,0,0" Click="BtnTnvCorrectionStep_Click" Tag="0.5"/>
                                 <Button Grid.Column="3" Content="Сброс" Style="{StaticResource AppleGhostButton}" Margin="4,0,0,0" Click="BtnTnvCorrectionReset_Click"/>
                             </Grid>
-                            <TextBlock x:Name="TxtTnvCorrectedPreview" Text="" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}" Margin="0,10,0,0"/>
+                            <TextBlock x:Name="TxtTnvCorrectedPreview" Text="" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}" Margin="0,10,0,0"/>
                         </StackPanel>
                     </Border>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -1994,33 +2393,42 @@
 
         <!-- Модальное окно настроек -->
         <Grid x:Name="OverlayAppSettings" Visibility="Collapsed" Background="#99000000" Panel.ZIndex="150">
-            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Width="460">
+            <Border Style="{StaticResource BentoCard}" Effect="{StaticResource PopupShadow}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" Width="460">
                 <StackPanel>
-                    <TextBlock Text="⚙ Настройки" FontWeight="Bold" FontSize="17" Margin="0,0,0,14" Foreground="{Binding TileForeground}"/>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconSettings}" Style="{StaticResource StrokeIcon}" Width="16" Height="16" Stroke="{DynamicResource AccentBlue}" Margin="0,0,8,0"/>
+                            <TextBlock Text="Настройки приложения" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource LabelPrimary}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ModalCloseButton}" Click="BtnCloseAppSettings_Click"/>
+                    </Grid>
 
-                    <TextBlock Text="Видимость разделов" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,6"/>
-                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,12">
+                    <TextBlock Text="Видимость разделов" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,6"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,12">
                         <StackPanel>
-                            <CheckBox x:Name="ChkSectionGeneral" Content="Общий мониторинг" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
-                            <CheckBox x:Name="ChkSectionTrend" Content="Текущие (тренд)" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
-                            <CheckBox x:Name="ChkSectionDashboard" Content="Дашборд" IsChecked="True" Margin="0,0,0,6" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionGeneral" Content="Общий мониторинг" IsChecked="True" Margin="0,0,0,8" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionTrend" Content="Текущие (тренд)" IsChecked="True" Margin="0,0,0,8" Click="SectionToggle_Click"/>
+                            <CheckBox x:Name="ChkSectionDashboard" Content="Дашборд" IsChecked="True" Margin="0,0,0,8" Click="SectionToggle_Click"/>
                             <CheckBox x:Name="ChkSectionPodpitka" Content="Подпитка" IsChecked="True" Margin="0" Click="SectionToggle_Click"/>
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,12">
+                    <TextBlock Text="Экспериментальные функции" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,6"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,12">
                         <StackPanel>
-                            <TextBlock Text="Экспериментальные функции" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,4"/>
-                            <TextBlock Text="Дополнительные режимы для тестирования." FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,8"/>
-                            <CheckBox x:Name="ChkExperimentalArchive" Content="Архив показаний" IsChecked="False" Margin="0,0,0,6" Click="ExperimentalToggle_Click"/>
+                            <CheckBox x:Name="ChkExperimentalArchive" Content="Архив показаний" IsChecked="False" Margin="0,0,0,8" Click="ExperimentalToggle_Click"/>
                             <CheckBox x:Name="ChkExperimentalReportPeriod" Content="Настраиваемый отчётный период" IsChecked="False" Margin="0" Click="ExperimentalToggle_Click"/>
                         </StackPanel>
                     </Border>
 
-                    <Border x:Name="PanelReportPeriodSettings" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,12" Visibility="Collapsed">
+                    <Border x:Name="PanelReportPeriodSettings" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,12" Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Text="Отчётный период подпитки" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,8"/>
-                            <Grid Margin="0,0,0,4">
+                            <TextBlock Text="Отчётный период подпитки" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,8"/>
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
@@ -2029,25 +2437,35 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="С (день):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <ComboBox x:Name="CmbReportPeriodStartDay" Grid.Column="1" SelectionChanged="CmbReportPeriodStartDay_Changed"/>
-                                <TextBlock Grid.Column="2" Text="По (день):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="8,0,8,0"/>
+                                <TextBlock Grid.Column="2" Text="По (день):" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="10,0,8,0"/>
                                 <ComboBox x:Name="CmbReportPeriodEndDay" Grid.Column="3" SelectionChanged="CmbReportPeriodEndDay_Changed"/>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <TextBlock Text="Перенос настроек" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,0,0,6"/>
-                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                    <TextBlock Text="Перенос настроек" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" Margin="2,0,0,6"/>
+                    <Border Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,14">
                         <StackPanel>
-                            <TextBlock Text="Сохраняет графики, границы, выбранные точки и тему в JSON без логина и пароля." FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,10"/>
+                            <TextBlock Text="Сохраняет графики, границы, выбранные точки и тему в JSON без логина и пароля." FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,0,10"/>
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Экспортировать" Style="{StaticResource ApplePrimaryButton}" Margin="0,0,8,0" Click="BtnExportSettings_Click"/>
-                                <Button Content="Импортировать" Style="{StaticResource BentoSecondaryButton}" Click="BtnImportSettings_Click"/>
+                                <Button Style="{StaticResource ApplePrimaryButton}" Margin="0,0,8,0" Click="BtnExportSettings_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconUpload}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="White" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Экспортировать" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource BentoSecondaryButton}" Click="BtnImportSettings_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconDownload}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Импортировать" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Закрыть" Click="BtnCloseAppSettings_Click" Style="{StaticResource ApplePrimaryButton}"/>
+                        <Button Content="Готово" Click="BtnCloseAppSettings_Click" Style="{StaticResource ApplePrimaryButton}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
