@@ -1413,40 +1413,40 @@
                                                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,6,4" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="T1 / T2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T2DashForeground}"/>
+                                                                            <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding T1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding T2DashForeground}"/>
                                                                         </TextBlock>
                                                                         <TextBlock FontSize="10" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}">
-                                                                            <Run Text="ΔT "/><Run Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—'}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
+                                                                            <Run Text="ΔT "/><Run Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,4" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="P1 / P2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P2DashForeground}"/>
+                                                                            <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding P1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding P2DashForeground}"/>
                                                                         </TextBlock>
                                                                         <TextBlock FontSize="10" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}">
-                                                                            <Run Text="ΔP "/><Run Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—'}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
+                                                                            <Run Text="ΔP "/><Run Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,2,6,2" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="V1 / V2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V2DashForeground}"/>
+                                                                            <Run Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding V1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding V2DashForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,2,0,2" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="M1 / M2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
                                                                         <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
-                                                                            <Run Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M2DashForeground}"/>
+                                                                            <Run Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding M1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding M2DashForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,3,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock FontSize="11" Foreground="{DynamicResource LabelSecondary}">
-                                                                            <Run Text="Q: "/><Run Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='—'}" FontWeight="Bold" Foreground="{Binding QDashForeground}"/><Run Text=" Гкал"/>
+                                                                            <Run Text="Q: "/><Run Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='—', Mode=OneWay}" FontWeight="Bold" Foreground="{Binding QDashForeground}"/><Run Text=" Гкал"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
                                                                 </Grid>
