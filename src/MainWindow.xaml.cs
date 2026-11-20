@@ -796,19 +796,23 @@ namespace LersMonitor
             OverlayLimits.Visibility = Visibility.Visible;
         }
         
-        /// <summary>Читает поле допуска. Поддерживает и запятую, и точку; диапазон 0…50 °C.</summary>
-        private bool TryGetScheduleTolerance(out double value)
+        /// <summary>Читает числовое поле допуска (0…50 °C).</summary>
+        private static bool TryParseToleranceBox(TextBox? box, out double value)
         {
             value = TempScheduleMath.DefaultTolerance;
-            string text = (TxtScheduleTolerance?.Text ?? "").Trim().Replace(',', '.');
+            string text = (box?.Text ?? "").Trim().Replace(',', '.');
             if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)) return false;
             if (parsed < 0 || parsed > 50) return false;
             value = parsed;
             return true;
         }
 
-        private double EditorTolerance()
-            => TryGetScheduleTolerance(out double tol) ? tol : TempScheduleMath.DefaultTolerance;
+        private (double tolT1, double tolT2) EditorTolerances()
+        {
+            double t1 = TryParseToleranceBox(TxtScheduleToleranceT1, out double p1) ? p1 : TempScheduleMath.DefaultTolerance;
+            double t2 = TryParseToleranceBox(TxtScheduleToleranceT2, out double p2) ? p2 : TempScheduleMath.DefaultTolerance;
+            return (t1, t2);
+        }
 
         /// <summary>Строки графика из редактора, отсортированные по Тнв.</summary>
         private List<TempSchedulePoint> CurrentEditorSchedule()
@@ -831,8 +835,8 @@ namespace LersMonitor
             foreach (var node in _dashboardNodes) node.Refresh();
         }
 
-        /// <summary>Записывает график и допуск в настройки указанных точек и сохраняет их.</summary>
-        private void WriteScheduleToPoints(IEnumerable<MeasurePointItem> points, List<TempSchedulePoint> schedule, double tol)
+        /// <summary>Записывает график и раздельные допуски T1/T2 в настройки указанных точек.</summary>
+        private void WriteScheduleToPoints(IEnumerable<MeasurePointItem> points, List<TempSchedulePoint> schedule, double tolT1, double tolT2)
         {
             var targetList = points.ToList();
             foreach (var point in targetList)
@@ -842,11 +846,12 @@ namespace LersMonitor
                     limits = new PointThresholds();
                     _settings.PointLimits[point.Id] = limits;
                 }
-                // Отдельная копия списка на каждую точку: правка одной не меняет остальные.
                 limits.Schedule = schedule
                     .Select(s => new TempSchedulePoint { Tnv = s.Tnv, T1 = s.T1, T2 = s.T2 })
                     .ToList();
-                limits.ScheduleTolerance = tol;
+                limits.ScheduleTolerance = tolT1;
+                limits.ScheduleToleranceT1 = tolT1;
+                limits.ScheduleToleranceT2 = tolT2;
             }
             SyncLimitsToViews(targetList.Select(p => p.Id));
             SaveUserSettings();
@@ -875,18 +880,21 @@ namespace LersMonitor
             {
                 if (kv.Value?.Schedule == null || kv.Value.Schedule.Count == 0) continue;
                 var pt = _allPoints.FirstOrDefault(p => p.Id == kv.Key);
-                double tol = kv.Value.ScheduleTolerance >= 0 && kv.Value.ScheduleTolerance <= 50
+                double fallback = kv.Value.ScheduleTolerance >= 0 && kv.Value.ScheduleTolerance <= 50
                     ? kv.Value.ScheduleTolerance
                     : TempScheduleMath.DefaultTolerance;
+                double tolT1 = kv.Value.ScheduleToleranceT1 is >= 0 and <= 50 ? kv.Value.ScheduleToleranceT1.Value : fallback;
+                double tolT2 = kv.Value.ScheduleToleranceT2 is >= 0 and <= 50 ? kv.Value.ScheduleToleranceT2.Value : fallback;
 
                 sources.Add(new ScheduleSourceItem
                 {
                     PointId = kv.Key,
                     DisplayName = pt?.DisplayName ?? $"Точка #{kv.Key}",
                     Description = string.Format(CultureInfo.CurrentCulture,
-                        "Строк в графике: {0} · допуск ±{1:0.##} °C", kv.Value.Schedule.Count, tol),
+                        "Строк: {0} · допуск T1 ±{1:0.##} °C, T2 ±{2:0.##} °C", kv.Value.Schedule.Count, tolT1, tolT2),
                     Schedule = kv.Value.Schedule,
-                    Tolerance = tol
+                    ToleranceT1 = tolT1,
+                    ToleranceT2 = tolT2
                 });
             }
 
@@ -894,15 +902,15 @@ namespace LersMonitor
             if (sources.Count == 0)
             {
                 MessageBox.Show("Пока ни у одной точки нет сохранённого температурного графика.\n\n" +
-                    "Создайте его через «📈 Температурный график», после чего этот список заполнится.",
+                    "Создайте его через «Температурный график», после чего этот список заполнится.",
                     "Нет готовых графиков", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             _scheduleSourceApplyDirectly = applyDirectly;
             TxtScheduleSourceHint.Text = applyDirectly
-                ? "График и допуск будут сразу применены к выбранным точкам и сохранены."
-                : "График и допуск попадут в редактор. Нажмите «Сохранить график», чтобы применить их.";
+                ? "График и допуски будут сразу применены к выбранным точкам и сохранены."
+                : "График и допуски попадут в редактор. Нажмите «Сохранить график», чтобы применить их.";
             ListScheduleSources.ItemsSource = sources;
             ListScheduleSources.SelectedIndex = 0;
             OverlayScheduleSource.Visibility = Visibility.Visible;
@@ -923,7 +931,7 @@ namespace LersMonitor
             if (_scheduleSourceApplyDirectly)
             {
                 if (_editingPoints.Count == 0) { OverlayScheduleSource.Visibility = Visibility.Collapsed; return; }
-                WriteScheduleToPoints(_editingPoints, src.Schedule, src.Tolerance);
+                WriteScheduleToPoints(_editingPoints, src.Schedule, src.ToleranceT1, src.ToleranceT2);
                 OverlayScheduleSource.Visibility = Visibility.Collapsed;
                 MessageBox.Show(string.Format(CultureInfo.CurrentCulture,
                     "График из «{0}» применён к {1} точкам.", src.DisplayName, _editingPoints.Count),
@@ -933,11 +941,14 @@ namespace LersMonitor
 
             _currentScheduleEdit.Clear();
             foreach (var sp in src.Schedule.OrderBy(p => p.Tnv))
-                _currentScheduleEdit.Add(new TempSchedulePointViewModel { Tnv = sp.Tnv, T1 = sp.T1, T2 = sp.T2 });
+                _currentScheduleEdit.Add(new TempSchedulePointViewModel
+                {
+                    Tnv = sp.Tnv, T1 = sp.T1, T2 = sp.T2,
+                    ToleranceT1 = src.ToleranceT1, ToleranceT2 = src.ToleranceT2
+                });
 
-            // Сначала строки, затем текст: TextChanged разошлёт допуск по строкам.
-            TxtScheduleTolerance.Text = src.Tolerance.ToString("0.##", CultureInfo.CurrentCulture);
-            foreach (var row in _currentScheduleEdit) row.Tolerance = src.Tolerance;
+            TxtScheduleToleranceT1.Text = src.ToleranceT1.ToString("0.##", CultureInfo.CurrentCulture);
+            TxtScheduleToleranceT2.Text = src.ToleranceT2.ToString("0.##", CultureInfo.CurrentCulture);
             TxtScheduleSource.Text = "Источник: " + src.DisplayName;
             UpdateScheduleToleranceHint();
             OverlayScheduleSource.Visibility = Visibility.Collapsed;
@@ -945,9 +956,10 @@ namespace LersMonitor
 
         private void BtnApplyScheduleToAll_Click(object sender, RoutedEventArgs e)
         {
-            if (!TryGetScheduleTolerance(out double tol))
+            if (!TryParseToleranceBox(TxtScheduleToleranceT1, out double tolT1) ||
+                !TryParseToleranceBox(TxtScheduleToleranceT2, out double tolT2))
             {
-                MessageBox.Show("Введите допустимое отклонение от 0 до 50 °C.",
+                MessageBox.Show("Введите допустимые отклонения T1 и T2 от 0 до 50 °C.",
                     "Температурный график", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -966,13 +978,13 @@ namespace LersMonitor
             }
 
             var answer = MessageBox.Show(string.Format(CultureInfo.CurrentCulture,
-                "Применить текущий график (строк: {0}, допуск ±{1:0.##} °C) ко ВСЕМ {2} точкам?\n\n" +
+                "Применить текущий график (строк: {0}, допуск T1 ±{1:0.##} °C, T2 ±{2:0.##} °C) ко ВСЕМ {3} точкам?\n\n" +
                 "Существующие графики у других точек будут заменены.",
-                schedule.Count, tol, _allPoints.Count),
+                schedule.Count, tolT1, tolT2, _allPoints.Count),
                 "Применить ко всем", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (answer != MessageBoxResult.Yes) return;
 
-            WriteScheduleToPoints(_allPoints, schedule, tol);
+            WriteScheduleToPoints(_allPoints, schedule, tolT1, tolT2);
             TxtScheduleSource.Text = string.Format(CultureInfo.CurrentCulture,
                 "График применён ко всем {0} точкам.", _allPoints.Count);
         }
@@ -981,7 +993,8 @@ namespace LersMonitor
         {
             _currentScheduleEdit.Clear();
             var point = _editingPoints.FirstOrDefault();
-            double tol = TempScheduleMath.DefaultTolerance;
+            double tolT1 = TempScheduleMath.DefaultTolerance;
+            double tolT2 = TempScheduleMath.DefaultTolerance;
 
             if (point != null && _settings.PointLimits.TryGetValue(point.Id, out var limits))
             {
@@ -989,13 +1002,15 @@ namespace LersMonitor
                     foreach (var sp in limits.Schedule)
                         _currentScheduleEdit.Add(new TempSchedulePointViewModel { Tnv = sp.Tnv, T1 = sp.T1, T2 = sp.T2 });
 
-                if (limits.ScheduleTolerance >= 0 && limits.ScheduleTolerance <= 50)
-                    tol = limits.ScheduleTolerance;
+                double fallback = limits.ScheduleTolerance >= 0 && limits.ScheduleTolerance <= 50
+                    ? limits.ScheduleTolerance : TempScheduleMath.DefaultTolerance;
+                tolT1 = limits.ScheduleToleranceT1 is >= 0 and <= 50 ? limits.ScheduleToleranceT1.Value : fallback;
+                tolT2 = limits.ScheduleToleranceT2 is >= 0 and <= 50 ? limits.ScheduleToleranceT2.Value : fallback;
             }
 
-            // Сначала строки, потом текст: TextChanged разошлёт допуск по всем строкам.
-            TxtScheduleTolerance.Text = tol.ToString("0.##", CultureInfo.CurrentCulture);
-            foreach (var row in _currentScheduleEdit) row.Tolerance = tol;
+            TxtScheduleToleranceT1.Text = tolT1.ToString("0.##", CultureInfo.CurrentCulture);
+            TxtScheduleToleranceT2.Text = tolT2.ToString("0.##", CultureInfo.CurrentCulture);
+            foreach (var row in _currentScheduleEdit) { row.ToleranceT1 = tolT1; row.ToleranceT2 = tolT2; }
             TxtScheduleSource.Text = "";
             UpdateScheduleToleranceHint();
             OverlayTempSchedule.Visibility = Visibility.Visible;
@@ -1003,9 +1018,9 @@ namespace LersMonitor
 
         private void TxtScheduleTolerance_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (TxtScheduleToleranceHint == null) return;   // окно ещё не проинициализировано
-            double tol = EditorTolerance();
-            foreach (var row in _currentScheduleEdit) row.Tolerance = tol;
+            if (TxtScheduleToleranceHint == null) return;
+            var (tolT1, tolT2) = EditorTolerances();
+            foreach (var row in _currentScheduleEdit) { row.ToleranceT1 = tolT1; row.ToleranceT2 = tolT2; }
             UpdateScheduleToleranceHint();
         }
 
@@ -1017,7 +1032,7 @@ namespace LersMonitor
         {
             if (TxtScheduleToleranceHint == null) return;
 
-            double tol = EditorTolerance();
+            var (tolT1, tolT2) = EditorTolerances();
             var pts = _currentScheduleEdit
                 .Select(x => new TempSchedulePoint { Tnv = x.Tnv, T1 = x.T1, T2 = x.T2 })
                 .ToList();
@@ -1026,24 +1041,25 @@ namespace LersMonitor
             if (CurrentGlobalTnv.HasValue && exp.expT1.HasValue && exp.expT2.HasValue)
             {
                 TxtScheduleToleranceHint.Text = string.Format(CultureInfo.CurrentCulture,
-                    "При Тнв = {0:0.#} °C по графику допустимо: T1 {1:0.#}…{2:0.#} °C, T2 {3:0.#}…{4:0.#} °C. Выход за границы считается нарушением.",
+                    "При Тнв = {0:0.#} °C допустимо: T1 {1:0.#}…{2:0.#} °C (±{3:0.##}), T2 {4:0.#}…{5:0.#} °C (±{6:0.##}).",
                     CurrentGlobalTnv.Value,
-                    exp.expT1.Value - tol, exp.expT1.Value + tol,
-                    exp.expT2.Value - tol, exp.expT2.Value + tol);
+                    exp.expT1.Value - tolT1, exp.expT1.Value + tolT1, tolT1,
+                    exp.expT2.Value - tolT2, exp.expT2.Value + tolT2, tolT2);
             }
             else
             {
                 TxtScheduleToleranceHint.Text = string.Format(CultureInfo.CurrentCulture,
-                    "Отклонение ±{0:0.##} °C применяется к T1 и T2 всех точек графика. Диапазоны в таблице пересчитываются сразу.",
-                    tol);
+                    "Допуски: прямая T1 ±{0:0.##} °C, обратная T2 ±{1:0.##} °C. Диапазоны в таблице пересчитываются сразу.",
+                    tolT1, tolT2);
             }
         }
 
         private void BtnAddSchedulePoint_Click(object sender, RoutedEventArgs e)
         {
+            var (tolT1, tolT2) = EditorTolerances();
             _currentScheduleEdit.Add(new TempSchedulePointViewModel
             {
-                Tnv = 0, T1 = 70, T2 = 50, Tolerance = EditorTolerance()
+                Tnv = 0, T1 = 70, T2 = 50, ToleranceT1 = tolT1, ToleranceT2 = tolT2
             });
         }
 
@@ -1060,14 +1076,15 @@ namespace LersMonitor
 
         private void BtnSaveSchedule_Click(object sender, RoutedEventArgs e)
         {
-            if (!TryGetScheduleTolerance(out double tol))
+            if (!TryParseToleranceBox(TxtScheduleToleranceT1, out double tolT1) ||
+                !TryParseToleranceBox(TxtScheduleToleranceT2, out double tolT2))
             {
-                MessageBox.Show("Введите допустимое отклонение от 0 до 50 °C (например 3 или 2,5).",
+                MessageBox.Show("Введите допустимые отклонения T1 и T2 от 0 до 50 °C (например 3 или 2,5).",
                     "Температурный график", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            WriteScheduleToPoints(_editingPoints, CurrentEditorSchedule(), tol);
+            WriteScheduleToPoints(_editingPoints, CurrentEditorSchedule(), tolT1, tolT2);
             TxtScheduleSource.Text = "";
             OverlayTempSchedule.Visibility = Visibility.Collapsed;
         }
@@ -1250,7 +1267,8 @@ namespace LersMonitor
         {
             if (CmbTrendPoint.SelectedItem is not MeasurePointItem selectedPoint) return;
             int durationMinutes = CmbTrendDuration.SelectedItem is int min ? min : 3;
-            var maxEndTime = DateTime.UtcNow.AddMinutes(durationMinutes);
+            DateTime? maxEndTime = null;
+            DateTime? lastObservedTime = null;
             _activeTrendPointId = selectedPoint.Id;
             _trendCts = new CancellationTokenSource(); var token = _trendCts.Token;
 
@@ -1258,20 +1276,67 @@ namespace LersMonitor
             CmbTrendPoint.IsEnabled = false; CmbTrendDuration.IsEnabled = false;
 
             _settings.PointLimits.TryGetValue(selectedPoint.Id, out var limits);
-            TxtStatus.Text = $"Запуск мониторинга для {selectedPoint.Title} (макс. {durationMinutes} мин)...";
+            TxtStatus.Text = $"Ожидание новых данных от {selectedPoint.Title} (отсчёт начнётся после первого ответа)...";
+            if (TxtTrendSubtitle != null)
+                TxtTrendSubtitle.Text = $"Ожидание первых новых данных от «{selectedPoint.Title}»...";
+
+            var countdownTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            countdownTimer.Tick += (s, ev) =>
+            {
+                if (token.IsCancellationRequested) { countdownTimer.Stop(); return; }
+                if (!maxEndTime.HasValue)
+                {
+                    TxtStatus.Text = $"Ожидание новых данных от {selectedPoint.Title}...";
+                    return;
+                }
+                var remain = maxEndTime.Value - DateTime.UtcNow;
+                if (remain <= TimeSpan.Zero)
+                {
+                    TxtStatus.Text = $"Лимит времени ({durationMinutes} мин) исчерпан.";
+                    countdownTimer.Stop();
+                    return;
+                }
+                string lastStr = lastObservedTime.HasValue ? $" · последние {lastObservedTime.Value:HH:mm:ss}" : "";
+                TxtStatus.Text = $"Мониторинг {selectedPoint.Title}: осталось {(int)remain.TotalMinutes:D2}:{remain.Seconds:D2}{lastStr}";
+                if (TxtTrendSubtitle != null)
+                    TxtTrendSubtitle.Text = $"Идёт мониторинг · осталось {(int)remain.TotalMinutes:D2}:{remain.Seconds:D2}{lastStr}";
+            };
+            countdownTimer.Start();
 
             try
             {
-                try {
+                // Фиксируем текущее время в базе до запуска опроса, чтобы дождаться именно НОВЫХ данных
+                DateTime? baselineTime = null;
+                try
+                {
+                    var preRes = await _http.GetAsync($"{_baseUrl}/Data/MeasurePoints/{selectedPoint.Id}/Consumption/Last", token);
+                    if (preRes.IsSuccessStatusCode)
+                    {
+                        var preJson = await preRes.Content.ReadAsStringAsync(token);
+                        if (!string.IsNullOrWhiteSpace(preJson) && preJson.Trim() != "null")
+                        {
+                            using var preDoc = JsonDocument.Parse(preJson);
+                            baselineTime = TryGetDate(preDoc.RootElement, "dateTime", "deviceTime", "date");
+                        }
+                    }
+                }
+                catch { }
+
+                try
+                {
                     using var pollReq = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/Poll/MeasurePoints/{selectedPoint.Id}/Currents");
                     pollReq.Content = new ByteArrayContent(Array.Empty<byte>()); pollReq.Content.Headers.ContentLength = 0;
                     using var r = await _http.SendAsync(pollReq, token);
-                } catch { }
+                }
+                catch { }
 
-                DateTime? lastObservedTime = null;
                 while (!token.IsCancellationRequested)
                 {
-                    if (DateTime.UtcNow >= maxEndTime) { TxtStatus.Text = $"Лимит времени ({durationMinutes} мин) исчерпан."; break; }
+                    if (maxEndTime.HasValue && DateTime.UtcNow >= maxEndTime.Value)
+                    {
+                        TxtStatus.Text = $"Лимит времени ({durationMinutes} мин) исчерпан.";
+                        break;
+                    }
                     try
                     {
                         var res = await _http.GetAsync($"{_baseUrl}/Data/MeasurePoints/{selectedPoint.Id}/Consumption/Last", token);
@@ -1282,27 +1347,46 @@ namespace LersMonitor
                             {
                                 using var doc = JsonDocument.Parse(json); var root = doc.RootElement;
                                 var timeNow = TryGetDate(root, "dateTime", "deviceTime", "date") ?? DateTime.Now;
-                                if (lastObservedTime == null || timeNow > lastObservedTime)
+                                bool isNew = lastObservedTime == null
+                                    ? (baselineTime == null || timeNow > baselineTime.Value)
+                                    : timeNow > lastObservedTime.Value;
+
+                                if (isNew)
                                 {
                                     lastObservedTime = timeNow;
-                                    var row = new PointResultViewModel { Id = selectedPoint.Id, Title = selectedPoint.Title, NodeTitle = selectedPoint.NodeTitle, DeviceTime = timeNow, Limits = limits, Status = "Снято" };
-                                    UpdatePointValues(row, root); _trendHistory.Insert(0, row); row.RefreshColors();
-                                    var remain = maxEndTime - DateTime.UtcNow;
-                                    TxtStatus.Text = $"Данные: {timeNow:HH:mm:ss} (осталось {(int)remain.TotalMinutes} мин {(int)remain.Seconds} сек)";
+                                    if (!maxEndTime.HasValue)
+                                        maxEndTime = DateTime.UtcNow.AddMinutes(durationMinutes);
+
+                                    var row = new PointResultViewModel
+                                    {
+                                        Id = selectedPoint.Id,
+                                        Title = selectedPoint.Title,
+                                        NodeTitle = selectedPoint.NodeTitle,
+                                        DeviceTime = timeNow,
+                                        Limits = limits,
+                                        Status = "Снято"
+                                    };
+                                    UpdatePointValues(row, root);
+                                    _trendHistory.Insert(0, row);
+                                    row.RefreshColors();
                                 }
                             }
                         }
                     }
-                    catch (OperationCanceledException) { break; } catch { }
+                    catch (OperationCanceledException) { break; }
+                    catch { }
                     await Task.Delay(3000, token);
                 }
             }
             catch (OperationCanceledException) { }
             finally
             {
+                countdownTimer.Stop();
                 StopNativeLersTrend();
                 BtnStartTrend.Visibility = Visibility.Visible; BtnStopTrend.Visibility = Visibility.Collapsed;
                 CmbTrendPoint.IsEnabled = true; CmbTrendDuration.IsEnabled = true;
+                if (TxtTrendSubtitle != null)
+                    TxtTrendSubtitle.Text = "Отсчёт времени начнётся автоматически после получения первых новых данных от прибора";
                 if (!TxtStatus.Text.StartsWith("Лимит времени")) TxtStatus.Text = "Мониторинг точки остановлен.";
             }
         }
@@ -2916,23 +3000,29 @@ namespace LersMonitor
         private double _t2;
         public double T2 { get => _t2; set { _t2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T2Band)); } }
 
-        /// <summary>Допустимое отклонение (±°C), общее для всех точек графика.</summary>
-        private double _tolerance = TempScheduleMath.DefaultTolerance;
+        private double _toleranceT1 = TempScheduleMath.DefaultTolerance;
         [JsonIgnore]
-        public double Tolerance
+        public double ToleranceT1
         {
-            get => _tolerance;
-            set { _tolerance = value; OnPropertyChanged(); OnPropertyChanged(nameof(T1Band)); OnPropertyChanged(nameof(T2Band)); }
+            get => _toleranceT1;
+            set { _toleranceT1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T1Band)); }
         }
 
-        /// <summary>Рассчитанный допустимый диапазон для отображения в таблице графика.</summary>
+        private double _toleranceT2 = TempScheduleMath.DefaultTolerance;
         [JsonIgnore]
-        public string T1Band => Band(T1);
-        [JsonIgnore]
-        public string T2Band => Band(T2);
+        public double ToleranceT2
+        {
+            get => _toleranceT2;
+            set { _toleranceT2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(T2Band)); }
+        }
 
-        private string Band(double v) => string.Format(CultureInfo.CurrentCulture,
-            "{0:0.#} … {1:0.#}", v - _tolerance, v + _tolerance);
+        [JsonIgnore]
+        public string T1Band => Band(T1, _toleranceT1);
+        [JsonIgnore]
+        public string T2Band => Band(T2, _toleranceT2);
+
+        private static string Band(double v, double tol) => string.Format(CultureInfo.CurrentCulture,
+            "{0:0.#} … {1:0.#}", v - tol, v + tol);
     }
 
     /// <summary>Точка-источник уже сохранённого температурного графика (для окна выбора).</summary>
@@ -2942,7 +3032,8 @@ namespace LersMonitor
         public string DisplayName { get; init; } = "";
         public string Description { get; init; } = "";
         public List<TempSchedulePoint> Schedule { get; init; } = new();
-        public double Tolerance { get; init; } = TempScheduleMath.DefaultTolerance;
+        public double ToleranceT1 { get; init; } = TempScheduleMath.DefaultTolerance;
+        public double ToleranceT2 { get; init; } = TempScheduleMath.DefaultTolerance;
     }
 
     public class MeasurePointItem
@@ -2966,8 +3057,12 @@ namespace LersMonitor
         public double? QMin { get; set; } public double? QMax { get; set; }
         public List<TempSchedulePoint> Schedule { get; set; } = new();
 
-        /// <summary>Допустимое отклонение от температурного графика, ±°C (для T1 и T2).</summary>
+        /// <summary>Общий допуск (для совместимости со старыми settings.json).</summary>
         public double ScheduleTolerance { get; set; } = TempScheduleMath.DefaultTolerance;
+        /// <summary>Допустимое отклонение от графика по прямой T1 (±°C).</summary>
+        public double? ScheduleToleranceT1 { get; set; }
+        /// <summary>Допустимое отклонение от графика по обратной T2 (±°C).</summary>
+        public double? ScheduleToleranceT2 { get; set; }
     }
 
     public class UserSettings
@@ -3106,7 +3201,7 @@ namespace LersMonitor
             OnPropertyChanged(nameof(RetryVisibility));
             OnPropertyChanged(nameof(DeltaT)); OnPropertyChanged(nameof(DeltaP));
             OnPropertyChanged(nameof(DeltaTColor)); OnPropertyChanged(nameof(DeltaPColor));
-            OnPropertyChanged(nameof(DeltaTDashBg)); OnPropertyChanged(nameof(DeltaPDashBg));
+            OnPropertyChanged(nameof(DeltaTDashBg)); OnPropertyChanged(nameof(DeltaPDashBg)); OnPropertyChanged(nameof(DeltaTDashBorder)); OnPropertyChanged(nameof(DeltaPDashBorder));
 
             // Заданные значения по температурному графику зависят от Тнв и настроек графика.
             OnPropertyChanged(nameof(ScheduleTargetVisibility));
@@ -3151,8 +3246,12 @@ namespace LersMonitor
             => TempScheduleMath.Expected(MainWindow.CurrentGlobalTnv, schedule);
 
         [System.Text.Json.Serialization.JsonIgnore]
-        public double ScheduleTolerance =>
-            Math.Max(0, Limits?.ScheduleTolerance ?? TempScheduleMath.DefaultTolerance);
+        public double ScheduleToleranceT1 =>
+            Math.Max(0, Limits?.ScheduleToleranceT1 ?? Limits?.ScheduleTolerance ?? TempScheduleMath.DefaultTolerance);
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public double ScheduleToleranceT2 =>
+            Math.Max(0, Limits?.ScheduleToleranceT2 ?? Limits?.ScheduleTolerance ?? TempScheduleMath.DefaultTolerance);
 
         [System.Text.Json.Serialization.JsonIgnore]
         public bool HasScheduleTarget =>
@@ -3169,35 +3268,35 @@ namespace LersMonitor
         public string ExpectedT2Text => FormatExpected(GetExpectedTemps(Limits?.Schedule).expT2);
 
         [System.Text.Json.Serialization.JsonIgnore]
-        public string ScheduleT1Tooltip => ScheduleTooltip(GetExpectedTemps(Limits?.Schedule).expT1);
+        public string ScheduleT1Tooltip => ScheduleTooltip(GetExpectedTemps(Limits?.Schedule).expT1, ScheduleToleranceT1);
 
         [System.Text.Json.Serialization.JsonIgnore]
-        public string ScheduleT2Tooltip => ScheduleTooltip(GetExpectedTemps(Limits?.Schedule).expT2);
+        public string ScheduleT2Tooltip => ScheduleTooltip(GetExpectedTemps(Limits?.Schedule).expT2, ScheduleToleranceT2);
 
         private static string FormatExpected(double? value) =>
             value.HasValue ? value.Value.ToString("F1", CultureInfo.CurrentCulture) : "";
 
-        private string ScheduleTooltip(double? expected)
+        private static string ScheduleTooltip(double? expected, double tolerance)
         {
             if (!expected.HasValue)
                 return "Температурный график не задан или не получена температура наружного воздуха (Тнв)";
             return string.Format(CultureInfo.CurrentCulture,
                 "По графику: {0:F1} °C при Тнв = {1:F1} °C. Допустимое отклонение ±{2:0.##} °C",
-                expected.Value, MainWindow.CurrentGlobalTnv ?? 0, ScheduleTolerance);
+                expected.Value, MainWindow.CurrentGlobalTnv ?? 0, tolerance);
         }
 
         private bool IsT1ScheduleBreached(double? t1, List<TempSchedulePoint>? schedule)
         {
             if (!t1.HasValue) return false;
             var exp = GetExpectedTemps(schedule).expT1;
-            return exp.HasValue && Math.Abs(t1.Value - exp.Value) > ScheduleTolerance;
+            return exp.HasValue && Math.Abs(t1.Value - exp.Value) > ScheduleToleranceT1;
         }
 
         private bool IsT2ScheduleBreached(double? t2, List<TempSchedulePoint>? schedule)
         {
             if (!t2.HasValue) return false;
             var exp = GetExpectedTemps(schedule).expT2;
-            return exp.HasValue && Math.Abs(t2.Value - exp.Value) > ScheduleTolerance;
+            return exp.HasValue && Math.Abs(t2.Value - exp.Value) > ScheduleToleranceT2;
         }
 
         private bool ParamBreached(double? val, double? min, double? max, bool isT1 = false, bool isT2 = false) =>
@@ -3333,6 +3432,8 @@ namespace LersMonitor
         [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaPColor => DeltaP.HasValue ? ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelPrimary") ?? Brushes.Black) : ((Brush?)Application.Current.MainWindow?.TryFindResource("LabelSecondary") ?? Brushes.Gray);
         [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaTDashBg => GetDashBg(null, null, null);
         [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaPDashBg => GetDashBg(null, null, null);
+        [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaTDashBorder => GetDashBorder(null, null, null);
+        [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaPDashBorder => GetDashBorder(null, null, null);
         
         private string _status = string.Empty; public string Status { get => _status; set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(RetryVisibility)); } }
     }

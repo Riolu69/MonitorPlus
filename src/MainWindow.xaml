@@ -639,12 +639,12 @@
             </Setter>
         </Style>
 
-        <!-- ═══ DataGrid — Bento Table Style ═══ -->
+        <!-- ═══ DataGrid — Bento / BoardUI Table Style ═══ -->
         <Style TargetType="DataGrid">
             <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="RowHeight" Value="42"/>
             <Setter Property="GridLinesVisibility" Value="Horizontal"/>
             <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrushSubtle}"/>
             <Setter Property="HeadersVisibility" Value="Column"/>
@@ -652,11 +652,15 @@
             <Setter Property="AlternatingRowBackground" Value="{DynamicResource CardBackgroundAlt}"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         </Style>
 
         <Style TargetType="DataGridRow">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource StatusIdleBg}"/>
@@ -674,16 +678,31 @@
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Padding" Value="12,11"/>
+            <Setter Property="Padding" Value="14,11"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
             <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="DataGridCell">
             <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
-            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Padding" Value="14,0"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
@@ -994,7 +1013,10 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Текущие параметры" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="Общий мониторинг" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource LabelPrimary}"/>
+                                <TextBlock Text="Сводная таблица текущих показаний по выбранным точкам учёта" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
+                            </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button x:Name="BtnSettings" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnSettingsShared_Click">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -1081,52 +1103,66 @@
                 </Border>
             </Grid>
 
-            <!-- Экран 2: Мониторинг текущих -->
+            <!-- Экран 2: Мониторинг текущих (Bento Style) -->
             <Grid x:Name="ViewTrend" Grid.Row="2" Visibility="Collapsed">
-                <Border Style="{StaticResource BentoCard}" Padding="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Панель управления мониторингом текущих -->
+                <Border Grid.Row="0" Style="{StaticResource BentoCard}" Padding="16,12" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,16,3">
+                                <TextBlock Text="Точка учёта:" Foreground="{DynamicResource LabelSecondary}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="CmbTrendPoint" Width="380" DisplayMemberPath="DisplayName"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,16,3">
+                                <TextBlock Text="Длительность (мин):" Foreground="{DynamicResource LabelSecondary}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="CmbTrendDuration" Width="68"/>
+                            </StackPanel>
+                        </WrapPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,3,0,3">
+                            <Button x:Name="BtnClearTrend" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnClearTrend_Click">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconTrash}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                    <TextBlock Text="Очистить" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnStartTrend" Style="{StaticResource AppleGreenButton}" Click="BtnStartTrend_Click">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconPlay}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                    <TextBlock Text="Запустить мониторинг" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnStopTrend" Style="{StaticResource AppleRedButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="BtnStopTrend_Click">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconStop}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Fill="White" Stroke="White" Margin="0,0,7,0"/>
+                                    <TextBlock Text="Остановить" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Таблица текущих показаний -->
+                <Border Grid.Row="1" Style="{StaticResource BentoCard}" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-
-                        <Grid Grid.Row="0" Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <WrapPanel Grid.Column="0" VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
-                                    <TextBlock Text="Точка учёта:" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <ComboBox x:Name="CmbTrendPoint" Width="380" DisplayMemberPath="DisplayName"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
-                                    <TextBlock Text="Длительность (мин):" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <ComboBox x:Name="CmbTrendDuration" Width="68"/>
-                                </StackPanel>
-                            </WrapPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
-                                <Button x:Name="BtnClearTrend" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnClearTrend_Click">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Path Data="{StaticResource IconTrash}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
-                                        <TextBlock Text="Очистить" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="BtnStartTrend" Style="{StaticResource AppleGreenButton}" Click="BtnStartTrend_Click">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Fill="White" Stroke="White" Margin="0,0,7,0"/>
-                                        <TextBlock Text="Запустить мониторинг" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="BtnStopTrend" Style="{StaticResource AppleRedButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="BtnStopTrend_Click">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Path Data="{StaticResource IconStop}" Style="{StaticResource StrokeIcon}" Width="11" Height="11" Fill="White" Stroke="White" Margin="0,0,7,0"/>
-                                        <TextBlock Text="Остановить" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Лента текущих показаний" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource LabelPrimary}"/>
+                                <TextBlock x:Name="TxtTrendSubtitle" Text="Отсчёт времени начнётся автоматически после получения первых новых данных от прибора" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Grid>
-
                         <Border Grid.Row="1" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
                             <DataGrid x:Name="GridTrend" AutoGenerateColumns="False" IsReadOnly="True">
                                 <DataGrid.Columns>
@@ -1337,7 +1373,7 @@
                                 </local:CompactColumnsPanel.LayoutTransform>
 
                                 <!-- Тнв Bento Card -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource StatusInfoBorder}" BorderThickness="1" CornerRadius="16" Padding="16"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource StatusInfoBorder}" BorderThickness="1.5" CornerRadius="16" Padding="16"
                                         ToolTip="Температура наружного воздуха (перетащите для изменения порядка)">
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -1358,7 +1394,7 @@
                                 </Border>
 
                                 <!-- T1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T1DashBg}" BorderBrush="{Binding T1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T1DashBg}" BorderBrush="{Binding T1DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -1387,7 +1423,7 @@
                                 </Border>
 
                                 <!-- T2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T2DashBg}" BorderBrush="{Binding T2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T2DashBg}" BorderBrush="{Binding T2DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -1416,7 +1452,7 @@
                                 </Border>
 
                                 <!-- ΔT -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaTDashBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaTDashBg}" BorderBrush="{Binding DeltaTDashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="ΔT · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1428,7 +1464,7 @@
                                 </Border>
 
                                 <!-- P1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P1DashBg}" BorderBrush="{Binding P1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P1DashBg}" BorderBrush="{Binding P1DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="P1 · Давление" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1440,7 +1476,7 @@
                                 </Border>
 
                                 <!-- P2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P2DashBg}" BorderBrush="{Binding P2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P2DashBg}" BorderBrush="{Binding P2DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="P2 · Обратка" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1452,7 +1488,7 @@
                                 </Border>
 
                                 <!-- ΔP -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaPDashBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaPDashBg}" BorderBrush="{Binding DeltaPDashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="ΔP · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1464,7 +1500,7 @@
                                 </Border>
 
                                 <!-- V1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V1DashBg}" BorderBrush="{Binding V1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V1DashBg}" BorderBrush="{Binding V1DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="V1 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1476,7 +1512,7 @@
                                 </Border>
 
                                 <!-- V2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V2DashBg}" BorderBrush="{Binding V2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V2DashBg}" BorderBrush="{Binding V2DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="V2 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1488,7 +1524,7 @@
                                 </Border>
 
                                 <!-- M1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M1DashBg}" BorderBrush="{Binding M1DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M1DashBg}" BorderBrush="{Binding M1DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="M1 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1500,7 +1536,7 @@
                                 </Border>
 
                                 <!-- M2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M2DashBg}" BorderBrush="{Binding M2DashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M2DashBg}" BorderBrush="{Binding M2DashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="M2 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -1512,7 +1548,7 @@
                                 </Border>
 
                                 <!-- Q -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding QDashBg}" BorderBrush="{Binding QDashBorder}" BorderThickness="1"
+                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding QDashBg}" BorderBrush="{Binding QDashBorder}" BorderThickness="1.5"
                                         Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
                                     <Grid>
                                         <TextBlock Text="Q · Теплоэнергия" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
@@ -2187,16 +2223,24 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="76"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="16"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Допустимое отклонение от графика (±)" FontSize="12.5" FontWeight="Medium" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                                <TextBox x:Name="TxtScheduleTolerance" Grid.Column="1" Text="3" Margin="6,0,6,0" Width="62"
-                                         Style="{StaticResource CompactNumericTextBox}" TextChanged="TxtScheduleTolerance_TextChanged"/>
-                                <TextBlock Grid.Column="2" Text="°C" FontSize="12.5" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="0" Text="Допустимое отклонение (±°C)" FontSize="12.5" FontWeight="Medium" Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Прямая T1:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="TxtScheduleToleranceT1" Text="3" Width="58"
+                                             Style="{StaticResource CompactNumericTextBox}" TextChanged="TxtScheduleTolerance_TextChanged"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Обратная T2:" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="TxtScheduleToleranceT2" Text="3" Width="58"
+                                             Style="{StaticResource CompactNumericTextBox}" TextChanged="TxtScheduleTolerance_TextChanged"/>
+                                </StackPanel>
                             </Grid>
-                            <TextBlock x:Name="TxtScheduleToleranceHint" FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource LabelSecondary}" Text="Отклонение применяется к T1 и T2 для всех выбранных точек."/>
+                            <TextBlock x:Name="TxtScheduleToleranceHint" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource LabelSecondary}" Text="Отклонение задаётся отдельно для прямой (T1) и обратной (T2)."/>
                         </StackPanel>
                     </Border>
 
