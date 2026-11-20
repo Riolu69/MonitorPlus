@@ -2394,40 +2394,37 @@ namespace LersMonitor
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
 
-                // Явно передаём dataFlags=Hour|Day|Month, иначе ЛЭРС по умолчанию отдаёт только суточные (00:00)
-                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}?dataFlags={kindParam}";
+                // В разных версиях ЛЭРС УЧЁТ REST API параметр типа архива называется dataTypes, dataType, dataFlags или dataKind.
+                // Перебираем их по очереди и останавливаемся на первом ответе, где пришёл нужный массив (hourConsumption/dayConsumption/monthConsumption).
+                var paramNames = new[] { "dataTypes", "dataType", "dataFlags", "dataKind" };
+                ArchiveParseResult? parsed = null;
+                System.Net.HttpStatusCode? lastErrorStatus = null;
 
-                using var req = new HttpRequestMessage(HttpMethod.Get, url);
-                using var res = await _http.SendAsync(req);
-
-                if (!res.IsSuccessStatusCode)
+                foreach (var pName in paramNames)
                 {
-                    TxtArchiveStatus.Text = $"Ошибка сервера: {(int)res.StatusCode} {res.StatusCode}. " +
-                                          $"Возможно, для точки «{pt.Title}» нет архива за период {fromDate} – {toDate}.";
-                    return;
-                }
+                    string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}?{pName}={kindParam}";
+                    using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                    using var res = await _http.SendAsync(req);
 
-                var json = await res.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")
-                {
-                    TxtArchiveStatus.Text = $"Сервер вернул пустой ответ за период {fromDate} – {toDate}.";
-                    return;
-                }
-
-                var parsed = ParseArchiveResponse(json, kindParam);
-
-                // Фолбэк для старых сборок ЛЭРС, если dataFlags не сработал и нужный массив пуст
-                if (parsed.Rows.Count == 0)
-                {
-                    string altUrl = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}?dataKind={kindParam}";
-                    using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
-                    using var altRes = await _http.SendAsync(altReq);
-                    if (altRes.IsSuccessStatusCode)
+                    if (!res.IsSuccessStatusCode)
                     {
-                        var altJson = await altRes.Content.ReadAsStringAsync();
-                        if (!string.IsNullOrWhiteSpace(altJson) && altJson.Trim() != "null")
-                            parsed = ParseArchiveResponse(altJson, kindParam);
+                        lastErrorStatus = res.StatusCode;
+                        continue;
                     }
+
+                    var json = await res.Content.ReadAsStringAsync();
+                    if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null") continue;
+
+                    parsed = ParseArchiveResponse(json, kindParam);
+                    if (parsed.Rows.Count > 0) break;
+                }
+
+                if (parsed == null)
+                {
+                    TxtArchiveStatus.Text = lastErrorStatus.HasValue
+                        ? $"Ошибка сервера: {(int)lastErrorStatus.Value} {lastErrorStatus.Value}. Возможно, для точки «{pt.Title}» нет архива за период {fromDate} – {toDate}."
+                        : $"Сервер вернул пустой ответ за период {fromDate} – {toDate}.";
+                    return;
                 }
 
                 var rows = parsed.Rows;
