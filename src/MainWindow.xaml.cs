@@ -2394,9 +2394,8 @@ namespace LersMonitor
                 string fromDate = from.ToString("yyyy-MM-dd");
                 string toDate = to.ToString("yyyy-MM-dd");
 
-                // Основной документированный формат ЛЭРС: путь с датами.
-                // Сервер сам выбирает набор доступных архивов и возвращает их в отдельных массивах.
-                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}";
+                // Явно передаём dataFlags=Hour|Day|Month, иначе ЛЭРС по умолчанию отдаёт только суточные (00:00)
+                string url = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}?dataFlags={kindParam}";
 
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 using var res = await _http.SendAsync(req);
@@ -2416,6 +2415,21 @@ namespace LersMonitor
                 }
 
                 var parsed = ParseArchiveResponse(json, kindParam);
+
+                // Фолбэк для старых сборок ЛЭРС, если dataFlags не сработал и нужный массив пуст
+                if (parsed.Rows.Count == 0)
+                {
+                    string altUrl = $"{_baseUrl}/Data/MeasurePoints/{pt.Id}/Consumption/{fromDate}/{toDate}?dataKind={kindParam}";
+                    using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
+                    using var altRes = await _http.SendAsync(altReq);
+                    if (altRes.IsSuccessStatusCode)
+                    {
+                        var altJson = await altRes.Content.ReadAsStringAsync();
+                        if (!string.IsNullOrWhiteSpace(altJson) && altJson.Trim() != "null")
+                            parsed = ParseArchiveResponse(altJson, kindParam);
+                    }
+                }
+
                 var rows = parsed.Rows;
 
                 if (rows.Count == 0)
@@ -2656,20 +2670,8 @@ namespace LersMonitor
                 }
             }
 
-            // 2) Фолбэк: если нужный массив пуст — берём любой непустой массив-архив,
-            //    исключая dataParametersUnit (это метаданные единиц, а не показания)
-            if (selected is null || selected.Value.GetArrayLength() == 0)
-            {
-                foreach (var prop in root.EnumerateObject())
-                {
-                    if (prop.Value.ValueKind != JsonValueKind.Array) continue;
-                    if (prop.Value.GetArrayLength() == 0) continue;
-                    if (prop.Name.Equals("dataParametersUnit", StringComparison.OrdinalIgnoreCase)) continue;
-                    if (!prop.Name.EndsWith("Consumption", StringComparison.OrdinalIgnoreCase)) continue;
-                    selected = prop.Value;
-                    break;
-                }
-            }
+            // Не подменяем запрошенный тип архива другим (например, суточными 00:00 вместо часовых).
+            // Если нужный массив пуст — вернём 0 строк и покажем в статусе, какие архивы реально есть.
 
             // 3) Фолбэк: корневой массив
             if (selected is null && root.ValueKind == JsonValueKind.Array)
