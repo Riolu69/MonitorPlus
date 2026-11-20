@@ -66,6 +66,19 @@ namespace LersMonitor
         private bool _showDeltaP = true; public bool ShowDeltaP { get => _showDeltaP; set { _showDeltaP = value; OnPropertyChanged(); } }
     }
 
+    public class GlobalTnvState : INotifyPropertyChanged
+    {
+        public static GlobalTnvState Instance { get; } = new GlobalTnvState();
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string prop = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+
+        private string _tnvText = "—";
+        public string TnvText { get => _tnvText; set { _tnvText = value; OnPropertyChanged(); } }
+
+        private string _updatedText = "Ожидание данных...";
+        public string UpdatedText { get => _updatedText; set { _updatedText = value; OnPropertyChanged(); } }
+    }
+
     public partial class MainWindow : Window
     {
         private HttpClient _http = new();
@@ -286,9 +299,107 @@ namespace LersMonitor
             _dashboardCts?.Cancel();
             _themeTimer.Stop();
             _globalTnvTimer.Stop();
+            if (_pillRenderingHooked) { CompositionTarget.Rendering -= TabPill_OnRender; _pillRenderingHooked = false; }
             StopNativeLersTrend();
             SaveUserSettings();
             base.OnClosed(e);
+        }
+
+        // --- Tab Pill: двухпружинная анимация растягивающейся «таблетки» (DesignBookmark) ---
+        private double _pillAx, _pillAv, _pillAt, _pillAk = 620, _pillAc = 40;
+        private double _pillBx, _pillBv, _pillBt, _pillBk = 620, _pillBc = 40;
+        private bool _pillInitialized;
+        private bool _pillRenderingHooked;
+        private DateTime _pillLastTick = DateTime.UtcNow;
+
+        private RadioButton? GetActiveNavTab()
+        {
+            if (TabAll?.IsChecked == true && TabAll.Visibility == Visibility.Visible) return TabAll;
+            if (TabSingle?.IsChecked == true && TabSingle.Visibility == Visibility.Visible) return TabSingle;
+            if (TabDashboard?.IsChecked == true && TabDashboard.Visibility == Visibility.Visible) return TabDashboard;
+            if (TabPodpitka?.IsChecked == true && TabPodpitka.Visibility == Visibility.Visible) return TabPodpitka;
+            if (TabArchive?.IsChecked == true && TabArchive.Visibility == Visibility.Visible) return TabArchive;
+            return null;
+        }
+
+        private void MoveTabPill(bool snap)
+        {
+            if (TabNavPill == null || TabPillHost == null) return;
+            var active = GetActiveNavTab();
+            if (active == null || active.ActualWidth <= 0) return;
+
+            var pt = active.TransformToAncestor(TabPillHost).Transform(new Point(0, 0));
+            double targetA = pt.X;
+            double targetB = pt.X + active.ActualWidth;
+
+            if (snap || !_pillInitialized)
+            {
+                _pillAx = _pillAt = targetA;
+                _pillBx = _pillBt = targetB;
+                _pillAv = _pillBv = 0;
+                _pillInitialized = true;
+                Canvas.SetLeft(TabNavPill, _pillAx);
+                TabNavPill.Width = Math.Max(0, _pillBx - _pillAx);
+                return;
+            }
+
+            bool movingRight = targetA > _pillAt;
+            _pillAt = targetA;
+            _pillBt = targetB;
+
+            // Ведущий край жёсткий (620, 40), догоняющий мягкий (170, 19) — эффект растяжения
+            if (movingRight)
+            {
+                _pillBk = 620; _pillBc = 40;
+                _pillAk = 170; _pillAc = 19;
+            }
+            else
+            {
+                _pillAk = 620; _pillAc = 40;
+                _pillBk = 170; _pillBc = 19;
+            }
+
+            if (!_pillRenderingHooked)
+            {
+                _pillLastTick = DateTime.UtcNow;
+                CompositionTarget.Rendering += TabPill_OnRender;
+                _pillRenderingHooked = true;
+            }
+        }
+
+        private void TabPill_OnRender(object? sender, EventArgs e)
+        {
+            var now = DateTime.UtcNow;
+            double dt = Math.Min((now - _pillLastTick).TotalSeconds, 1.0 / 30.0);
+            _pillLastTick = now;
+
+            double subDt = dt / 4.0;
+            for (int i = 0; i < 4; i++)
+            {
+                double aa = -_pillAk * (_pillAx - _pillAt) - _pillAc * _pillAv;
+                _pillAv += aa * subDt; _pillAx += _pillAv * subDt;
+
+                double ab = -_pillBk * (_pillBx - _pillBt) - _pillBc * _pillBv;
+                _pillBv += ab * subDt; _pillBx += _pillBv * subDt;
+            }
+
+            Canvas.SetLeft(TabNavPill, _pillAx);
+            TabNavPill.Width = Math.Max(0, _pillBx - _pillAx);
+
+            if (Math.Abs(_pillAx - _pillAt) < 0.08 && Math.Abs(_pillBx - _pillBt) < 0.08 &&
+                Math.Abs(_pillAv) < 0.5 && Math.Abs(_pillBv) < 0.5)
+            {
+                _pillAx = _pillAt; _pillBx = _pillBt; _pillAv = _pillBv = 0;
+                Canvas.SetLeft(TabNavPill, _pillAx);
+                TabNavPill.Width = Math.Max(0, _pillBx - _pillAx);
+                CompositionTarget.Rendering -= TabPill_OnRender;
+                _pillRenderingHooked = false;
+            }
+        }
+
+        private void TabPillHost_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Dispatcher.InvokeAsync(() => MoveTabPill(snap: true), DispatcherPriority.Loaded);
         }
 
         private void TabMode_Checked(object sender, RoutedEventArgs e)
@@ -308,6 +419,7 @@ namespace LersMonitor
                 ViewArchive.Visibility = Visibility.Visible;
                 EnsureArchivePointsLoaded();
             }
+            Dispatcher.InvokeAsync(() => MoveTabPill(snap: !_pillInitialized), DispatcherPriority.Loaded);
         }
 
         private void CmbTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -360,6 +472,8 @@ namespace LersMonitor
                 res["SelectionForeground"] = B("#FFFFFF");
                 res["SegmentedBg"] = B("#16161A");
                 res["SegmentedSelectedBg"] = B("#27272E");
+                res["TabPillBg"] = B("#FFFFFF");
+                res["TabPillFg"] = B("#09090B");
                 res["AccentBlue"] = B("#0A84FF");
                 res["AccentBlueHover"] = B("#3B9CFF");
                 res["AccentGreen"] = B("#30D158");
@@ -397,6 +511,8 @@ namespace LersMonitor
                 res["SelectionForeground"] = B("#FFFFFF");
                 res["SegmentedBg"] = B("#EBEBEF");
                 res["SegmentedSelectedBg"] = B("#FFFFFF");
+                res["TabPillBg"] = B("#0E0F11");
+                res["TabPillFg"] = B("#F4F3F1");
                 res["AccentBlue"] = B("#007AFF");
                 res["AccentBlueHover"] = B("#0051D5");
                 res["AccentGreen"] = B("#22C55E");
@@ -573,7 +689,8 @@ namespace LersMonitor
                 _settings.TnvSourcePointId = pt.Id;
                 SaveUserSettings();
                 TxtGlobalTnv.Text = "...";
-                TxtTnvCardUpdated.Text = "Ожидание данных...";
+                GlobalTnvState.Instance.TnvText = "...";
+                GlobalTnvState.Instance.UpdatedText = "Ожидание данных...";
                 await UpdateGlobalTnvAsync();
             }
         }
@@ -595,19 +712,21 @@ namespace LersMonitor
                             if (tnv.HasValue)
                             {
                                 CurrentGlobalTnv = tnv + TnvCorrection;
-                                TxtGlobalTnv.Text = CurrentGlobalTnv.Value.ToString("F1");
-                                TxtTnvCardUpdated.Text = $"Обновлено в {DateTime.Now:HH:mm:ss}";
+                                string tnvStr = CurrentGlobalTnv.Value.ToString("F1");
+                                TxtGlobalTnv.Text = tnvStr;
+                                GlobalTnvState.Instance.TnvText = tnvStr;
+                                GlobalTnvState.Instance.UpdatedText = $"Обновлено в {DateTime.Now:HH:mm:ss}";
                                 foreach (var p in _dashboardFlatPoints) p.RefreshColors();
                                 foreach (var p in _results) p.RefreshColors();
                                 foreach (var node in _dashboardNodes) node.Refresh();
                             }
-                            else TxtTnvCardUpdated.Text = "Параметр Тнв не найден";
+                            else GlobalTnvState.Instance.UpdatedText = "Параметр Тнв не найден";
                         }
-                        else TxtTnvCardUpdated.Text = "Нет данных в ответе";
+                        else GlobalTnvState.Instance.UpdatedText = "Нет данных в ответе";
                     }
-                    else TxtTnvCardUpdated.Text = "Нет ответа от источника";
+                    else GlobalTnvState.Instance.UpdatedText = "Нет ответа от источника";
                 }
-                catch { TxtTnvCardUpdated.Text = "Нет связи с источником"; }
+                catch { GlobalTnvState.Instance.UpdatedText = "Нет связи с источником"; }
             }
         }
 
@@ -1481,7 +1600,10 @@ namespace LersMonitor
             while (child != null)
             {
                 if (child is T found) return found;
-                child = VisualTreeHelper.GetParent(child);
+                if (child is Visual or System.Windows.Media.Media3D.Visual3D)
+                    child = VisualTreeHelper.GetParent(child);
+                else
+                    child = LogicalTreeHelper.GetParent(child);
             }
             return null;
         }
@@ -1940,6 +2062,7 @@ namespace LersMonitor
             else if (TabDashboard.IsChecked == true && _settings.HideDashboard) SwitchToFirstVisibleTab();
             else if (TabPodpitka.IsChecked == true && _settings.HidePodpitka) SwitchToFirstVisibleTab();
             else if (TabArchive.IsChecked == true && !_settings.ExperimentalArchive) SwitchToFirstVisibleTab();
+            Dispatcher.InvokeAsync(() => MoveTabPill(snap: true), DispatcherPriority.Loaded);
         }
 
         private void SwitchToFirstVisibleTab()
@@ -5078,6 +5201,16 @@ namespace LersMonitor
             };
 
             var innerGrid = new Grid { ClipToBounds = true };
+            innerGrid.SizeChanged += (s, ev) =>
+            {
+                double w = innerGrid.ActualWidth;
+                double h = innerGrid.ActualHeight;
+                if (w > 0 && h > 0)
+                {
+                    double r = 18.5; // CornerRadius (20) - BorderThickness (1.5)
+                    innerGrid.Clip = new RectangleGeometry(new Rect(0, 0, w, h), r, r);
+                }
+            };
             innerGrid.Children.Add(_accentGlowLayer);
             innerGrid.Children.Add(_frontHost);
             innerGrid.Children.Add(_backHost);

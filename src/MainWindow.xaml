@@ -79,6 +79,8 @@
         <SolidColorBrush x:Key="SelectionForeground" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="SegmentedBg" Color="#16161A"/>
         <SolidColorBrush x:Key="SegmentedSelectedBg" Color="#27272E"/>
+        <SolidColorBrush x:Key="TabPillBg" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TabPillFg" Color="#09090B"/>
         <SolidColorBrush x:Key="StatusDotOk" Color="#30D158"/>
         <SolidColorBrush x:Key="StatusDotErr" Color="#FF453A"/>
         <SolidColorBrush x:Key="StatusDotWait" Color="#FF9F0A"/>
@@ -411,7 +413,7 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Height" Value="34"/>
-            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="Padding" Value="10,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -678,7 +680,7 @@
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Padding" Value="14,11"/>
+            <Setter Property="Padding" Value="10,10"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
             <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
@@ -714,17 +716,18 @@
             </Setter>
         </Style>
 
-        <!-- ═══ Segmented Control — Bento / BoardUI Switcher ═══ -->
+        <!-- ═══ Tab Pill Navigation Button (DesignBookmark / Motion Studies) ═══ -->
         <Style x:Key="TabNavButton" TargetType="RadioButton">
             <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="32"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="8" Padding="14,7" Margin="1,0">
+                        <Border x:Name="bd" Background="Transparent" CornerRadius="16" Padding="16,0">
                             <ContentPresenter x:Name="cp" VerticalAlignment="Center" HorizontalAlignment="Center"
                                               TextElement.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
@@ -733,9 +736,8 @@
                                 <Setter TargetName="cp" Property="TextElement.Foreground" Value="{DynamicResource LabelPrimary}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SegmentedSelectedBg}"/>
-                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
-                                <Setter TargetName="cp" Property="TextElement.Foreground" Value="{DynamicResource LabelPrimary}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="cp" Property="TextElement.Foreground" Value="{DynamicResource TabPillFg}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -930,14 +932,21 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Background="{DynamicResource SegmentedBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="11" Padding="3" HorizontalAlignment="Left">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="TabAll" Content="Общий мониторинг" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="TabMode_Checked"/>
-                        <RadioButton x:Name="TabSingle" Content="Текущие" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
-                        <RadioButton x:Name="TabDashboard" Content="Дашборд" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
-                        <RadioButton x:Name="TabPodpitka" Content="Подпитка" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
-                        <RadioButton x:Name="TabArchive" Content="Архив" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
-                    </StackPanel>
+                <Border Grid.Column="0" Background="{DynamicResource SegmentedBg}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="20" Padding="4" HorizontalAlignment="Left">
+                    <Grid x:Name="TabPillHost" SizeChanged="TabPillHost_SizeChanged">
+                        <Canvas IsHitTestVisible="False">
+                            <Border x:Name="TabNavPill" Height="32" CornerRadius="16"
+                                    Background="{DynamicResource TabPillBg}"
+                                    Canvas.Top="0" Canvas.Left="0"/>
+                        </Canvas>
+                        <StackPanel x:Name="TabNavPanel" Orientation="Horizontal">
+                            <RadioButton x:Name="TabAll" Content="Общий мониторинг" Style="{StaticResource TabNavButton}" IsChecked="True" Checked="TabMode_Checked"/>
+                            <RadioButton x:Name="TabSingle" Content="Текущие" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                            <RadioButton x:Name="TabDashboard" Content="Дашборд" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                            <RadioButton x:Name="TabPodpitka" Content="Подпитка" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                            <RadioButton x:Name="TabArchive" Content="Архив" Style="{StaticResource TabNavButton}" Checked="TabMode_Checked"/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
                 <Button x:Name="BtnSettingsGear" Grid.Column="2" Style="{StaticResource BentoSecondaryButton}" Click="BtnSettingsGear_Click" ToolTip="Настройки приложения" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -1057,45 +1066,46 @@
                         </Border>
 
                         <Border Grid.Row="2" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Background="{DynamicResource CardBackground}">
-                            <DataGrid x:Name="GridResults" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid x:Name="GridResults" AutoGenerateColumns="False" IsReadOnly="True"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Объект учёта" Binding="{Binding NodeTitle}" Width="150"/>
-                                    <DataGridTextColumn Header="Точка" Binding="{Binding Title}" Width="120"/>
-                                    <DataGridTextColumn Header="Время" Binding="{Binding DeviceTime, StringFormat=\{0:dd.MM.yyyy HH:mm\}}" Width="115"/>
-                                    <DataGridTextColumn Header="T1 (°C)" Binding="{Binding T1, StringFormat=\{0:F1\}}" Width="65">
+                                    <DataGridTextColumn Header="Объект учёта" Binding="{Binding NodeTitle}" Width="Auto" MinWidth="160"/>
+                                    <DataGridTextColumn Header="Точка" Binding="{Binding Title}" Width="Auto" MinWidth="130"/>
+                                    <DataGridTextColumn Header="Время" Binding="{Binding DeviceTime, StringFormat=\{0:dd.MM.yyyy HH:mm\}}" Width="Auto" MinWidth="130"/>
+                                    <DataGridTextColumn Header="T1 (°C)" Binding="{Binding T1, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="74">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding T1Color}"/><Setter Property="FontWeight" Value="SemiBold"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="T2 (°C)" Binding="{Binding T2, StringFormat=\{0:F1\}}" Width="65">
+                                    <DataGridTextColumn Header="T2 (°C)" Binding="{Binding T2, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="74">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding T2Color}"/><Setter Property="FontWeight" Value="SemiBold"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="ΔT (°C)" Binding="{Binding DeltaT, StringFormat=\{0:F1\}}" Width="60" IsReadOnly="True">
+                                    <DataGridTextColumn Header="ΔT (°C)" Binding="{Binding DeltaT, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="74" IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaTColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="P1 (атм)" Binding="{Binding P1, StringFormat=\{0:F1\}}" Width="68">
+                                    <DataGridTextColumn Header="P1 (атм)" Binding="{Binding P1, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="82">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="P2 (атм)" Binding="{Binding P2, StringFormat=\{0:F1\}}" Width="68" Visibility="Collapsed">
+                                    <DataGridTextColumn Header="P2 (атм)" Binding="{Binding P2, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="82" Visibility="Collapsed">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="ΔP (атм)" Binding="{Binding DeltaP, StringFormat=\{0:F2\}}" Width="65" IsReadOnly="True">
+                                    <DataGridTextColumn Header="ΔP (атм)" Binding="{Binding DeltaP, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="84" IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaPColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="V1 (м³/ч)" Binding="{Binding V1, StringFormat=\{0:F2\}}" Width="72">
+                                    <DataGridTextColumn Header="V1 (м³/ч)" Binding="{Binding V1, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="88">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding V1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="V2 (м³/ч)" Binding="{Binding V2, StringFormat=\{0:F2\}}" Width="72" Visibility="Collapsed">
+                                    <DataGridTextColumn Header="V2 (м³/ч)" Binding="{Binding V2, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="88" Visibility="Collapsed">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding V2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="M1 (т)" Binding="{Binding M1, StringFormat=\{0:F2\}}" Width="70">
+                                    <DataGridTextColumn Header="M1 (т)" Binding="{Binding M1, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="74">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding M1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="M2 (т)" Binding="{Binding M2, StringFormat=\{0:F2\}}" Width="70">
+                                    <DataGridTextColumn Header="M2 (т)" Binding="{Binding M2, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="74">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding M2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Q (Гкал)" Binding="{Binding Q, StringFormat=\{0:F3\}}" Width="72">
+                                    <DataGridTextColumn Header="Q (Гкал)" Binding="{Binding Q, StringFormat=\{0:F3\}}" Width="Auto" MinWidth="84">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding QColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
+                                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*" MinWidth="150"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
@@ -1164,43 +1174,44 @@
                             </StackPanel>
                         </Grid>
                         <Border Grid.Row="1" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
-                            <DataGrid x:Name="GridTrend" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid x:Name="GridTrend" AutoGenerateColumns="False" IsReadOnly="True"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Время прибора" Binding="{Binding DeviceTime, StringFormat=\{0:dd.MM.yyyy HH:mm:ss\}}" Width="150"/>
-                                    <DataGridTextColumn Header="T1 (°C)" Binding="{Binding T1, StringFormat=\{0:F1\}}" Width="80">
+                                    <DataGridTextColumn Header="Время прибора" Binding="{Binding DeviceTime, StringFormat=\{0:dd.MM.yyyy HH:mm:ss\}}" Width="Auto" MinWidth="150"/>
+                                    <DataGridTextColumn Header="T1 (°C)" Binding="{Binding T1, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="78">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding T1Color}"/><Setter Property="FontWeight" Value="SemiBold"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="T2 (°C)" Binding="{Binding T2, StringFormat=\{0:F1\}}" Width="80">
+                                    <DataGridTextColumn Header="T2 (°C)" Binding="{Binding T2, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="78">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding T2Color}"/><Setter Property="FontWeight" Value="SemiBold"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="ΔT (°C)" Binding="{Binding DeltaT, StringFormat=\{0:F1\}}" Width="70" IsReadOnly="True">
+                                    <DataGridTextColumn Header="ΔT (°C)" Binding="{Binding DeltaT, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="78" IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaTColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="P1 (атм)" Binding="{Binding P1, StringFormat=\{0:F1\}}" Width="80">
+                                    <DataGridTextColumn Header="P1 (атм)" Binding="{Binding P1, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="84">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="P2 (атм)" Binding="{Binding P2, StringFormat=\{0:F1\}}" Width="80">
+                                    <DataGridTextColumn Header="P2 (атм)" Binding="{Binding P2, StringFormat=\{0:F1\}}" Width="Auto" MinWidth="84">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding P2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="ΔP (атм)" Binding="{Binding DeltaP, StringFormat=\{0:F2\}}" Width="70" IsReadOnly="True">
+                                    <DataGridTextColumn Header="ΔP (атм)" Binding="{Binding DeltaP, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="86" IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding DeltaPColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="V1 (м³/ч)" Binding="{Binding V1, StringFormat=\{0:F2\}}" Width="80">
+                                    <DataGridTextColumn Header="V1 (м³/ч)" Binding="{Binding V1, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="90">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding V1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="V2 (м³/ч)" Binding="{Binding V2, StringFormat=\{0:F2\}}" Width="80">
+                                    <DataGridTextColumn Header="V2 (м³/ч)" Binding="{Binding V2, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="90">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding V2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="M1 (т)" Binding="{Binding M1, StringFormat=\{0:F2\}}" Width="80">
+                                    <DataGridTextColumn Header="M1 (т)" Binding="{Binding M1, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="78">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding M1Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="M2 (т)" Binding="{Binding M2, StringFormat=\{0:F2\}}" Width="80">
+                                    <DataGridTextColumn Header="M2 (т)" Binding="{Binding M2, StringFormat=\{0:F2\}}" Width="Auto" MinWidth="78">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding M2Color}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Q (Гкал)" Binding="{Binding Q, StringFormat=\{0:F3\}}" Width="90">
+                                    <DataGridTextColumn Header="Q (Гкал)" Binding="{Binding Q, StringFormat=\{0:F3\}}" Width="Auto" MinWidth="86">
                                         <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding QColor}"/></Style></DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
+                                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*" MinWidth="130"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
@@ -1394,9 +1405,9 @@
                                                 <TextBlock Text="Тнв · Улица" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
                                                 <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentTeal}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                             </Grid>
-                                            <TextBlock x:Name="TxtTnvCardUpdated" Grid.Row="1" Text="Ожидание..." FontSize="11" Foreground="{DynamicResource LabelTertiary}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding Source={x:Static local:GlobalTnvState.Instance}, Path=UpdatedText}" FontSize="11" Foreground="{DynamicResource LabelTertiary}" VerticalAlignment="Center"/>
                                             <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                <TextBlock Text="{Binding ElementName=TxtGlobalTnv, Path=Text}" Foreground="{DynamicResource AccentTeal}" FontSize="38" FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding Source={x:Static local:GlobalTnvState.Instance}, Path=TnvText}" Foreground="{DynamicResource AccentTeal}" FontSize="38" FontWeight="Bold"/>
                                                 <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
                                             </StackPanel>
                                         </Grid>
