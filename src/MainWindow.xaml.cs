@@ -2326,7 +2326,7 @@ namespace LersMonitor
             string kindRu = GetArchiveKindRu();
             var (from, to) = GetArchivePeriod();
 
-            TxtArchiveInfo.Text = $"Точка: {pt.DisplayName}   •   Данные: {kindRu}   •   Период: {from:dd.MM.yyyy} — {to:dd.MM.yyyy}";
+            TxtArchiveInfo.Text = $"Точка: {pt.DisplayName}   •   Данные: {kindRu}   •   Период: {from:dd.MM.yyyy} — {to.AddDays(-1):dd.MM.yyyy}";
         }
 
         private string GetArchiveKindRu()
@@ -2353,13 +2353,14 @@ namespace LersMonitor
                 {
                     0 => 1, 1 => 7, 2 => 14, 3 => 30, 4 => 90, 5 => 365, _ => 7
                 };
-                return (now.AddDays(-days), now);
+                // Берём завтрашнюю дату как верхнюю границу, чтобы ЛЭРС отдал все сегодняшние часы (00:00..текущий час)
+                return (now.Date.AddDays(-days), now.Date.AddDays(1));
             }
 
             var from = DpArchiveFrom?.SelectedDate ?? now.AddDays(-7);
             var to = DpArchiveTo?.SelectedDate ?? now;
             if (to < from) (from, to) = (to, from);
-            return (from, to.Date.AddDays(1));
+            return (from.Date, to.Date.AddDays(1));
         }
 
         private void RbArchiveMode_Changed(object sender, RoutedEventArgs e)
