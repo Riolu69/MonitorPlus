@@ -1486,8 +1486,11 @@ namespace LersMonitor
             return null;
         }
 
+        private bool _dashCardDidDrag;
+
         private void DashCard_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            _dashCardDidDrag = false;
             if (FindVisualParent<Button>(e.OriginalSource as DependencyObject) != null)
             {
                 _draggedDashNode = null;
@@ -1496,6 +1499,67 @@ namespace LersMonitor
             _dragStartPoint = e.GetPosition(null);
             _draggedDashNode = (sender as FrameworkElement)?.DataContext as DashboardNodeViewModel;
         }
+
+        private void DashCard_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (_dashCardDidDrag || _draggedDashNode == null) { _draggedDashNode = null; return; }
+            if (FindVisualParent<Button>(e.OriginalSource as DependencyObject) != null) { _draggedDashNode = null; return; }
+            var pos = e.GetPosition(null);
+            if (Math.Abs(pos.X - _dragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
+                Math.Abs(pos.Y - _dragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+            {
+                var node = _draggedDashNode;
+                _draggedDashNode = null;
+                _dashCardDidDrag = true;
+                OpenDashCardDetail(node);
+            }
+            else
+            {
+                _draggedDashNode = null;
+            }
+        }
+
+        private void OpenDashCardDetail(DashboardNodeViewModel node)
+        {
+            OverlayDashCardDetail.DataContext = node;
+            OverlayDashCardDetail.Opacity = 0;
+            OverlayDashCardDetail.Visibility = Visibility.Visible;
+
+            var fade = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180));
+            OverlayDashCardDetail.BeginAnimation(UIElement.OpacityProperty, fade);
+
+            // Springy flip-and-zoom entrance (like Parallax Ticket flip)
+            DashCardDetailScale.ScaleX = 0.02;
+            DashCardDetailScale.ScaleY = 0.86;
+            var ease = new System.Windows.Media.Animation.BackEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut, Amplitude = 0.25 };
+            DashCardDetailScale.BeginAnimation(ScaleTransform.ScaleXProperty,
+                new System.Windows.Media.Animation.DoubleAnimation(0.02, 1.0, TimeSpan.FromMilliseconds(320)) { EasingFunction = ease });
+            DashCardDetailScale.BeginAnimation(ScaleTransform.ScaleYProperty,
+                new System.Windows.Media.Animation.DoubleAnimation(0.86, 1.0, TimeSpan.FromMilliseconds(300)) { EasingFunction = ease });
+        }
+
+        private void CloseDashCardDetail()
+        {
+            if (OverlayDashCardDetail.Visibility != Visibility.Visible) return;
+            var ease = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn };
+            var flipOut = new System.Windows.Media.Animation.DoubleAnimation(1.0, 0.02, TimeSpan.FromMilliseconds(160)) { EasingFunction = ease };
+            var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(160));
+            flipOut.Completed += (s, ev) =>
+            {
+                OverlayDashCardDetail.Visibility = Visibility.Collapsed;
+                OverlayDashCardDetail.DataContext = null;
+                DashCardDetailScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                DashCardDetailScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                DashCardDetailScale.ScaleX = 1;
+                DashCardDetailScale.ScaleY = 1;
+            };
+            DashCardDetailScale.BeginAnimation(ScaleTransform.ScaleXProperty, flipOut);
+            OverlayDashCardDetail.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+        }
+
+        private void BtnCloseDashCardDetail_Click(object sender, RoutedEventArgs e) => CloseDashCardDetail();
+        private void OverlayDashCardDetail_BackdropClick(object sender, System.Windows.Input.MouseButtonEventArgs e) => CloseDashCardDetail();
+        private void DashCardDetailContainer_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => e.Handled = true;
 
         private void DashCard_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
@@ -3207,6 +3271,14 @@ namespace LersMonitor
             OnPropertyChanged(nameof(ScheduleTargetVisibility));
             OnPropertyChanged(nameof(ExpectedT1Text)); OnPropertyChanged(nameof(ExpectedT2Text));
             OnPropertyChanged(nameof(ScheduleT1Tooltip)); OnPropertyChanged(nameof(ScheduleT2Tooltip));
+            OnPropertyChanged(nameof(TnvCorrectionSummary));
+            OnPropertyChanged(nameof(T1LimitsSummary)); OnPropertyChanged(nameof(T2LimitsSummary));
+            OnPropertyChanged(nameof(P1LimitsSummary)); OnPropertyChanged(nameof(P2LimitsSummary));
+            OnPropertyChanged(nameof(V1LimitsSummary)); OnPropertyChanged(nameof(V2LimitsSummary));
+            OnPropertyChanged(nameof(M1LimitsSummary)); OnPropertyChanged(nameof(M2LimitsSummary));
+            OnPropertyChanged(nameof(QLimitsSummary));
+            OnPropertyChanged(nameof(T1ScheduleBackInfo)); OnPropertyChanged(nameof(T2ScheduleBackInfo));
+            OnPropertyChanged(nameof(DeltaTBackInfo)); OnPropertyChanged(nameof(DeltaPBackInfo));
         }
 
         private PollState _state = PollState.Pending;
@@ -3436,6 +3508,53 @@ namespace LersMonitor
         [System.Text.Json.Serialization.JsonIgnore] public Brush DeltaPDashBorder => GetDashBorder(null, null, null);
         
         private string _status = string.Empty; public string Status { get => _status; set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(SingleStatusColor)); OnPropertyChanged(nameof(PointTitleColor)); OnPropertyChanged(nameof(RetryVisibility)); } }
+
+        // ---------- Информация для обратной стороны Parallax-карточек ----------
+        private static string FmtLim(double? min, double? max, string unit)
+        {
+            if (!min.HasValue && !max.HasValue) return "Границы не заданы";
+            string sMin = min.HasValue ? min.Value.ToString("0.##", CultureInfo.CurrentCulture) : "—";
+            string sMax = max.HasValue ? max.Value.ToString("0.##", CultureInfo.CurrentCulture) : "—";
+            return $"Допуск: {sMin} … {sMax} {unit}";
+        }
+
+        [JsonIgnore] public string TnvCorrectionSummary => MainWindow.TnvCorrection == 0
+            ? "Поправка датчика: 0 °C"
+            : $"Поправка датчика: {MainWindow.TnvCorrection:+0.#;-0.#;0} °C";
+        [JsonIgnore] public string T1LimitsSummary => FmtLim(Limits?.T1Min, Limits?.T1Max, "°C");
+        [JsonIgnore] public string T2LimitsSummary => FmtLim(Limits?.T2Min, Limits?.T2Max, "°C");
+        [JsonIgnore] public string P1LimitsSummary => FmtLim(Limits?.P1Min, Limits?.P1Max, "атм");
+        [JsonIgnore] public string P2LimitsSummary => FmtLim(Limits?.P2Min, Limits?.P2Max, "атм");
+        [JsonIgnore] public string V1LimitsSummary => FmtLim(Limits?.V1Min, Limits?.V1Max, "м³/ч");
+        [JsonIgnore] public string V2LimitsSummary => FmtLim(Limits?.V2Min, Limits?.V2Max, "м³/ч");
+        [JsonIgnore] public string M1LimitsSummary => FmtLim(Limits?.M1Min, Limits?.M1Max, "т");
+        [JsonIgnore] public string M2LimitsSummary => FmtLim(Limits?.M2Min, Limits?.M2Max, "т");
+        [JsonIgnore] public string QLimitsSummary  => FmtLim(Limits?.QMin,  Limits?.QMax,  "Гкал");
+
+        [JsonIgnore] public string T1ScheduleBackInfo
+        {
+            get
+            {
+                var exp = GetExpectedTemps(Limits?.Schedule).expT1;
+                return exp.HasValue
+                    ? string.Format(CultureInfo.CurrentCulture, "По графику: {0:F1} °C (±{1:0.##} °C)", exp.Value, ScheduleToleranceT1)
+                    : "Температурный график не задан";
+            }
+        }
+        [JsonIgnore] public string T2ScheduleBackInfo
+        {
+            get
+            {
+                var exp = GetExpectedTemps(Limits?.Schedule).expT2;
+                return exp.HasValue
+                    ? string.Format(CultureInfo.CurrentCulture, "По графику: {0:F1} °C (±{1:0.##} °C)", exp.Value, ScheduleToleranceT2)
+                    : "Температурный график не задан";
+            }
+        }
+        [JsonIgnore] public string DeltaTBackInfo =>
+            (T1.HasValue && T2.HasValue) ? $"T1 ({T1:F1}) − T2 ({T2:F1}) = {DeltaT:F1} °C" : "Разница температур T1 − T2";
+        [JsonIgnore] public string DeltaPBackInfo =>
+            (P1.HasValue && P2.HasValue) ? $"P1 ({P1:F1}) − P2 ({P2:F1}) = {DeltaP:F2} атм" : "Разница давлений P1 − P2";
     }
 
     // ==================== Poll Log ====================
@@ -4838,6 +4957,327 @@ namespace LersMonitor
             if (e.Contains("занят"))
                 return "Рекомендация: канал связи занят другим сеансом в ЛЭРС УЧЁТ. Дождитесь его завершения.";
             return "Рекомендация: сбой опроса. Проверьте канал связи в ЛЭРС УЧЁТ или перезагрузите модем на объекте по питанию.";
+        }
+    }
+
+
+    // ==================== ParallaxTicketCard (Motion Studies Style) ====================
+
+    /// <summary>
+    /// Интерактивная карточка в стиле Parallax Ticket (DesignBookmark / Motion Studies):
+    ///  - плавный параллакс слоёв и лёгкий наклон к курсору на пружинной физике;
+    ///  - блик (glare), следующий за указателем;
+    ///  - мягкое фоновое свечение (mesh accent) и тонкая сетка;
+    ///  - пружинный переворот (flip) по клику на обратную сторону с деталями/допусками;
+    ///  - не конфликтует с Drag & Drop (переворачивается только при клике без перетаскивания).
+    /// </summary>
+    public sealed class ParallaxTicketCard : ContentControl
+    {
+        public static readonly DependencyProperty FrontContentProperty =
+            DependencyProperty.Register(nameof(FrontContent), typeof(object), typeof(ParallaxTicketCard),
+                new PropertyMetadata(null, (d, e) => ((ParallaxTicketCard)d).SyncSides()));
+
+        public static readonly DependencyProperty BackContentProperty =
+            DependencyProperty.Register(nameof(BackContent), typeof(object), typeof(ParallaxTicketCard),
+                new PropertyMetadata(null, (d, e) => ((ParallaxTicketCard)d).SyncSides()));
+
+        public static readonly DependencyProperty CardBackgroundProperty =
+            DependencyProperty.Register(nameof(CardBackground), typeof(Brush), typeof(ParallaxTicketCard),
+                new PropertyMetadata(Brushes.Transparent, (d, e) => ((ParallaxTicketCard)d).ApplyBrushes()));
+
+        public static readonly DependencyProperty CardBorderBrushProperty =
+            DependencyProperty.Register(nameof(CardBorderBrush), typeof(Brush), typeof(ParallaxTicketCard),
+                new PropertyMetadata(Brushes.Gray, (d, e) => ((ParallaxTicketCard)d).ApplyBrushes()));
+
+        public static readonly DependencyProperty AccentColorProperty =
+            DependencyProperty.Register(nameof(AccentColor), typeof(Color), typeof(ParallaxTicketCard),
+                new PropertyMetadata(Color.FromRgb(56, 189, 248), (d, e) => ((ParallaxTicketCard)d).UpdateAccentGlow()));
+
+        public object? FrontContent { get => GetValue(FrontContentProperty); set => SetValue(FrontContentProperty, value); }
+        public object? BackContent  { get => GetValue(BackContentProperty);  set => SetValue(BackContentProperty, value); }
+        public Brush CardBackground { get => (Brush)GetValue(CardBackgroundProperty); set => SetValue(CardBackgroundProperty, value); }
+        public Brush CardBorderBrush { get => (Brush)GetValue(CardBorderBrushProperty); set => SetValue(CardBorderBrushProperty, value); }
+        public Color AccentColor    { get => (Color)GetValue(AccentColorProperty);    set => SetValue(AccentColorProperty, value); }
+
+        private readonly Border _outerBorder;
+        private readonly Border _accentGlowLayer;
+        private readonly Border _glareLayer;
+        private readonly RadialGradientBrush _glareBrush;
+        private readonly ContentPresenter _frontHost;
+        private readonly ContentPresenter _backHost;
+
+        private readonly ScaleTransform _flipScale = new(1, 1);
+        private readonly SkewTransform _tiltSkew = new(0, 0);
+        private readonly TranslateTransform _bgParallax = new(0, 0);
+        private readonly TranslateTransform _fgParallax = new(0, 0);
+
+        private bool _isFlipped;
+        private bool _isFlipping;
+        private bool _isHovered;
+        private Point _downPos;
+        private bool _mouseDownInside;
+
+        // Spring state (stiffness / damping like Motion Studies)
+        private double _nx, _ny;
+        private double _cx, _cy, _vx, _vy;
+        private double _glareOp, _glareV;
+        private double _lift = 1.0, _liftT = 1.0, _liftV;
+        private DateTime _lastTick = DateTime.UtcNow;
+        private bool _renderingHooked;
+
+        public ParallaxTicketCard()
+        {
+            Cursor = System.Windows.Input.Cursors.Hand;
+            RenderTransformOrigin = new Point(0.5, 0.5);
+
+            var tg = new TransformGroup();
+            tg.Children.Add(_flipScale);
+            tg.Children.Add(_tiltSkew);
+            RenderTransform = tg;
+
+            // Background ambient radial glow layer
+            _accentGlowLayer = new Border
+            {
+                CornerRadius = new CornerRadius(20),
+                IsHitTestVisible = false,
+                RenderTransform = _bgParallax,
+                Margin = new Thickness(-14)
+            };
+
+            // Cursor-tracking glare layer
+            _glareBrush = new RadialGradientBrush
+            {
+                GradientOrigin = new Point(0.5, 0.3),
+                Center = new Point(0.5, 0.3),
+                RadiusX = 0.75,
+                RadiusY = 0.75,
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(Color.FromArgb(46, 255, 255, 255), 0.0),
+                    new GradientStop(Color.FromArgb(0, 255, 255, 255), 1.0)
+                }
+            };
+            _glareLayer = new Border
+            {
+                CornerRadius = new CornerRadius(20),
+                Background = _glareBrush,
+                Opacity = 0,
+                IsHitTestVisible = false
+            };
+
+            _frontHost = new ContentPresenter
+            {
+                Margin = new Thickness(18, 16, 18, 16),
+                RenderTransform = _fgParallax
+            };
+            _backHost = new ContentPresenter
+            {
+                Margin = new Thickness(18, 16, 18, 16),
+                Visibility = Visibility.Collapsed,
+                RenderTransform = _fgParallax
+            };
+
+            var innerGrid = new Grid { ClipToBounds = true };
+            innerGrid.Children.Add(_accentGlowLayer);
+            innerGrid.Children.Add(_frontHost);
+            innerGrid.Children.Add(_backHost);
+            innerGrid.Children.Add(_glareLayer);
+
+            _outerBorder = new Border
+            {
+                CornerRadius = new CornerRadius(20),
+                BorderThickness = new Thickness(1.5),
+                ClipToBounds = true,
+                Child = innerGrid
+            };
+
+            Content = _outerBorder;
+            UpdateAccentGlow();
+            ApplyBrushes();
+
+            Loaded += (_, _) => { ApplyBrushes(); SyncSides(); };
+            Unloaded += (_, _) => UnhookRendering();
+        }
+
+        private void SyncSides()
+        {
+            _frontHost.Content = FrontContent;
+            _backHost.Content = BackContent;
+            _frontHost.Visibility = _isFlipped ? Visibility.Collapsed : Visibility.Visible;
+            _backHost.Visibility = _isFlipped ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void ApplyBrushes()
+        {
+            _outerBorder.Background = CardBackground;
+            _outerBorder.BorderBrush = CardBorderBrush;
+        }
+
+        private void UpdateAccentGlow()
+        {
+            var c = AccentColor;
+            _accentGlowLayer.Background = new RadialGradientBrush
+            {
+                GradientOrigin = new Point(0.88, 0.14),
+                Center = new Point(0.88, 0.14),
+                RadiusX = 0.72,
+                RadiusY = 0.85,
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(Color.FromArgb(42, c.R, c.G, c.B), 0.0),
+                    new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 1.0)
+                }
+            };
+        }
+
+        protected override void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _isHovered = true;
+            HookRendering();
+        }
+
+        protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            if (ActualWidth <= 1 || ActualHeight <= 1) return;
+            var p = e.GetPosition(this);
+            _nx = Math.Clamp(p.X / ActualWidth * 2.0 - 1.0, -1.0, 1.0);
+            _ny = Math.Clamp(p.Y / ActualHeight * 2.0 - 1.0, -1.0, 1.0);
+            _isHovered = true;
+            HookRendering();
+        }
+
+        protected override void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _isHovered = false;
+            _nx = 0; _ny = 0;
+            _liftT = 1.0;
+            _mouseDownInside = false;
+            HookRendering();
+        }
+
+        protected override void OnPreviewMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+        {
+            base.OnPreviewMouseLeftButtonDown(e);
+            _downPos = e.GetPosition(null);
+            _mouseDownInside = true;
+            _liftT = 0.975;
+            HookRendering();
+        }
+
+        protected override void OnPreviewMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+        {
+            base.OnPreviewMouseLeftButtonUp(e);
+            _liftT = 1.0;
+            if (!_mouseDownInside) return;
+            _mouseDownInside = false;
+
+            var upPos = e.GetPosition(null);
+            if (Math.Abs(upPos.X - _downPos.X) < SystemParameters.MinimumHorizontalDragDistance &&
+                Math.Abs(upPos.Y - _downPos.Y) < SystemParameters.MinimumVerticalDragDistance &&
+                BackContent != null)
+            {
+                Flip();
+            }
+        }
+
+        private void Flip()
+        {
+            if (_isFlipping) return;
+            _isFlipping = true;
+
+            var easeIn = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn };
+            var easeOut = new System.Windows.Media.Animation.BackEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut, Amplitude = 0.28 };
+
+            var firstHalf = new System.Windows.Media.Animation.DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(125)) { EasingFunction = easeIn };
+            firstHalf.Completed += (_, _) =>
+            {
+                _isFlipped = !_isFlipped;
+                SyncSides();
+                var secondHalf = new System.Windows.Media.Animation.DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(240)) { EasingFunction = easeOut };
+                secondHalf.Completed += (_, _) =>
+                {
+                    _flipScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                    _flipScale.ScaleX = _lift;
+                    _isFlipping = false;
+                };
+                _flipScale.BeginAnimation(ScaleTransform.ScaleXProperty, secondHalf);
+            };
+            _flipScale.BeginAnimation(ScaleTransform.ScaleXProperty, firstHalf);
+        }
+
+        private void HookRendering()
+        {
+            if (_renderingHooked) return;
+            _lastTick = DateTime.UtcNow;
+            CompositionTarget.Rendering += OnRenderFrame;
+            _renderingHooked = true;
+        }
+
+        private void UnhookRendering()
+        {
+            if (!_renderingHooked) return;
+            CompositionTarget.Rendering -= OnRenderFrame;
+            _renderingHooked = false;
+        }
+
+        private void OnRenderFrame(object? sender, EventArgs e)
+        {
+            var now = DateTime.UtcNow;
+            double dt = Math.Min((now - _lastTick).TotalSeconds, 1.0 / 30.0);
+            _lastTick = now;
+
+            // Spring integration (4 sub-steps for stability)
+            const double k = 220.0, c = 20.0;
+            const double gk = 260.0, gc = 24.0;
+            const double lk = 320.0, lc = 22.0;
+            double targetGlare = _isHovered ? 1.0 : 0.0;
+
+            double subDt = dt / 4.0;
+            for (int i = 0; i < 4; i++)
+            {
+                double ax = -k * (_cx - _nx) - c * _vx; _vx += ax * subDt; _cx += _vx * subDt;
+                double ay = -k * (_cy - _ny) - c * _vy; _vy += ay * subDt; _cy += _vy * subDt;
+                double ag = -gk * (_glareOp - targetGlare) - gc * _glareV; _glareV += ag * subDt; _glareOp += _glareV * subDt;
+                double al = -lk * (_lift - _liftT) - lc * _liftV; _liftV += al * subDt; _lift += _liftV * subDt;
+            }
+
+            // Apply parallax & tilt
+            _bgParallax.X = -_cx * 6.0;
+            _bgParallax.Y = -_cy * 6.0;
+            _fgParallax.X = _cx * 7.5;
+            _fgParallax.Y = _cy * 5.5;
+            _tiltSkew.AngleX = -_cy * 1.4;
+            _tiltSkew.AngleY = _cx * 1.4;
+
+            if (!_isFlipping)
+            {
+                _flipScale.ScaleX = _lift;
+                _flipScale.ScaleY = _lift;
+            }
+
+            double gx = (_cx + 1.0) * 0.5;
+            double gy = (_cy + 1.0) * 0.5;
+            _glareBrush.GradientOrigin = new Point(gx, gy);
+            _glareBrush.Center = new Point(gx, gy);
+            _glareLayer.Opacity = Math.Clamp(_glareOp, 0.0, 1.0);
+
+            // Auto-sleep when settled and not hovered (0% idle CPU)
+            if (!_isHovered &&
+                Math.Abs(_cx) < 0.002 && Math.Abs(_cy) < 0.002 &&
+                Math.Abs(_vx) < 0.002 && Math.Abs(_vy) < 0.002 &&
+                Math.Abs(_glareOp) < 0.002 && Math.Abs(_lift - 1.0) < 0.002)
+            {
+                _cx = _cy = _vx = _vy = _glareOp = _glareV = _liftV = 0;
+                _lift = 1.0;
+                _bgParallax.X = _bgParallax.Y = _fgParallax.X = _fgParallax.Y = 0;
+                _tiltSkew.AngleX = _tiltSkew.AngleY = 0;
+                _glareLayer.Opacity = 0;
+                if (!_isFlipping) { _flipScale.ScaleX = 1; _flipScale.ScaleY = 1; }
+                UnhookRendering();
+            }
         }
     }
 

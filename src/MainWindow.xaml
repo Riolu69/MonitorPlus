@@ -1361,7 +1361,7 @@
                         </Border>
 
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <local:CompactColumnsPanel x:Name="SinglePointCardsPanel" Spacing="10" MinColumnWidth="200"
+                            <local:CompactColumnsPanel x:Name="SinglePointCardsPanel" Spacing="12" MinColumnWidth="220"
                                                        TextOptions.TextFormattingMode="Ideal"
                                                        TextOptions.TextHintingMode="Animated"
                                                        RenderOptions.BitmapScalingMode="HighQuality"
@@ -1372,192 +1372,476 @@
                                                     ScaleY="{Binding ElementName=SldUiScale, Path=Value}"/>
                                 </local:CompactColumnsPanel.LayoutTransform>
 
-                                <!-- Тнв Bento Card -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource StatusInfoBorder}" BorderThickness="1.5" CornerRadius="16" Padding="16"
-                                        ToolTip="Температура наружного воздуха (перетащите для изменения порядка)">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid Grid.Row="0">
-                                            <TextBlock Text="Тнв (улица)" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
-                                            <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentTeal}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        </Grid>
-                                        <TextBlock x:Name="TxtTnvCardUpdated" Grid.Row="1" Text="Ожидание..." FontSize="10.5" Foreground="{DynamicResource LabelTertiary}" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding ElementName=TxtGlobalTnv, Path=Text}" Foreground="{DynamicResource AccentTeal}" FontSize="34" FontWeight="Bold"/>
-                                            <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-
-                                <!-- T1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T1DashBg}" BorderBrush="{Binding T1DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid Grid.Row="0">
-                                            <TextBlock Text="T1 · Подача" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
-                                            <Ellipse Width="7" Height="7" Fill="{Binding T1StatusDot}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        </Grid>
-                                        <Grid Grid.Row="2" VerticalAlignment="Bottom">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                <TextBlock Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T1DashForeground}" FontSize="34" FontWeight="Bold"/>
-                                                <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
+                                <!-- Тнв Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{DynamicResource CardBackground}"
+                                                          CardBorderBrush="{DynamicResource StatusInfoBorder}"
+                                                          AccentColor="#38BDF8"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <TextBlock Text="Тнв · Улица" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                                <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentTeal}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <TextBlock x:Name="TxtTnvCardUpdated" Grid.Row="1" Text="Ожидание..." FontSize="11" Foreground="{DynamicResource LabelTertiary}" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding ElementName=TxtGlobalTnv, Path=Text}" Foreground="{DynamicResource AccentTeal}" FontSize="38" FontWeight="Bold"/>
+                                                <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
                                             </StackPanel>
-                                            <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="8" Padding="7,3"
-                                                    Visibility="{Binding ScheduleTargetVisibility}" ToolTip="{Binding ScheduleT1Tooltip}">
-                                                <StackPanel>
-                                                    <TextBlock Text="график" FontSize="9" Foreground="{DynamicResource LabelTertiary}" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding ExpectedT1Text}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" HorizontalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
                                         </Grid>
-                                    </Grid>
-                                </Border>
-
-                                <!-- T2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding T2DashBg}" BorderBrush="{Binding T2DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid Grid.Row="0">
-                                            <TextBlock Text="T2 · Обратка" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
-                                            <Ellipse Width="7" Height="7" Fill="{Binding T2StatusDot}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        </Grid>
-                                        <Grid Grid.Row="2" VerticalAlignment="Bottom">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                <TextBlock Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T2DashForeground}" FontSize="34" FontWeight="Bold"/>
-                                                <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="Датчик Тнв" Foreground="{DynamicResource AccentTeal}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                                <TextBlock Text="Используется для расчёта температурного графика T1/T2" FontSize="11" Foreground="{DynamicResource LabelSecondary}" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding TnvCorrectionSummary}" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}" Margin="0,6,0,0"/>
                                             </StackPanel>
-                                            <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="8" Padding="7,3"
-                                                    Visibility="{Binding ScheduleTargetVisibility}" ToolTip="{Binding ScheduleT2Tooltip}">
-                                                <StackPanel>
-                                                    <TextBlock Text="график" FontSize="9" Foreground="{DynamicResource LabelTertiary}" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding ExpectedT2Text}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" HorizontalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
                                         </Grid>
-                                    </Grid>
-                                </Border>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- ΔT -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaTDashBg}" BorderBrush="{Binding DeltaTDashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="ΔT · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{DynamicResource LabelPrimary}" FontSize="34" FontWeight="Bold"/>
-                                            <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- T1 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding T1DashBg}"
+                                                          CardBorderBrush="{Binding T1DashBorder}"
+                                                          AccentColor="#FF6B4A"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <TextBlock Text="T1 · Подача" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                                <Ellipse Width="7" Height="7" Fill="{Binding T1StatusDot}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <Grid Grid.Row="2" VerticalAlignment="Bottom">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                    <TextBlock Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T1DashForeground}" FontSize="38" FontWeight="Bold"/>
+                                                    <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                                </StackPanel>
+                                                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="9" Padding="8,4"
+                                                        Visibility="{Binding ScheduleTargetVisibility}" ToolTip="{Binding ScheduleT1Tooltip}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="график" FontSize="9" Foreground="{DynamicResource LabelTertiary}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding ExpectedT1Text}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="T1 · Подача (допуски)" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding T1LimitsSummary}" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding T1ScheduleBackInfo}" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- P1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P1DashBg}" BorderBrush="{Binding P1DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="P1 · Давление" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P1DashForeground}" FontSize="34" FontWeight="Bold"/>
-                                            <TextBlock Text=" атм" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- T2 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding T2DashBg}"
+                                                          CardBorderBrush="{Binding T2DashBorder}"
+                                                          AccentColor="#FF9F0A"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <TextBlock Text="T2 · Обратка" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                                <Ellipse Width="7" Height="7" Fill="{Binding T2StatusDot}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <Grid Grid.Row="2" VerticalAlignment="Bottom">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                    <TextBlock Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding T2DashForeground}" FontSize="38" FontWeight="Bold"/>
+                                                    <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                                </StackPanel>
+                                                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="9" Padding="8,4"
+                                                        Visibility="{Binding ScheduleTargetVisibility}" ToolTip="{Binding ScheduleT2Tooltip}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="график" FontSize="9" Foreground="{DynamicResource LabelTertiary}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding ExpectedT2Text}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="T2 · Обратка (допуски)" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding T2LimitsSummary}" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding T2ScheduleBackInfo}" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- P2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding P2DashBg}" BorderBrush="{Binding P2DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="P2 · Обратка" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P2DashForeground}" FontSize="34" FontWeight="Bold"/>
-                                            <TextBlock Text=" атм" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- ΔT Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding DeltaTDashBg}"
+                                                          CardBorderBrush="{Binding DeltaTDashBorder}"
+                                                          AccentColor="#BF5AF2"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="ΔT · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{DynamicResource LabelPrimary}" FontSize="38" FontWeight="Bold"/>
+                                                <TextBlock Text=" °C" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="ΔT · Перепад температур" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding DeltaTBackInfo}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- ΔP -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding DeltaPDashBg}" BorderBrush="{Binding DeltaPDashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="ΔP · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{DynamicResource LabelPrimary}" FontSize="34" FontWeight="Bold"/>
-                                            <TextBlock Text=" атм" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- P1 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding P1DashBg}"
+                                                          CardBorderBrush="{Binding P1DashBorder}"
+                                                          AccentColor="#0A84FF"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="P1 · Давление" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P1DashForeground}" FontSize="38" FontWeight="Bold"/>
+                                                <TextBlock Text=" атм" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="P1 · Подача (допуски)" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding P1LimitsSummary}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- V1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V1DashBg}" BorderBrush="{Binding V1DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="V1 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V1DashForeground}" FontSize="32" FontWeight="Bold"/>
-                                            <TextBlock Text=" м³/ч" Foreground="{DynamicResource LabelSecondary}" FontSize="13" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- P2 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding P2DashBg}"
+                                                          CardBorderBrush="{Binding P2DashBorder}"
+                                                          AccentColor="#5E5CE6"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="P2 · Обратка" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—'}" Foreground="{Binding P2DashForeground}" FontSize="38" FontWeight="Bold"/>
+                                                <TextBlock Text=" атм" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="P2 · Обратка (допуски)" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding P2LimitsSummary}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- V2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding V2DashBg}" BorderBrush="{Binding V2DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="V2 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V2DashForeground}" FontSize="32" FontWeight="Bold"/>
-                                            <TextBlock Text=" м³/ч" Foreground="{DynamicResource LabelSecondary}" FontSize="13" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- ΔP Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding DeltaPDashBg}"
+                                                          CardBorderBrush="{Binding DeltaPDashBorder}"
+                                                          AccentColor="#30D158"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="ΔP · Перепад" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{DynamicResource LabelPrimary}" FontSize="38" FontWeight="Bold"/>
+                                                <TextBlock Text=" атм" Foreground="{DynamicResource LabelSecondary}" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="ΔP · Перепад давлений" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding DeltaPBackInfo}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- M1 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M1DashBg}" BorderBrush="{Binding M1DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="M1 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M1DashForeground}" FontSize="32" FontWeight="Bold"/>
-                                            <TextBlock Text=" т" Foreground="{DynamicResource LabelSecondary}" FontSize="13" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- V1 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding V1DashBg}"
+                                                          CardBorderBrush="{Binding V1DashBorder}"
+                                                          AccentColor="#22D3EE"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="V1 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V1DashForeground}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text=" м³/ч" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="V1 · Объёмный расход" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding V1LimitsSummary}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- M2 -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding M2DashBg}" BorderBrush="{Binding M2DashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="M2 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M2DashForeground}" FontSize="32" FontWeight="Bold"/>
-                                            <TextBlock Text=" т" Foreground="{DynamicResource LabelSecondary}" FontSize="13" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- V2 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding V2DashBg}"
+                                                          CardBorderBrush="{Binding V2DashBorder}"
+                                                          AccentColor="#34D399"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="V2 · Расход" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding V2DashForeground}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text=" м³/ч" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="V2 · Обратный расход" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding V2LimitsSummary}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
 
-                                <!-- Q -->
-                                <Border Height="124" AllowDrop="True" Cursor="Hand" PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown" PreviewMouseMove="SingleTile_PreviewMouseMove" DragOver="SingleTile_DragOver" Drop="SingleTile_Drop" Background="{Binding QDashBg}" BorderBrush="{Binding QDashBorder}" BorderThickness="1.5"
-                                        Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}" CornerRadius="16" Padding="16">
-                                    <Grid>
-                                        <TextBlock Text="Q · Теплоэнергия" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='—'}" Foreground="{Binding QDashForeground}" FontSize="32" FontWeight="Bold"/>
-                                            <TextBlock Text=" Гкал" Foreground="{DynamicResource LabelSecondary}" FontSize="13" VerticalAlignment="Bottom" Margin="2,0,0,6"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
+                                <!-- M1 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding M1DashBg}"
+                                                          CardBorderBrush="{Binding M1DashBorder}"
+                                                          AccentColor="#A78BFA"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="M1 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M1DashForeground}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text=" т" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="M1 · Масса (подача)" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding M1LimitsSummary}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
+
+                                <!-- M2 Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding M2DashBg}"
+                                                          CardBorderBrush="{Binding M2DashBorder}"
+                                                          AccentColor="#F472B6"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="M2 · Масса" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—'}" Foreground="{Binding M2DashForeground}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text=" т" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="M2 · Масса (обратка)" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding M2LimitsSummary}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
+
+                                <!-- Q Parallax Ticket -->
+                                <local:ParallaxTicketCard Height="148"
+                                                          CardBackground="{Binding QDashBg}"
+                                                          CardBorderBrush="{Binding QDashBorder}"
+                                                          AccentColor="#FBBF24"
+                                                          Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}"
+                                                          AllowDrop="True"
+                                                          PreviewMouseLeftButtonDown="SingleTile_PreviewMouseLeftButtonDown"
+                                                          PreviewMouseMove="SingleTile_PreviewMouseMove"
+                                                          DragOver="SingleTile_DragOver"
+                                                          Drop="SingleTile_Drop"
+                                                          ToolTip="Нажмите, чтобы перевернуть · перетащите для смены порядка">
+                                    <local:ParallaxTicketCard.FrontContent>
+                                        <Grid>
+                                            <TextBlock Text="Q · Теплоэнергия" Foreground="{DynamicResource LabelSecondary}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Top"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='—'}" Foreground="{Binding QDashForeground}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text=" Гкал" Foreground="{DynamicResource LabelSecondary}" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,7"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.FrontContent>
+                                    <local:ParallaxTicketCard.BackContent>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="Q · Теплоэнергия (допуски)" Foreground="{DynamicResource LabelPrimary}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Text="{Binding QLimitsSummary}" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2" Text="Нажмите, чтобы вернуть" FontSize="10" Foreground="{DynamicResource LabelTertiary}"/>
+                                        </Grid>
+                                    </local:ParallaxTicketCard.BackContent>
+                                </local:ParallaxTicketCard>
                             </local:CompactColumnsPanel>
                         </ScrollViewer>
                     </Grid>
@@ -1576,7 +1860,7 @@
                             </ItemsControl.LayoutTransform>
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <local:MasonryPanel Spacing="10" MaxCardWidth="430" MinCardWidth="250"/>
+                                    <local:MasonryPanel Spacing="12" MaxCardWidth="540" MinCardWidth="290"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -1587,8 +1871,10 @@
                                             AllowDrop="True" Cursor="Hand"
                                             PreviewMouseLeftButtonDown="DashCard_PreviewMouseLeftButtonDown"
                                             PreviewMouseMove="DashCard_PreviewMouseMove"
+                                            PreviewMouseLeftButtonUp="DashCard_PreviewMouseLeftButtonUp"
                                             DragOver="DashCard_DragOver"
-                                            Drop="DashCard_Drop">
+                                            Drop="DashCard_Drop"
+                                            ToolTip="Нажмите, чтобы развернуть карточку · перетащите для смены порядка">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
@@ -1603,7 +1889,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding NodeTitle}" Foreground="{DynamicResource LabelPrimary}" FontSize="14" FontWeight="Bold" TextWrapping="Wrap" ToolTip="{Binding NodeTitle}"/>
+                                                    <TextBlock Text="{Binding NodeTitle}" Foreground="{DynamicResource LabelPrimary}" FontSize="15.5" FontWeight="Bold" TextWrapping="Wrap" ToolTip="{Binding NodeTitle}"/>
                                                     <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="7,2" HorizontalAlignment="Left" Margin="0,4,0,0">
                                                         <StackPanel Orientation="Horizontal">
                                                             <Ellipse Width="6" Height="6" Fill="{Binding StatusAccent}" Margin="0,0,5,0" VerticalAlignment="Center"/>
@@ -1648,7 +1934,7 @@
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <Ellipse Grid.Column="0" Width="6" Height="6" Fill="{Binding SingleStatusColor}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                                    <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                                                     <Button Grid.Column="2" Tag="{Binding}" Click="BtnPollDetails_Click" Style="{StaticResource CardIconButton}" ToolTip="Ход опроса">
                                                                         <Path Data="{StaticResource IconInfo}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentTeal}"/>
                                                                     </Button>
@@ -1669,41 +1955,41 @@
                                                                     </Grid.RowDefinitions>
 
                                                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,6,4" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}">
-                                                                        <TextBlock Text="T1 / T2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
-                                                                        <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
+                                                                        <TextBlock Text="T1 / T2" FontSize="10.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                                                        <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
                                                                             <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding T1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding T2DashForeground}"/>
                                                                         </TextBlock>
-                                                                        <TextBlock FontSize="10" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}">
+                                                                        <TextBlock FontSize="12" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}">
                                                                             <Run Text="ΔT "/><Run Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,4" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}">
-                                                                        <TextBlock Text="P1 / P2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
-                                                                        <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
+                                                                        <TextBlock Text="P1 / P2" FontSize="10.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                                                        <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}">
                                                                             <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding P1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding P2DashForeground}"/>
                                                                         </TextBlock>
-                                                                        <TextBlock FontSize="10" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}">
+                                                                        <TextBlock FontSize="12" Foreground="{DynamicResource LabelSecondary}" Margin="0,1,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}">
                                                                             <Run Text="ΔP "/><Run Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,2,6,2" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}">
-                                                                        <TextBlock Text="V1 / V2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
-                                                                        <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
+                                                                        <TextBlock Text="V1 / V2" FontSize="10.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                                                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
                                                                             <Run Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding V1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding V2DashForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,2,0,2" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}">
-                                                                        <TextBlock Text="M1 / M2" FontSize="9.5" Foreground="{DynamicResource LabelSecondary}"/>
-                                                                        <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
+                                                                        <TextBlock Text="M1 / M2" FontSize="10.5" Foreground="{DynamicResource LabelSecondary}"/>
+                                                                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource LabelPrimary}">
                                                                             <Run Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding M1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding M2DashForeground}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,3,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}">
-                                                                        <TextBlock FontSize="11" Foreground="{DynamicResource LabelSecondary}">
+                                                                        <TextBlock FontSize="12" Foreground="{DynamicResource LabelSecondary}">
                                                                             <Run Text="Q: "/><Run Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='—', Mode=OneWay}" FontWeight="Bold" Foreground="{Binding QDashForeground}"/><Run Text=" Гкал"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
@@ -2528,6 +2814,160 @@
                         <Button Content="Готово" Click="BtnCloseAppSettings_Click" Style="{StaticResource ApplePrimaryButton}"/>
                     </StackPanel>
                 </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Модальное окно увеличенной перевёрнутой карточки Дашборда -->
+        <Grid x:Name="OverlayDashCardDetail" Visibility="Collapsed" Background="#B3000000" Panel.ZIndex="160"
+              MouseLeftButtonDown="OverlayDashCardDetail_BackdropClick">
+            <Border x:Name="DashCardDetailContainer"
+                    Background="{Binding TileBackground}"
+                    BorderBrush="{Binding TileBorderBrush}"
+                    BorderThickness="2"
+                    CornerRadius="24"
+                    Effect="{StaticResource PopupShadow}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Padding="24"
+                    MinWidth="580"
+                    MaxWidth="900"
+                    MaxHeight="740"
+                    RenderTransformOrigin="0.5,0.5"
+                    MouseLeftButtonDown="DashCardDetailContainer_Click">
+                <Border.RenderTransform>
+                    <ScaleTransform x:Name="DashCardDetailScale" ScaleX="1" ScaleY="1"/>
+                </Border.RenderTransform>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Шапка увеличенной карточки -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="{Binding NodeTitle}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource LabelPrimary}" TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <Border Background="{Binding StatusBadgeBg}" BorderBrush="{Binding TileBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,3" Margin="0,0,12,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="7" Height="7" Fill="{Binding StatusAccent}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding GeneralStatus}" Foreground="{Binding StatusAccent}" FontSize="12.5" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="{Binding MaxDeviceTime, StringFormat='Обновлено: {0:dd.MM.yyyy HH:mm:ss}'}" FontSize="12.5" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ModalCloseButton}" Width="34" Height="34" Click="BtnCloseDashCardDetail_Click" VerticalAlignment="Top" ToolTip="Закрыть"/>
+                    </Grid>
+
+                    <!-- Крупные читаемые карточки всех точек объекта -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="520">
+                        <ItemsControl ItemsSource="{Binding Points}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <local:CompactColumnsPanel Spacing="12" MinColumnWidth="360"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding PointCardBg}" BorderBrush="{Binding PointCardBorder}" BorderThickness="1.5" CornerRadius="16" Padding="16">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Grid.Column="0" Width="8" Height="8" Fill="{Binding SingleStatusColor}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="{Binding PointTitleColor}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                <Button Grid.Column="2" Tag="{Binding}" Click="BtnPollDetails_Click" Style="{StaticResource BentoSecondaryButton}" Height="28" Padding="10,0" Margin="6,0,0,0" ToolTip="Ход опроса">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Path Data="{StaticResource IconInfo}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentTeal}" Margin="0,0,5,0"/>
+                                                        <TextBlock Text="Логи" FontSize="11.5" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Grid.Column="3" Tag="{Binding}" Visibility="{Binding RetryVisibility}" Click="BtnRetryPoint_Click" Style="{StaticResource BentoSecondaryButton}" Height="28" Padding="10,0" Margin="6,0,0,0" ToolTip="Повторить опрос">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="12" Height="12" Stroke="{DynamicResource AccentOrange}" Margin="0,0,5,0"/>
+                                                        <TextBlock Text="Повтор" FontSize="11.5" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+
+                                            <UniformGrid Columns="2">
+                                                <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,6,8" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowT, Converter={StaticResource BoolToVis}}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="T1 / T2 (°C)" FontSize="11" Foreground="{DynamicResource LabelSecondary}"/>
+                                                        <TextBlock FontSize="20" FontWeight="Bold" Margin="0,2,0,0">
+                                                            <Run Text="{Binding T1, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding T1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding T2, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding T2DashForeground}"/>
+                                                        </TextBlock>
+                                                        <TextBlock FontSize="12" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaT, Converter={StaticResource BoolToVis}}">
+                                                            <Run Text="ΔT: "/><Run Text="{Binding DeltaT, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/><Run Text=" °C"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="6,0,0,8" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowP, Converter={StaticResource BoolToVis}}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="P1 / P2 (атм)" FontSize="11" Foreground="{DynamicResource LabelSecondary}"/>
+                                                        <TextBlock FontSize="20" FontWeight="Bold" Margin="0,2,0,0">
+                                                            <Run Text="{Binding P1, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding P1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding P2, StringFormat=\{0:F1\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding P2DashForeground}"/>
+                                                        </TextBlock>
+                                                        <TextBlock FontSize="12" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowDeltaP, Converter={StaticResource BoolToVis}}">
+                                                            <Run Text="ΔP: "/><Run Text="{Binding DeltaP, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding TileForeground}"/><Run Text=" атм"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,6,8" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowV, Converter={StaticResource BoolToVis}}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="V1 / V2 (м³/ч)" FontSize="11" Foreground="{DynamicResource LabelSecondary}"/>
+                                                        <TextBlock FontSize="19" FontWeight="Bold" Margin="0,2,0,0">
+                                                            <Run Text="{Binding V1, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding V1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding V2, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding V2DashForeground}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="6,0,0,8" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowM, Converter={StaticResource BoolToVis}}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="M1 / M2 (т)" FontSize="11" Foreground="{DynamicResource LabelSecondary}"/>
+                                                        <TextBlock FontSize="19" FontWeight="Bold" Margin="0,2,0,0">
+                                                            <Run Text="{Binding M1, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding M1DashForeground}"/><Run Text=" / " Foreground="{Binding SeparatorBrush}"/><Run Text="{Binding M2, StringFormat=\{0:F2\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding M2DashForeground}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </UniformGrid>
+
+                                            <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Visibility="{Binding Source={x:Static local:DashSettings.Instance}, Path=ShowQ, Converter={StaticResource BoolToVis}}">
+                                                <Grid>
+                                                    <TextBlock Text="Q · Теплоэнергия" FontSize="12" Foreground="{DynamicResource LabelSecondary}" VerticalAlignment="Center"/>
+                                                    <TextBlock FontSize="19" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                        <Run Text="{Binding Q, StringFormat=\{0:F3\}, TargetNullValue='—', Mode=OneWay}" Foreground="{Binding QDashForeground}"/><Run Text=" Гкал" Foreground="{Binding SeparatorBrush}" FontSize="13"/>
+                                                    </TextBlock>
+                                                </Grid>
+                                            </Border>
+
+                                            <TextBlock Text="{Binding Status}" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="2,8,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0" Margin="0,14,0,0" Padding="0,12,0,0">
+                        <Grid>
+                            <TextBlock Text="Нажмите вне карточки или «Закрыть», чтобы свернуть обратно" FontSize="11.5" Foreground="{DynamicResource LabelTertiary}" VerticalAlignment="Center"/>
+                            <Button Content="Закрыть" HorizontalAlignment="Right" Style="{StaticResource ApplePrimaryButton}" Click="BtnCloseDashCardDetail_Click"/>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Border>
         </Grid>
     </Grid>
