@@ -39,6 +39,9 @@
         <Geometry x:Key="IconChevronRight">M9,18 L15,12 L9,6</Geometry>
         <Geometry x:Key="IconPlusMinus">M12,4 V12 M8,8 H16 M8,18 H16</Geometry>
         <Geometry x:Key="IconPlug">M12,22 V17 M9,7 V2 M15,7 V2 M6,7 H18 V12 A6,6 0 0,1 6,12 Z</Geometry>
+        <Geometry x:Key="IconColumns">M3,5 A2,2 0 0,1 5,3 H19 A2,2 0 0,1 21,5 V19 A2,2 0 0,1 19,21 H5 A2,2 0 0,1 3,19 Z M9,3 V21 M15,3 V21</Geometry>
+        <Geometry x:Key="IconChevronUp">M18,15 L12,9 L6,15</Geometry>
+        <Geometry x:Key="IconChevronDown">M6,9 L12,15 L18,9</Geometry>
 
         <!-- Icon Path Base Style -->
         <Style x:Key="StrokeIcon" TargetType="Path">
@@ -641,20 +644,50 @@
             </Setter>
         </Style>
 
-        <!-- ═══ DataGrid — Bento / BoardUI Table Style ═══ -->
+        <!-- ═══ DataGrid — shadcn / TanStack Table Style (Resizable & Sortable) ═══ -->
+        <Style x:Key="ColumnHeaderGripperStyle" TargetType="Thumb">
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="Transparent" Padding="0,6">
+                            <Rectangle x:Name="divider" Width="1" HorizontalAlignment="Center" Fill="{DynamicResource BorderBrushColor}" Opacity="0.85"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="divider" Property="Width" Value="2"/>
+                                <Setter TargetName="divider" Property="Fill" Value="{DynamicResource AccentBlue}"/>
+                                <Setter TargetName="divider" Property="Opacity" Value="1"/>
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="divider" Property="Width" Value="2"/>
+                                <Setter TargetName="divider" Property="Fill" Value="{DynamicResource AccentBlue}"/>
+                                <Setter TargetName="divider" Property="Opacity" Value="1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="DataGrid">
             <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="RowHeight" Value="42"/>
+            <Setter Property="RowHeight" Value="44"/>
             <Setter Property="GridLinesVisibility" Value="Horizontal"/>
             <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrushSubtle}"/>
             <Setter Property="HeadersVisibility" Value="Column"/>
             <Setter Property="RowBackground" Value="Transparent"/>
-            <Setter Property="AlternatingRowBackground" Value="{DynamicResource CardBackgroundAlt}"/>
-            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="AlternatingRowBackground" Value="Transparent"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
             <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="CanUserResizeColumns" Value="True"/>
+            <Setter Property="CanUserSortColumns" Value="True"/>
+            <Setter Property="CanUserReorderColumns" Value="True"/>
             <Setter Property="SelectionUnit" Value="FullRow"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         </Style>
@@ -665,7 +698,7 @@
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource StatusIdleBg}"/>
+                    <Setter Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
@@ -678,23 +711,63 @@
             <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
             <Setter Property="Background" Value="{DynamicResource CardBackgroundAlt}"/>
             <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Padding" Value="10,10"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="12,0"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridColumnHeader">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True"/>
-                        </Border>
+                        <Grid>
+                            <Border x:Name="hdrBd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter Grid.Column="0"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalAlignment="Center"
+                                                      RecognizesAccessKey="True"/>
+                                    <Path x:Name="SortAscIcon" Grid.Column="1"
+                                          Data="{StaticResource IconChevronUp}"
+                                          Style="{StaticResource StrokeIcon}"
+                                          Width="12" Height="12" Margin="6,0,2,0"
+                                          Stroke="{DynamicResource LabelSecondary}" Opacity="0.7"
+                                          Visibility="Collapsed"/>
+                                    <Path x:Name="SortDescIcon" Grid.Column="1"
+                                          Data="{StaticResource IconChevronDown}"
+                                          Style="{StaticResource StrokeIcon}"
+                                          Width="12" Height="12" Margin="6,0,2,0"
+                                          Stroke="{DynamicResource LabelSecondary}" Opacity="0.7"
+                                          Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Style="{StaticResource ColumnHeaderGripperStyle}" Opacity="0"/>
+                            <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Margin="0,0,-5,0" Style="{StaticResource ColumnHeaderGripperStyle}"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="hdrBd" Property="Background" Value="{DynamicResource StatusIdleBg}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="SortDirection" Value="Ascending">
+                                <Setter TargetName="SortAscIcon" Property="Visibility" Value="Visible"/>
+                                <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="SortDirection" Value="Descending">
+                                <Setter TargetName="SortDescIcon" Property="Visibility" Value="Visible"/>
+                                <Setter Property="Foreground" Value="{DynamicResource LabelPrimary}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -702,7 +775,7 @@
 
         <Style TargetType="DataGridCell">
             <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
-            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="Padding" Value="12,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
@@ -1017,16 +1090,22 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid Grid.Row="0" Margin="0,0,0,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                 <TextBlock Text="Общий мониторинг" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource LabelPrimary}"/>
-                                <TextBlock Text="Сводная таблица текущих показаний по выбранным точкам учёта" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
+                                <TextBlock Text="Сортировка по клику на заголовок · изменение ширины перетаскиванием разделителя" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="BtnGeneralColumns" Tag="General" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnOpenColumnPicker_Click" ToolTip="Настроить отображение столбцов">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconColumns}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Столбцы" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                                 <Button x:Name="BtnSettings" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnSettingsShared_Click">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <Path Data="{StaticResource IconSliders}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
@@ -1047,23 +1126,6 @@
                                 </Button>
                             </StackPanel>
                         </Grid>
-
-                        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,12">
-                            <WrapPanel VerticalAlignment="Center">
-                                <TextBlock Text="Колонки:" FontSize="11.5" FontWeight="Medium" Foreground="{DynamicResource LabelSecondary}" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                <CheckBox Content="T1" IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="T2" IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="P1" IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="P2" IsChecked="False" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="V1" IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="V2" IsChecked="False" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="M1" IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="M2" IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="Q"  IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="ΔT" IsChecked="True" Click="ColumnToggle_Click"/>
-                                <CheckBox Content="ΔP" IsChecked="True" Margin="0" Click="ColumnToggle_Click"/>
-                            </WrapPanel>
-                        </Border>
 
                         <Border Grid.Row="2" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Background="{DynamicResource CardBackground}">
                             <DataGrid x:Name="GridResults" AutoGenerateColumns="False" IsReadOnly="True"
@@ -1168,10 +1230,20 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0" Margin="0,0,0,12">
-                            <StackPanel>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                 <TextBlock Text="Лента текущих показаний" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource LabelPrimary}"/>
                                 <TextBlock x:Name="TxtTrendSubtitle" Text="Отсчёт времени начнётся автоматически после получения первых новых данных от прибора" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
                             </StackPanel>
+                            <Button x:Name="BtnTrendColumns" Grid.Column="1" Tag="Trend" Style="{StaticResource BentoSecondaryButton}" Click="BtnOpenColumnPicker_Click" VerticalAlignment="Center" ToolTip="Настроить отображение столбцов">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconColumns}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                    <TextBlock Text="Столбцы" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </Grid>
                         <Border Grid.Row="1" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
                             <DataGrid x:Name="GridTrend" AutoGenerateColumns="False" IsReadOnly="True"
@@ -2313,15 +2385,30 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Margin="0,0,0,10">
-                            <TextBlock x:Name="TxtArchiveTitle" Text="Архив показаний" FontWeight="SemiBold" FontSize="15"
-                                       Foreground="{DynamicResource LabelPrimary}" VerticalAlignment="Center"/>
-                            <Button x:Name="BtnArchiveRefresh" Style="{StaticResource BentoSecondaryButton}" HorizontalAlignment="Right" Click="BtnArchiveRefresh_Click">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
-                                    <TextBlock Text="Обновить" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtArchiveTitle" Text="Архив показаний" FontWeight="SemiBold" FontSize="15"
+                                           Foreground="{DynamicResource LabelPrimary}"/>
+                                <TextBlock Text="Сортировка по клику · настройка видимых столбцов и их ширины" FontSize="11.5" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="BtnArchiveColumns" Tag="Archive" Style="{StaticResource BentoSecondaryButton}" Margin="0,0,8,0" Click="BtnOpenColumnPicker_Click" ToolTip="Настроить отображение столбцов">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconColumns}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Столбцы" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnArchiveRefresh" Style="{StaticResource BentoSecondaryButton}" Click="BtnArchiveRefresh_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="13" Height="13" Stroke="{DynamicResource LabelSecondary}" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Обновить" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
                         </Grid>
 
                         <Border Grid.Row="1" Background="{DynamicResource CardBackgroundAlt}" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,12">
@@ -2330,7 +2417,7 @@
                         </Border>
 
                         <Border Grid.Row="2" CornerRadius="12" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" ClipToBounds="True">
-                            <DataGrid x:Name="GridArchive" AutoGenerateColumns="False" IsReadOnly="True" ColumnWidth="Auto"/>
+                            <DataGrid x:Name="GridArchive" AutoGenerateColumns="False" IsReadOnly="True" ColumnWidth="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto"/>
                         </Border>
                     </Grid>
                 </Border>
@@ -2981,5 +3068,33 @@
                 </Grid>
             </Border>
         </Grid>
+
+        <!-- Всплывающее меню настройки столбцов (shadcn / TanStack Table style) -->
+        <Popup x:Name="PopupColumnPicker" AllowsTransparency="True" StaysOpen="False" Placement="Bottom" PopupAnimation="Fade" VerticalOffset="6">
+            <Border Background="{DynamicResource CardBackground}"
+                    BorderBrush="{DynamicResource BorderBrushColor}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Padding="14,12"
+                    MinWidth="240"
+                    MaxWidth="320"
+                    Effect="{StaticResource PopupShadow}">
+                <StackPanel>
+                    <TextBlock Text="Отображение столбцов" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource LabelPrimary}"/>
+                    <TextBlock Text="Отметьте нужные столбцы таблицы" FontSize="11" Foreground="{DynamicResource LabelSecondary}" Margin="0,2,0,10"/>
+
+                    <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="PanelColumnCheckboxes"/>
+                    </ScrollViewer>
+
+                    <Border BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,8,0,0">
+                        <Grid>
+                            <Button Content="Показать все" Style="{StaticResource AppleGhostButton}" HorizontalAlignment="Left" Click="BtnColumnsShowAll_Click"/>
+                            <Button Content="Скрыть лишние" Style="{StaticResource AppleGhostButton}" Foreground="{DynamicResource LabelSecondary}" HorizontalAlignment="Right" Click="BtnColumnsResetDefault_Click"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </Window>

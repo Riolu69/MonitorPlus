@@ -248,6 +248,8 @@ namespace LersMonitor
             _themeTimer.Start();
             ApplyThemeLogic();
             ApplySectionVisibility();
+            ApplySavedColumnVisibility(GridResults, _settings.HiddenGeneralColumns);
+            ApplySavedColumnVisibility(GridTrend, _settings.HiddenTrendColumns);
         }
 
         private void SaveUserSettings(List<int>? selectedPointIds = null)
@@ -852,20 +854,128 @@ namespace LersMonitor
         private void BtnSelectAllDashboard_Click(object sender, RoutedEventArgs e) => ListPointsDashboard.SelectAll();
         private void BtnClearSelectionDashboard_Click(object sender, RoutedEventArgs e) => ListPointsDashboard.UnselectAll();
 
-        private void ColumnToggle_Click(object sender, RoutedEventArgs e)
+        // --- Универсальное меню настройки столбцов (Общий мониторинг / Текущие / Архив) ---
+
+        private string _activeColumnPickerTarget = "General";
+
+        private (DataGrid? grid, List<string>? hiddenList) ResolveColumnPickerTarget(string target) => target switch
         {
-            if (sender is CheckBox chk && GridResults != null)
+            "Trend" => (GridTrend, _settings.HiddenTrendColumns),
+            "Archive" => (GridArchive, _settings.HiddenArchiveColumns),
+            _ => (GridResults, _settings.HiddenGeneralColumns),
+        };
+
+        private void SaveColumnPickerHiddenList(string target, DataGrid grid)
+        {
+            var hidden = grid.Columns
+                .Where(c => c.Visibility != Visibility.Visible && c.Header != null)
+                .Select(c => c.Header.ToString()!)
+                .ToList();
+
+            if (target == "Trend") _settings.HiddenTrendColumns = hidden;
+            else if (target == "Archive") _settings.HiddenArchiveColumns = hidden;
+            else _settings.HiddenGeneralColumns = hidden;
+
+            SaveUserSettings();
+        }
+
+        private static void ApplySavedColumnVisibility(DataGrid? grid, List<string>? hiddenHeaders)
+        {
+            if (grid == null || hiddenHeaders == null) return;
+            var hiddenSet = new HashSet<string>(hiddenHeaders, StringComparer.OrdinalIgnoreCase);
+            foreach (var col in grid.Columns)
             {
-                string headerPrefix = chk.Content?.ToString() + " ";
-                foreach (var col in GridResults.Columns)
+                var header = col.Header?.ToString();
+                if (string.IsNullOrEmpty(header)) continue;
+                col.Visibility = hiddenSet.Contains(header) ? Visibility.Collapsed : Visibility.Visible;
+            }
+        }
+
+        private void BtnOpenColumnPicker_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn) return;
+            _activeColumnPickerTarget = btn.Tag?.ToString() ?? "General";
+            var (grid, _) = ResolveColumnPickerTarget(_activeColumnPickerTarget);
+            if (grid == null) return;
+
+            PanelColumnCheckboxes.Children.Clear();
+
+            if (grid.Columns.Count == 0)
+            {
+                PanelColumnCheckboxes.Children.Add(new TextBlock
                 {
-                    if (col.Header != null && (col.Header.ToString()!.StartsWith(headerPrefix) || col.Header.ToString()!.StartsWith(chk.Content?.ToString() + " (")))
+                    Text = "Сначала загрузите данные, чтобы появились столбцы.",
+                    FontSize = 11.5,
+                    Foreground = TryFindResource("LabelSecondary") as Brush ?? Brushes.Gray,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 4, 0, 4)
+                });
+            }
+            else
+            {
+                foreach (var col in grid.Columns)
+                {
+                    string title = col.Header?.ToString() ?? "Столбец";
+                    var chk = new CheckBox
                     {
-                        col.Visibility = chk.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-                        break;
-                    }
+                        Content = title,
+                        IsChecked = col.Visibility == Visibility.Visible,
+                        Margin = new Thickness(0, 0, 0, 8),
+                        Tag = col
+                    };
+                    chk.Click += (s, ev) =>
+                    {
+                        if (s is CheckBox c && c.Tag is DataGridColumn targetCol)
+                        {
+                            // Не даём скрыть абсолютно все столбцы — хотя бы один остаётся видимым
+                            if (c.IsChecked != true && grid.Columns.Count(x => x.Visibility == Visibility.Visible) <= 1)
+                            {
+                                c.IsChecked = true;
+                                return;
+                            }
+                            targetCol.Visibility = c.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                            SaveColumnPickerHiddenList(_activeColumnPickerTarget, grid);
+                        }
+                    };
+                    PanelColumnCheckboxes.Children.Add(chk);
                 }
             }
+
+            PopupColumnPicker.PlacementTarget = btn;
+            PopupColumnPicker.IsOpen = true;
+        }
+
+        private void BtnColumnsShowAll_Click(object sender, RoutedEventArgs e)
+        {
+            var (grid, _) = ResolveColumnPickerTarget(_activeColumnPickerTarget);
+            if (grid == null) return;
+            foreach (var col in grid.Columns) col.Visibility = Visibility.Visible;
+            foreach (var child in PanelColumnCheckboxes.Children.OfType<CheckBox>()) child.IsChecked = true;
+            SaveColumnPickerHiddenList(_activeColumnPickerTarget, grid);
+        }
+
+        private void BtnColumnsResetDefault_Click(object sender, RoutedEventArgs e)
+        {
+            var (grid, _) = ResolveColumnPickerTarget(_activeColumnPickerTarget);
+            if (grid == null) return;
+
+            var defaultHidden = _activeColumnPickerTarget switch
+            {
+                "Archive" => new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Дата (raw)", "Ресурс", "Пусто", "Интервал, с" },
+                _ => new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "P2 (атм)", "V2 (м³/ч)" }
+            };
+
+            foreach (var col in grid.Columns)
+            {
+                string h = col.Header?.ToString() ?? "";
+                col.Visibility = defaultHidden.Contains(h) ? Visibility.Collapsed : Visibility.Visible;
+            }
+            foreach (var child in PanelColumnCheckboxes.Children.OfType<CheckBox>())
+            {
+                if (child.Tag is DataGridColumn c)
+                    child.IsChecked = c.Visibility == Visibility.Visible;
+            }
+            SaveColumnPickerHiddenList(_activeColumnPickerTarget, grid);
         }
 
         private void DashFilter_Click(object sender, RoutedEventArgs e)
@@ -2359,15 +2469,27 @@ namespace LersMonitor
             var dateKeys = allKeys.Where(IsArchiveDateKey).ToList();
             var otherKeys = allKeys.Where(k => !IsArchiveDateKey(k)).ToList();
 
+            var hiddenArchive = _settings.HiddenArchiveColumns != null
+                ? new HashSet<string>(_settings.HiddenArchiveColumns, StringComparer.OrdinalIgnoreCase)
+                : new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Дата (raw)", "Ресурс", "Пусто", "Интервал, с" };
+
             foreach (var key in dateKeys.Concat(otherKeys))
             {
+                string title = GetArchiveColumnTitle(key);
+                var cellStyle = new Style(typeof(TextBlock));
+                cellStyle.Setters.Add(new Setter(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis));
+                if (IsArchiveDateKey(key))
+                    cellStyle.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.Medium));
+
                 var col = new DataGridTextColumn
                 {
-                    Header = GetArchiveColumnTitle(key),
+                    Header = title,
                     Binding = new System.Windows.Data.Binding($"[{key}]"),
                     IsReadOnly = true,
-                    Width = IsArchiveDateKey(key) ? new DataGridLength(150) : DataGridLength.Auto,
-                    ElementStyle = new Style(typeof(TextBlock))
+                    Width = IsArchiveDateKey(key) ? new DataGridLength(155) : DataGridLength.Auto,
+                    MinWidth = IsArchiveDateKey(key) ? 140 : 84,
+                    Visibility = hiddenArchive.Contains(title) ? Visibility.Collapsed : Visibility.Visible,
+                    ElementStyle = cellStyle
                 };
                 GridArchive.Columns.Add(col);
             }
@@ -3280,6 +3402,9 @@ namespace LersMonitor
         public int ReportPeriodStartDay { get; set; } = 25;
         public int ReportPeriodEndDay { get; set; } = 24;
         public List<string> DashboardNodeOrder { get; set; } = new();
+        public List<string>? HiddenGeneralColumns { get; set; }
+        public List<string>? HiddenTrendColumns { get; set; }
+        public List<string>? HiddenArchiveColumns { get; set; }
     }
 
     public class DashboardNodeViewModel : INotifyPropertyChanged
