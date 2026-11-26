@@ -157,7 +157,7 @@ namespace LersMonitor
         
         private void InitPolling()
         {
-            _coord = new PollCoordinator(_http, () => _baseUrl, maxDevicePolls: 20, maxHttp: 40);
+            _coord = new PollCoordinator(_http, () => _baseUrl, maxDevicePolls: 4, maxHttp: 16);
             _coord.Updated += u => Dispatcher.InvokeAsync(() => ApplyUpdate(u));
             _volumes = new PodpitkaVolumeService(_http, () => _baseUrl);
         }
@@ -1551,13 +1551,9 @@ namespace LersMonitor
                 }
                 catch { }
 
-                try
-                {
-                    using var pollReq = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/Poll/MeasurePoints/{selectedPoint.Id}/Currents");
-                    pollReq.Content = new ByteArrayContent(Array.Empty<byte>()); pollReq.Content.Headers.ContentLength = 0;
-                    using var r = await _http.SendAsync(pollReq, token);
-                }
-                catch { }
+                // Строго по LERS API V1: используем только однократный опрос ?once=true,
+                // т.к. метода остановки непрерывного мониторинга (DELETE .../Currents) в API V1 нет.
+                var nextPollAt = DateTime.UtcNow;
 
                 while (!token.IsCancellationRequested)
                 {
@@ -1566,6 +1562,25 @@ namespace LersMonitor
                         TxtStatus.Text = $"Лимит времени ({durationMinutes} мин) исчерпан.";
                         break;
                     }
+
+                    if (DateTime.UtcNow >= nextPollAt)
+                    {
+                        try
+                        {
+                            using var pollReq = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/Poll/MeasurePoints/{selectedPoint.Id}/Currents?once=true");
+                            pollReq.Content = new ByteArrayContent(Array.Empty<byte>());
+                            pollReq.Content.Headers.ContentLength = 0;
+                            using var r = await _http.SendAsync(pollReq, token);
+                            // Ждём до 45 с завершения текущего однократного сеанса, прежде чем слать повторный POST
+                            nextPollAt = DateTime.UtcNow.AddSeconds(45);
+                        }
+                        catch (OperationCanceledException) { break; }
+                        catch
+                        {
+                            nextPollAt = DateTime.UtcNow.AddSeconds(10);
+                        }
+                    }
+
                     try
                     {
                         var res = await _http.GetAsync($"{_baseUrl}/Data/MeasurePoints/{selectedPoint.Id}/Consumption/Last", token);
@@ -1598,6 +1613,9 @@ namespace LersMonitor
                                     UpdatePointValues(row, root);
                                     _trendHistory.Insert(0, row);
                                     row.RefreshColors();
+
+                                    // Пауза 5 сек после получения данных, чтобы ЛЭРС закрыл TCP-соединение с прибором
+                                    nextPollAt = DateTime.UtcNow.AddSeconds(5);
                                 }
                             }
                         }
@@ -1620,16 +1638,10 @@ namespace LersMonitor
             }
         }
 
-        private async void StopNativeLersTrend()
+        private void StopNativeLersTrend()
         {
             _trendCts?.Cancel();
-            if (_activeTrendPointId > 0 && !string.IsNullOrEmpty(_baseUrl)) {
-                try { 
-                    using var stopReq = new HttpRequestMessage(HttpMethod.Delete, $"{_baseUrl}/Poll/MeasurePoints/{_activeTrendPointId}/Currents"); 
-                    using var r = await _http.SendAsync(stopReq); 
-                } catch { }
-                _activeTrendPointId = 0;
-            }
+            _activeTrendPointId = 0;
         }
 
         private void BtnStopTrend_Click(object sender, RoutedEventArgs e) => StopNativeLersTrend();
@@ -3892,6 +3904,8 @@ namespace LersMonitor
         public TimeSpan CacheTtl { get; set; } = TimeSpan.FromMinutes(3);
         public TimeSpan PollTimeout { get; set; } = TimeSpan.FromMinutes(3);
         public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(30);
+        /// <summary>Пауза после живого опроса прибора перед освобождением канала, чтобы ЛЭРС успел закрыть TCP-сокет.</summary>
+        public TimeSpan ChannelCooldown { get; set; } = TimeSpan.FromSeconds(5);
 
         /// <summary>Вызывается из потоков пула! Подписчик обязан маршалить в UI.</summary>
         public event Action<PollUpdate>? Updated;
@@ -3940,20 +3954,28 @@ namespace LersMonitor
                 _channelPendingCount.AddOrUpdate(t.NodeKey, 1, (_, count) => count + 1);
                 var chanLock = _channelLocks.GetOrAdd(t.NodeKey, _ => new SemaphoreSlim(1, 1));
                 await chanLock.WaitAsync(ct).ConfigureAwait(false);        // 1 прибор/канал за раз
+                bool didLivePoll = false;
                 try
                 {
                     await _deviceSlots.WaitAsync(ct).ConfigureAwait(false); // глобальный потолок
-                    try { return await PollDeviceAsync(t, ignoreCache, ct).ConfigureAwait(false); }
+                    try
+                    {
+                        var result = await PollDeviceAsync(t, ignoreCache, ct).ConfigureAwait(false);
+                        didLivePoll = result.State != PollState.OkCached;
+                        return result;
+                    }
                     finally { _deviceSlots.Release(); }
                 }
                 finally
                 {
+                    if (didLivePoll && ChannelCooldown > TimeSpan.Zero && !ct.IsCancellationRequested)
+                    {
+                        try { await Task.Delay(ChannelCooldown, ct).ConfigureAwait(false); } catch { }
+                    }
                     int pending = _channelPendingCount.AddOrUpdate(t.NodeKey, 0, (_, count) => Math.Max(0, count - 1));
                     if (pending == 0)
                     {
                         Log.Add(t.PointId, PollState.Ok, "Опрос объекта завершён", "Готово");
-                        // Принудительное отключение отключено: при /Currents?once=true ЛЭРС сам завершает сеанс,
-                        // а асинхронный DisconnectAsync после снятия chanLock мог обрывать следующую TCP-сессию.
                     }
                     chanLock.Release();
                 }
@@ -3987,12 +4009,13 @@ namespace LersMonitor
 
                 if (DateTime.UtcNow >= nextPostAt)
                 {
-                    Log.Add(t.PointId, PollState.Polling, "Отправка команды опроса прибору (дозвон)", "Дозвон");
-                    var (ok, code, err) = await PostPollAsync(t.PointId, ct);
+                    Log.Add(t.PointId, PollState.Polling, "Отправка команды опроса прибору (POST /Currents?once=true)", "Дозвон");
+                    var (ok, code, err, sessionId) = await PostPollAsync(t.PointId, ct);
                     if (ok)
                     {
                         nextPostAt = deadline;                              // не шлём повторный POST, пока идёт текущий опрос
-                        Publish(new PollUpdate(t.PointId, PollState.Polling, "Идёт опрос прибора...", null));
+                        string sessMsg = sessionId.HasValue ? $"Идёт опрос прибора (сеанс #{sessionId.Value})..." : "Идёт опрос прибора...";
+                        Publish(new PollUpdate(t.PointId, PollState.Polling, sessMsg, null));
                     }
                     else
                     {
@@ -4085,64 +4108,40 @@ namespace LersMonitor
             finally { _httpSlots.Release(); }
         }
 
-        private async Task<(bool ok, int code, string err)> PostPollAsync(int id, CancellationToken ct)
+        private async Task<(bool ok, int code, string err, long? sessionId)> PostPollAsync(int id, CancellationToken ct)
         {
             await _httpSlots.WaitAsync(ct);
             try
             {
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 cts.CancelAfter(RequestTimeout);
+                // Строго по Swagger LERS SERVER API V1: POST /api/v1/Poll/MeasurePoints/{measurePointId}/Currents?once=true
                 using var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{id}/Currents?once=true")
                 { Content = new ByteArrayContent(Array.Empty<byte>()) };
+                req.Content.Headers.ContentLength = 0;
                 using var res = await _http.SendAsync(req, cts.Token);
-                if (res.IsSuccessStatusCode) return (true, (int)res.StatusCode, "");
                 var body = await res.Content.ReadAsStringAsync(cts.Token);
-                return (false, (int)res.StatusCode, ParseLersError(body, (int)res.StatusCode));
+                if (res.IsSuccessStatusCode)
+                {
+                    long? sessionId = null;
+                    try
+                    {
+                        if (!string.IsNullOrWhiteSpace(body))
+                        {
+                            using var d = JsonDocument.Parse(body);
+                            if (d.RootElement.TryGetProperty("pollSessionId", out var sid) && sid.TryGetInt64(out var v))
+                                sessionId = v;
+                        }
+                    }
+                    catch { }
+                    return (true, (int)res.StatusCode, "", sessionId);
+                }
+                return (false, (int)res.StatusCode, ParseLersError(body, (int)res.StatusCode), null);
             }
-            catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return (false, 0, "Сбой сети (таймаут запроса)"); }
-            catch (HttpRequestException) { return (false, 0, "Сбой сети"); }
-            catch (IOException) { return (false, 0, "Сбой сети (разрыв соединения)"); }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return (false, 0, "Сбой сети (таймаут запроса)", null); }
+            catch (HttpRequestException) { return (false, 0, "Сбой сети", null); }
+            catch (IOException) { return (false, 0, "Сбой сети (разрыв соединения)", null); }
             finally { _httpSlots.Release(); }
-        }
-
-        /// <summary>
-        /// Отключает прибор после опроса, освобождая канал связи.
-        /// Пробует несколько вариантов эндпоинтов отключения.
-        /// Ошибки тихо игнорируются — отключение best-effort.
-        /// </summary>
-        public async Task DisconnectAsync(int pointId, CancellationToken ct)
-        {
-            await _httpSlots.WaitAsync(ct);
-            try
-            {
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                cts.CancelAfter(TimeSpan.FromSeconds(15));
-
-                // Вариант 1: POST /Poll/MeasurePoints/{id}/Disconnect (наиболее вероятный по схеме API)
-                using var req1 = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{pointId}/Disconnect")
-                { Content = new ByteArrayContent(Array.Empty<byte>()) };
-                using var res1 = await _http.SendAsync(req1, cts.Token);
-                if (res1.IsSuccessStatusCode) return;
-
-                // Вариант 2: DELETE /Poll/MeasurePoints/{id}/Currents
-                using var req2 = new HttpRequestMessage(HttpMethod.Delete, $"{_baseUrl()}/Poll/MeasurePoints/{pointId}/Currents");
-                using var res2 = await _http.SendAsync(req2, cts.Token);
-                if (res2.IsSuccessStatusCode) return;
-
-                // Вариант 3: POST /Poll/MeasurePoints/{id}/Stop
-                using var req3 = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl()}/Poll/MeasurePoints/{pointId}/Stop")
-                { Content = new ByteArrayContent(Array.Empty<byte>()) };
-                using var res3 = await _http.SendAsync(req3, cts.Token);
-                // Результат игнорируем — best-effort
-            }
-            catch
-            {
-                // Тихо игнорируем — отключение не критично
-            }
-            finally
-            {
-                _httpSlots.Release();
-            }
         }
 
         private static bool IsBusy(int code, string msg) =>
@@ -4158,8 +4157,15 @@ namespace LersMonitor
             {
                 if (string.IsNullOrWhiteSpace(json)) return $"Отказ ({status})";
                 using var d = JsonDocument.Parse(json);
-                if (d.RootElement.TryGetProperty("errorDescription", out var a)) return a.GetString() ?? "";
-                if (d.RootElement.TryGetProperty("errorMessage", out var b)) return b.GetString() ?? "";
+                string? msg = null;
+                if (d.RootElement.TryGetProperty("errorMessage", out var b)) msg = b.GetString();
+                else if (d.RootElement.TryGetProperty("errorDescription", out var a)) msg = a.GetString();
+                if (!string.IsNullOrWhiteSpace(msg))
+                {
+                    if (d.RootElement.TryGetProperty("errorCode", out var c) && c.TryGetInt32(out var ec) && ec != 0)
+                        return $"{msg} (код {ec})";
+                    return msg;
+                }
             }
             catch { }
             return $"Отказ ({status})";
@@ -4581,33 +4587,23 @@ namespace LersMonitor
                 string toDate = to.ToString("yyyy-MM-dd");
                 string kind = hourly ? "Hour" : "Day";
 
-                // Основной формат: path-based (документированный в LERS REST API)
-                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}";
-
+                // Строго по Swagger LERS SERVER API V1: GET /api/v1/Data/MeasurePoints/{id}/Consumption/{start}/{end}
+                string url = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}?dataTypes={kind}";
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 using var res = await _http.SendAsync(req, ct);
-
                 if (res.IsSuccessStatusCode)
                 {
-                    return await ParseLersConsumptionArray(res, hourFilterFrom, hourFilterTo);
+                    var val = await ParseLersConsumptionArray(res, hourFilterFrom, hourFilterTo);
+                    if (val.HasValue) return val;
                 }
 
-                // Фолбэк 1: query-based с dataKind
-                string altUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?start={fromDate}&end={toDate}&dataKind={kind}";
-                using var altReq = new HttpRequestMessage(HttpMethod.Get, altUrl);
-                using var altRes = await _http.SendAsync(altReq, ct);
-                if (altRes.IsSuccessStatusCode)
+                // Повтор без query-фильтра на тот же штатный эндпоинт V1
+                string plainUrl = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption/{fromDate}/{toDate}";
+                using var plainReq = new HttpRequestMessage(HttpMethod.Get, plainUrl);
+                using var plainRes = await _http.SendAsync(plainReq, ct);
+                if (plainRes.IsSuccessStatusCode)
                 {
-                    return await ParseLersConsumptionArray(altRes, hourFilterFrom, hourFilterTo);
-                }
-
-                // Фолбэк 2: startDate/endDate (старый формат)
-                string altUrl2 = $"{_baseUrl()}/Data/MeasurePoints/{pointId}/Consumption?startDate={fromDate}&endDate={toDate}&dataKind={kind}";
-                using var altReq2 = new HttpRequestMessage(HttpMethod.Get, altUrl2);
-                using var altRes2 = await _http.SendAsync(altReq2, ct);
-                if (altRes2.IsSuccessStatusCode)
-                {
-                    return await ParseLersConsumptionArray(altRes2, hourFilterFrom, hourFilterTo);
+                    return await ParseLersConsumptionArray(plainRes, hourFilterFrom, hourFilterTo);
                 }
 
                 return null;
