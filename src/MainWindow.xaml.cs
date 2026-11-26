@@ -2101,11 +2101,12 @@ namespace LersMonitor
 
         private void CmbPodpitkaInterval_Changed(object sender, SelectionChangedEventArgs e)
         {
+            if (!_isLoaded) return;
             if (CmbPodpitkaInterval.SelectedItem is int m)
             {
                 _settings.PodpitkaIntervalMin = m;
                 SaveUserSettings();
-                StartPodpitkaScheduler();
+                if (_podCts != null) StartPodpitkaScheduler();
             }
         }
 
@@ -3950,8 +3951,9 @@ namespace LersMonitor
                     int pending = _channelPendingCount.AddOrUpdate(t.NodeKey, 0, (_, count) => Math.Max(0, count - 1));
                     if (pending == 0)
                     {
-                        Log.Add(t.PointId, PollState.Ok, "Опрос объекта завершён, освобождаем канал", "Отключение");
-                        _ = DisconnectAsync(t.PointId, CancellationToken.None);
+                        Log.Add(t.PointId, PollState.Ok, "Опрос объекта завершён", "Готово");
+                        // Принудительное отключение отключено: при /Currents?once=true ЛЭРС сам завершает сеанс,
+                        // а асинхронный DisconnectAsync после снятия chanLock мог обрывать следующую TCP-сессию.
                     }
                     chanLock.Release();
                 }
@@ -3989,7 +3991,7 @@ namespace LersMonitor
                     var (ok, code, err) = await PostPollAsync(t.PointId, ct);
                     if (ok)
                     {
-                        nextPostAt = DateTime.UtcNow.AddSeconds(30);        // не долбим прибор повторными POST
+                        nextPostAt = deadline;                              // не шлём повторный POST, пока идёт текущий опрос
                         Publish(new PollUpdate(t.PointId, PollState.Polling, "Идёт опрос прибора...", null));
                     }
                     else
